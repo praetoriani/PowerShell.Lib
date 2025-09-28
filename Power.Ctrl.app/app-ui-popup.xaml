@@ -12,11 +12,11 @@
     
     <!-- Window Resources for Styling -->
     <Window.Resources>
-        <!-- Dark Theme Button Style -->
+        <!-- Enhanced Dark Theme Button Style with Lighter Colors -->
         <Style x:Key="DarkButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#FF4A4A4A"/>
+            <Setter Property="Background" Value="#FF6A6A6A"/>
             <Setter Property="Foreground" Value="#FFFFFFFF"/>
-            <Setter Property="BorderBrush" Value="#FF6A6A6A"/>
+            <Setter Property="BorderBrush" Value="#FF8A8A8A"/>
             <Setter Property="BorderThickness" Value="2"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="Margin" Value="8"/>
@@ -36,7 +36,7 @@
                         <ControlTemplate.Triggers>
                             <!-- Hover Effect -->
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FF5A5A5A"/>
+                                <Setter Property="Background" Value="#FF7A7A7A"/>
                                 <Setter Property="BorderBrush" Value="#FF4A9EFF"/>
                             </Trigger>
                             <!-- Pressed Effect -->

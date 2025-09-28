@@ -7,7 +7,7 @@
 .NOTES
     Creation Date: 28.09.2025
     Last Update: 28.09.2025
-    Version: v1.00.07
+    Version: v1.00.08
     Author: Praetoriani
     Website: https://github.com/praetoriani
 #>
@@ -24,13 +24,13 @@ Add-Type -AssemblyName System.Drawing
 # GLOBAL APPLICATION VARIABLES
 # ====================================
 $global:globalAppName = "Power.Ctrl.app"
-$global:globalAppVers = "v1.00.07"
+$global:globalAppVers = "v1.00.08"
 $global:globalAppPath = $PSScriptRoot
 $global:globalAppIcon = Join-Path $globalAppPath "appicon.ico"
 $global:globalLanguage = "de-de" # Change this to "en-us" for English
 
 # Window positioning: "center", "lowerleft", "lowerright"
-$global:globalWindowPosition = "center"
+$global:globalWindowPosition = "lowerright"
 
 # Show confirmation dialog: $true or $false
 $global:globalShowConfirmationDialog = $true
@@ -247,13 +247,35 @@ function Get-LocalizedText {
 function Write-ConsoleMessage {
     <#
     .SYNOPSIS
-    Writes localized console messages
+    Writes localized console messages with fallback for early startup
     #>
     param(
         [string]$MessageKey,
         [string]$Parameter = ""
     )
     
+    # Early startup fallback messages before language file is loaded
+    if (-not $global:languageData) {
+        $fallbackMessages = @{
+            "ApplicationStarting" = if ($global:globalLanguage -eq "de-de") { "Power.Ctrl.app v1.00.08 wird gestartet" } else { "Starting Power.Ctrl.app v1.00.08" }
+            "ApplicationInstanceCreating" = if ($global:globalLanguage -eq "de-de") { "Neue WPF Application-Instanz wird erstellt" } else { "Creating new WPF Application instance" }
+            "ApplicationInstanceCreated" = if ($global:globalLanguage -eq "de-de") { "Neue WPF Application-Instanz erfolgreich erstellt" } else { "New WPF Application instance created successfully" }
+            "ApplicationInstanceReused" = if ($global:globalLanguage -eq "de-de") { "Bestehende WPF Application-Instanz wiederverwendet" } else { "Reusing existing WPF Application instance" }
+            "ConsoleHandleInitialized" = if ($global:globalLanguage -eq "de-de") { "Console-Fenster-Handle initialisiert" } else { "Console window handle initialized" }
+            "ConsoleMinimized" = if ($global:globalLanguage -eq "de-de") { "Console-Fenster minimiert" } else { "Console window minimized" }
+        }
+        
+        if ($fallbackMessages.ContainsKey($MessageKey)) {
+            $message = $fallbackMessages[$MessageKey]
+            if ($Parameter -ne "") {
+                $message = $message -replace '\{0\}', $Parameter
+            }
+            Write-Host $message
+            return
+        }
+    }
+    
+    # Normal localized message handling
     if ($global:languageData -and $global:languageData.Console -and $global:languageData.Console.PSObject.Properties[$MessageKey]) {
         $message = $global:languageData.Console.$MessageKey
         if ($Parameter -ne "") {
@@ -821,6 +843,7 @@ function Start-PowerCtrlApplication {
     Main application entry point
     #>
     try {
+        # Initial application starting message with fallback
         Write-ConsoleMessage "ApplicationStarting"
         
         # Get or create WPF Application instance
