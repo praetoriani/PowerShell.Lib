@@ -1,0 +1,51 @@
+DAS PROGRAMM WURDE GESTARTET. ES WURDE DIE AKTION "SPERREN" AUSGEWÄHLT.
+DAS HAUPTFENSTER WURDE KORREKT AUSGEBLENDET UND DAS POPUP EINGEBLENDET.
+KLICKT MAN "NEIN" WIRD DAS POPUP KORREKT AUSGEBLENDER, UND DAS HAUPTFENSTER KORREKT EINGEBLENDET.
+KLICKT MAN "JA", WIRD DIE AKTION KORREKT AUSGEFÜHRT, ABER DAS PROGRAMM WIRD NICHT SAUBER BEENDET.
+FOLGEND DIE KONSOLEN-AUSGABE
+
+PS C:\Users\pendo\Github\PowerShell.Lib\Power.Ctrl.app> .\Power.Ctrl.app.ps1
+ApplicationStarting:
+ConsoleHandleInitialized:
+ConsoleMinimized:
+Sprachdatei erfolgreich geladen: C:\Users\pendo\Github\PowerShell.Lib\Power.Ctrl.app\de-de.json
+Hauptfenster erfolgreich geladen
+Fensterposition gesetzt auf: center
+Hauptfenster-Elemente erfolgreich initialisiert
+Hauptfenster Event-Handler erfolgreich registriert
+Aktion angefordert: lock
+Popup-Fenster erfolgreich geladen
+Popup-Fenster-Elemente erfolgreich initialisiert
+Popup-Fenster Event-Handler erfolgreich registriert
+Benutzer hat Aktion abgebrochen
+Zum Hauptfenster zurückgekehrt
+Aktion angefordert: lock
+Popup-Fenster erfolgreich geladen
+Popup-Fenster-Elemente erfolgreich initialisiert
+Popup-Fenster Event-Handler erfolgreich registriert
+Benutzer hat Aktion bestätigt
+Arbeitsplatz erfolgreich gesperrt
+Aktion ausgeführt, Anwendung wird geschlossen
+Power.Ctrl.app Anwendung beendet
+Hauptfenster wird geschlossen - Benutzer klickte X-Button
+Console-Fenster auf normalen Status wiederhergestellt
+Anwendung beendet ohne Ausführung einer Systemaktion
+Power.Ctrl.app Anwendung beendet
+Popup-Fenster wird geschlossen - Benutzer klickte X-Button
+Fehler beim Zurückkehren zum Hauptfenster: Exception calling "Show" with "0" argument(s): "Visibility kann nicht festgelegt oder Show, ShowDialog oder WindowInteropHelper.EnsureHandle können nicht aufgerufen werden, nachdem ein Window geschlossen wurde."
+Popup-Fenster wird geschlossen - Benutzer klickte X-Button
+Fehler beim Zurückkehren zum Hauptfenster: Exception calling "Show" with "0" argument(s): "Visibility kann nicht festgelegt oder Show, ShowDialog oder WindowInteropHelper.EnsureHandle können nicht aufgerufen werden, nachdem ein Window geschlossen wurde."
+Power.Ctrl.app Anwendung beendet
+PS C:\Users\pendo\Github\PowerShell.Lib\Power.Ctrl.app>
+
+
+WENN DAS PROGRAMM DANN NEU GESTARTET WIRD, ERSCHEINT FOLGENDER TEXT IN DER KONSOLE
+
+
+PS C:\Users\pendo\Github\PowerShell.Lib\Power.Ctrl.app> .\Power.Ctrl.app.ps1
+ApplicationStarting:
+ApplicationError: Exception calling ".ctor" with "0" argument(s): "Es kann nicht mehr als eine System.Windows.Application-Instanz für dieselbe "AppDomain" erstellt werden."
+PS C:\Users\pendo\Github\PowerShell.Lib\Power.Ctrl.app>
+
+
+MAN MUSS AM ENDE DIE KOMPLETTE KONSOLE SCHLIESSEN, DAMIT DAS PROGRAMM WIEDER NEU GESTARTET WERDEN KANN.
