@@ -3,11 +3,11 @@
     Power.Ctrl.app - Simple System Control Application
 .DESCRIPTION
     A simple application that provides buttons for common system actions: Lock, Logoff, Restart, and Shutdown.
-    Features dark mode UI, multilingual support via JSON language files, and icons from Shell32.dll.
+    Features dark mode UI, multilingual support via JSON language files, icons from Shell32.dll, and optional logging.
 .NOTES
     Creation Date: 28.09.2025
     Last Update: 28.09.2025
-    Version: v1.00.08
+    Version: v1.00.09
     Author: Praetoriani
     Website: https://github.com/praetoriani
 #>
@@ -24,16 +24,19 @@ Add-Type -AssemblyName System.Drawing
 # GLOBAL APPLICATION VARIABLES
 # ====================================
 $global:globalAppName = "Power.Ctrl.app"
-$global:globalAppVers = "v1.00.08"
+$global:globalAppVers = "v1.00.09"
 $global:globalAppPath = $PSScriptRoot
 $global:globalAppIcon = Join-Path $globalAppPath "appicon.ico"
 $global:globalLanguage = "de-de" # Change this to "en-us" for English
 
 # Window positioning: "center", "lowerleft", "lowerright"
-$global:globalWindowPosition = "lowerright"
+$global:globalWindowPosition = "center"
 
 # Show confirmation dialog: $true or $false
 $global:globalShowConfirmationDialog = $true
+
+# Create log file: $true or $false
+$global:globalCreateLogFile = $false
 
 # Language and UI variables
 $global:languageData = $null
@@ -43,6 +46,63 @@ $global:pendingAction = ""
 $global:consoleHandle = $null
 $global:application = $null
 $global:isShuttingDown = $false
+$global:logFilePath = ""
+
+# ====================================
+# LOG FILE MANAGEMENT FUNCTIONS
+# ====================================
+
+function Initialize-LogFile {
+    <#
+    .SYNOPSIS
+    Initializes the log file based on global settings
+    #>
+    try {
+        $global:logFilePath = Join-Path $global:globalAppPath "Power.Ctrl.app.log"
+        
+        if ($global:globalCreateLogFile) {
+            # Delete existing log file if it exists
+            if (Test-Path $global:logFilePath) {
+                Remove-Item $global:logFilePath -Force -ErrorAction SilentlyContinue
+            }
+            
+            # Create new empty log file
+            New-Item -Path $global:logFilePath -ItemType File -Force | Out-Null
+            Write-LogMessage "Log file initialized: $global:logFilePath"
+        }
+        else {
+            # Delete log file if it exists and logging is disabled
+            if (Test-Path $global:logFilePath) {
+                Remove-Item $global:logFilePath -Force -ErrorAction SilentlyContinue
+            }
+        }
+    }
+    catch {
+        # If log initialization fails, continue without logging
+        $global:globalCreateLogFile = $false
+    }
+}
+
+function Write-LogMessage {
+    <#
+    .SYNOPSIS
+    Writes a message to the log file with timestamp
+    #>
+    param(
+        [string]$Message
+    )
+    
+    if ($global:globalCreateLogFile -and $global:logFilePath -and (Test-Path $global:logFilePath)) {
+        try {
+            $timestamp = Get-Date -Format "dd.MM.yyyy ; HH:mm:ss"
+            $logEntry = "[$timestamp] $Message"
+            Add-Content -Path $global:logFilePath -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
+        }
+        catch {
+            # If logging fails, continue silently
+        }
+    }
+}
 
 # ====================================
 # CONSOLE MANAGEMENT FUNCTIONS
@@ -247,17 +307,20 @@ function Get-LocalizedText {
 function Write-ConsoleMessage {
     <#
     .SYNOPSIS
-    Writes localized console messages with fallback for early startup
+    Writes localized console messages with fallback for early startup and logs to file
     #>
     param(
         [string]$MessageKey,
         [string]$Parameter = ""
     )
     
+    $message = ""
+    
     # Early startup fallback messages before language file is loaded
     if (-not $global:languageData) {
         $fallbackMessages = @{
-            "ApplicationStarting" = if ($global:globalLanguage -eq "de-de") { "Power.Ctrl.app v1.00.08 wird gestartet" } else { "Starting Power.Ctrl.app v1.00.08" }
+            "ApplicationStarting" = if ($global:globalLanguage -eq "de-de") { "Power.Ctrl.app v1.00.09 wird gestartet" } else { "Starting Power.Ctrl.app v1.00.09" }
+            "LogFileInitialized" = if ($global:globalLanguage -eq "de-de") { "Log-Datei initialisiert" } else { "Log file initialized" }
             "ApplicationInstanceCreating" = if ($global:globalLanguage -eq "de-de") { "Neue WPF Application-Instanz wird erstellt" } else { "Creating new WPF Application instance" }
             "ApplicationInstanceCreated" = if ($global:globalLanguage -eq "de-de") { "Neue WPF Application-Instanz erfolgreich erstellt" } else { "New WPF Application instance created successfully" }
             "ApplicationInstanceReused" = if ($global:globalLanguage -eq "de-de") { "Bestehende WPF Application-Instanz wiederverwendet" } else { "Reusing existing WPF Application instance" }
@@ -270,23 +333,27 @@ function Write-ConsoleMessage {
             if ($Parameter -ne "") {
                 $message = $message -replace '\{0\}', $Parameter
             }
-            Write-Host $message
-            return
         }
     }
     
     # Normal localized message handling
-    if ($global:languageData -and $global:languageData.Console -and $global:languageData.Console.PSObject.Properties[$MessageKey]) {
+    if (-not $message -and $global:languageData -and $global:languageData.Console -and $global:languageData.Console.PSObject.Properties[$MessageKey]) {
         $message = $global:languageData.Console.$MessageKey
         if ($Parameter -ne "") {
             $message = $message -replace '\{0\}', $Parameter
         }
-        Write-Host $message
     }
-    else {
-        # Fallback to English key name if translation not available
-        Write-Host "$MessageKey`: $Parameter"
+    
+    # Final fallback
+    if (-not $message) {
+        $message = if ($Parameter -ne "") { "$MessageKey`: $Parameter" } else { $MessageKey }
     }
+    
+    # Output to console
+    Write-Host $message
+    
+    # Log to file if enabled
+    Write-LogMessage $message
 }
 
 # ====================================
@@ -296,15 +363,26 @@ function Write-ConsoleMessage {
 function Set-WindowPosition {
     <#
     .SYNOPSIS
-    Sets window position based on global setting
+    Sets window position based on global setting with precise positioning and taskbar awareness
     #>
     param(
         [System.Windows.Window]$Window
     )
     
     try {
+        # Get working area (screen size minus taskbar and other system elements)
+        $workingArea = [System.Windows.SystemParameters]::WorkArea
+        $workingWidth = $workingArea.Width
+        $workingHeight = $workingArea.Height
+        $workingLeft = $workingArea.Left
+        $workingTop = $workingArea.Top
+        
+        # Get full screen dimensions for reference
         $screenWidth = [System.Windows.SystemParameters]::PrimaryScreenWidth
         $screenHeight = [System.Windows.SystemParameters]::PrimaryScreenHeight
+        
+        # Calculate taskbar height for logging
+        $taskbarHeight = $screenHeight - $workingHeight
         
         switch ($global:globalWindowPosition.ToLower()) {
             "center" {
@@ -312,20 +390,24 @@ function Set-WindowPosition {
             }
             "lowerleft" {
                 $Window.WindowStartupLocation = [System.Windows.WindowStartupLocation]::Manual
-                $Window.Left = 0
-                $Window.Top = $screenHeight - $Window.Height
+                # Position at left edge (0px from left border)
+                $Window.Left = -6
+                # Position above taskbar (window bottom touches taskbar top)
+                $Window.Top = ($workingTop + $workingHeight - $Window.Height)+6
             }
             "lowerright" {
                 $Window.WindowStartupLocation = [System.Windows.WindowStartupLocation]::Manual
-                $Window.Left = $screenWidth - $Window.Width
-                $Window.Top = $screenHeight - $Window.Height
+                # Position at right edge (0px from right border)
+                $Window.Left = ($workingLeft + $workingWidth - $Window.Width)+6
+                # Position above taskbar (window bottom touches taskbar top)
+                $Window.Top = ($workingTop + $workingHeight - $Window.Height)+6
             }
             default {
                 $Window.WindowStartupLocation = [System.Windows.WindowStartupLocation]::CenterScreen
             }
         }
         
-        Write-ConsoleMessage "WindowPositionSet" $global:globalWindowPosition
+        Write-ConsoleMessage "WindowPositionSet" "$global:globalWindowPosition (Working Area: ${workingWidth}x${workingHeight}, Taskbar Height: ${taskbarHeight}px)"
     }
     catch {
         Write-ConsoleMessage "WindowPositionError" $_.Exception.Message
@@ -632,9 +714,8 @@ function Initialize-PopupWindowElements {
         $global:popupWindow.FindName("YesButton").ToolTip = Get-LocalizedText "YesButtonTooltip"
         $global:popupWindow.FindName("NoButton").ToolTip = Get-LocalizedText "NoButtonTooltip"
         
-        # Position popup at same location as main window
-        $global:popupWindow.Left = $global:mainWindow.Left
-        $global:popupWindow.Top = $global:mainWindow.Top
+        # Position popup at same location as main window using precise positioning
+        Set-WindowPosition $global:popupWindow
         
         Write-ConsoleMessage "PopupWindowElementsInitialized"
     }
@@ -845,6 +926,9 @@ function Start-PowerCtrlApplication {
     try {
         # Initial application starting message with fallback
         Write-ConsoleMessage "ApplicationStarting"
+        
+        # Initialize log file system
+        Initialize-LogFile
         
         # Get or create WPF Application instance
         $global:application = Get-WPFApplication

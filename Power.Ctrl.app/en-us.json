@@ -21,7 +21,7 @@
     "ActionCompleted": "Action completed successfully",
     "ActionFailed": "Action failed to execute",
     "Console": {
-        "ApplicationStarting": "Starting Power.Ctrl.app v1.00.08",
+        "ApplicationStarting": "Starting Power.Ctrl.app v1.00.09",
         "ApplicationClosed": "Power.Ctrl.app application closed",
         "ApplicationClosedWithoutAction": "Application closed without executing any system action",
         "ApplicationError": "Application error: {0}",
@@ -31,6 +31,7 @@
         "ApplicationInstanceCreating": "Creating new WPF Application instance",
         "ApplicationInstanceCreated": "New WPF Application instance created successfully",
         "ApplicationInstanceError": "Error managing Application instance: {0}",
+        "LogFileInitialized": "Log file initialized",
         "LanguageFileLoaded": "Language file loaded successfully: {0}",
         "LanguageFileNotFound": "Language file not found: {0}",
         "LanguageFileLoadError": "Failed to load language file: {0}",

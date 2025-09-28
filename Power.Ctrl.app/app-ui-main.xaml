@@ -144,7 +144,7 @@
                    VerticalAlignment="Bottom"
                    Foreground="#FF666666"
                    FontSize="10"
-                   Text="Power.Ctrl.app v1.00.08 - System Control Application"
+                   Text="Power.Ctrl.app v1.00.09 - System Control Application"
                    Margin="0,12,0,0"/>
     </Grid>
 </Window>
