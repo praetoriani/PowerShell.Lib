@@ -1,268 +1,184 @@
-# Power.Ctrl.app - Installation Guide (English)
+# Power.Ctrl.app 🚀
 
-## Overview
-Power.Ctrl.app is an advanced system control application that enables common system actions such as Lock, Logoff, Restart, and Shutdown through a user-friendly graphical interface. Version 1.00.04 implements important bug fixes and improvements.
+> **Version:** v1.00.10  
+> **Author:** Praetoriani  
+> **Date:** 28.09.2025
 
-## Required Files
-1. **Power.Ctrl.app.ps1** - Main application script
-2. **app-ui-main.xaml** - XAML file for the main window
-3. **app-ui-popup.xaml** - XAML file for confirmation dialogs
-4. **de-de.json** - German language file
-5. **en-us.json** - English language file
+A modern, minimalist PowerShell WPF application for quick Windows system control with elegant Dark Mode interface.
 
-## Installation
+## 📋 Overview
 
-### Step 1: Prepare Files
-1. Create a new folder for Power.Ctrl.app (e.g., `C:\Tools\Power.Ctrl.app\`)
-2. Save all five generated files in this folder
-3. Ensure all files are in the same directory
+**Power.Ctrl.app** is a user-friendly system control application that provides four essential Windows actions through a modern graphical interface:
+- 🔒 **Lock workstation**
+- 👤 **Log off user**
+- 🔄 **Restart computer**
+- ⚡ **Shut down computer**
 
-### Step 2: PowerShell Execution Policy
-Open PowerShell as Administrator and run:
+## ✨ Features
+
+- 🎨 **Modern Dark Mode UI** - Sleek, dark WPF interface
+- 🌍 **Full Localization** - German/English with automatic language detection
+- 📍 **Flexible Positioning** - Center, Lower-Left, Lower-Right
+- ✅ **Confirmation Dialogs** - Security prompts before system actions
+- 📝 **Optional Logging** - Detailed logging with timestamps
+- 🎯 **Shell32.dll Icons** - Native Windows system symbols
+- ⚡ **Robust Architecture** - Stable WPF Application management
+- 💻 **Windows 11 Ready** - Optimized for modern Windows versions
+
+## 🔧 System Requirements
+
+- **Operating System:** Windows 10/11
+- **PowerShell:** Version 5.0 or higher
+- **.NET Framework:** 4.7.2 or higher (usually pre-installed)
+- **Permissions:** Administrator rights recommended for all system actions
+
+## 📦 Installation & Launch
+
+### Quick Start
+1. Copy all files to a folder of your choice
+2. Open PowerShell as Administrator
+3. Navigate to folder: `cd C:\Path\To\Power.Ctrl.app`
+4. Launch application: `.\Power.Ctrl.app.ps1`
+
+### Initial Setup
+If PowerShell execution policies prevent this:
 ```powershell
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-### Step 3: Start Application
-Navigate to the Power.Ctrl.app folder and run:
+## ⚙️ Configuration
+
+All settings are configured via **global variables** in the main script:
+
+### Language 🌍
 ```powershell
-.\Power.Ctrl.app.ps1
+$global:globalLanguage = "de-de"  # or "en-us"
 ```
 
-## Configuration
-
-### Global Variables
-Edit these variables at the beginning of the Power.Ctrl.app.ps1 file:
-
-#### Change Language
+### Window Position 📍
 ```powershell
-$global:globalLanguage = "de-de"  # For German
-$global:globalLanguage = "en-us"  # For English
+$global:globalWindowPosition = "center"  # "lowerleft", "lowerright"
 ```
 
-#### Set Window Position
+### Confirmation Dialogs ✅
 ```powershell
-$global:globalWindowPosition = "center"     # Screen center
-$global:globalWindowPosition = "lowerleft"  # Bottom left (0px distance)
-$global:globalWindowPosition = "lowerright" # Bottom right (0px distance)
+$global:globalShowConfirmationDialog = $true  # $false for direct execution
 ```
 
-#### Enable/Disable Confirmation Dialog
+### Logging System 📝
 ```powershell
-$global:globalShowConfirmationDialog = $true   # Show confirmation
-$global:globalShowConfirmationDialog = $false  # Direct execution
+$global:globalCreateLogFile = $false  # $true for logging
 ```
 
-### Add Additional Languages
-1. Create a new JSON file following the pattern `[language]-[region].json`
-2. Copy the structure from `de-de.json` or `en-us.json`
-3. Translate all texts (UI elements, ToolTips, Console messages, Popup texts)
-4. Change the `$global:globalLanguage` variable accordingly
+## 📁 Files & Structure
 
-## Functions
+```
+Power.Ctrl.app/
+├── Power.Ctrl.app.ps1     # Main application
+├── app-ui-main.xaml       # Main window interface
+├── app-ui-popup.xaml      # Confirmation dialog
+├── de-de.json            # German localization
+├── en-us.json            # English localization
+├── Power.Ctrl.app.log    # Log file (when enabled)
+└── README-EN.md          # This file
+```
 
-### Available Actions
-- **Lock**: Locks the current workstation (immediate)
-- **Logoff**: Logs off the current user (immediate)
-- **Restart**: Restarts the computer (immediate, no delay)
-- **Shutdown**: Shuts down the computer (immediate, no delay)
+## 🎮 Usage
 
-### Features in Version 1.00.04
-- ✅ **Uniform Window Sizes**: Both windows 520x200 pixels for seamless switching
-- ✅ **Precise Positioning**: 0px distance to screen edges and taskbar
-- ✅ **Improved Popup Buttons**: Taller Yes/No buttons for better usability
-- ✅ **Corrected Popup Workflow**: No button returns to main window (doesn't exit)
-- ✅ **Intelligent X-Button Handling**: Popup-X returns to Main, Main-X exits program
-- ✅ **Console Management**: Automatic console restoration on program exit without action
-- ✅ **Fully Localized ToolTips**: All help texts language-dependent
-- ✅ **Dark Mode User Interface**: Consistent dark design
-- ✅ **Larger Buttons**: 48x48 pixels for better usability
-- ✅ **Icons from Windows Shell32.dll**: System-compliant display
-- ✅ **Multilingual Support**: 100% localized (UI + Console + ToolTips)
-- ✅ **Always On Top**: Both windows remain visible
+### Main Window
+- **4 large buttons** with icons for each system action
+- **Tooltips** when hovering over buttons
+- **Automatic language detection** based on configuration
 
-## Changes in Version 1.00.04
+### Confirmation Dialog
+- **Yes/No buttons** for security confirmation
+- **Specific messages** depending on chosen action
+- **ESC** or **X-button** = Return to main window
 
-### Bug Fixes
-1. **Identical Window Sizes**: Both XAML files now use 520x200 pixels
-2. **Precise Corner Positioning**:
-   - `lowerleft`: Left = 0, Top = ScreenHeight - WindowHeight
-   - `lowerright`: Left = ScreenWidth - WindowWidth, Top = ScreenHeight - WindowHeight
-3. **Taller Popup Buttons**: MinHeight = 35px for better clickability
-4. **Corrected No Button**: Returns to main window instead of exiting program
-5. **X-Button Logic**: Popup-X returns to Main, only Main-X exits program
-6. **Console Restoration**: Console becomes visible again on program exit without action
+### Keyboard Shortcuts
+- **ESC** - Exit application (in main window)
+- **Alt+F4** - Exit application
 
-### Improved Functionality
-- **Return-ToMainWindow Function**: Clean transition from Popup back to Main
-- **Close-Application Function**: Controlled exit with optional console restoration
-- **Console Management**: Separate functions for Hide/Show Console
-- **Event Handlers**: Popup-Closing-Event prevents actual closing and returns to Main
+## 📋 Log System
 
-### Extended JSON Messages
-New console messages added:
-- `ApplicationClosedWithoutAction`: On program exit without system action
-- `MainWindowClosing`: On Main window X-button click
-- `PopupWindowClosing`: On Popup window X-button click
-- `ReturnedToMainWindow`: On successful return to Main
-- `ActionExecutedClosing`: On action execution before program exit
-- Console-Handle-Management: Messages for console operations
+When logging is enabled (`$globalCreateLogFile = $true`):
+- **File:** `Power.Ctrl.app.log` in application folder
+- **Format:** `[DD.MM.YYYY ; HH:MM:SS] Message`
+- **Content:** All console outputs with timestamps
+- **Rotation:** New file with each start (old one deleted)
 
-## Application Workflow
+### Example Log:
+```
+[28.09.2025 ; 21:05:33] Starting Power.Ctrl.app v1.00.10
+[28.09.2025 ; 21:05:34] Main window loaded successfully
+[28.09.2025 ; 21:05:45] Action requested: lock
+[28.09.2025 ; 21:05:47] User confirmed action
+[28.09.2025 ; 21:05:47] Workstation locked successfully
+```
 
-### With Confirmation Dialog ($globalShowConfirmationDialog = $true)
-1. **Main Window** is displayed at chosen position (520x200)
-2. **User clicks Action** → Main window is hidden
-3. **Popup Dialog** appears at identical position (520x200) with specific confirmation
-4. **User clicks "Yes"** → Action is executed, program exits (without console restoration)
-5. **User clicks "No"** or **X-Button** → Popup closes, main window visible again
-6. **User clicks Main-X** → Program exits with console restoration
+## 🔍 Troubleshooting
 
-### Without Confirmation Dialog ($globalShowConfirmationDialog = $false)
-1. **Main Window** is displayed
-2. **User clicks Action** → Action is executed immediately, program exits
-3. **User clicks Main-X** → Program exits with console restoration
-
-## Window Positioning
-
-### Center (Default)
-- Position: Screen center
-- Implementation: `WindowStartupLocation = CenterScreen`
-
-### LowerLeft
-- Position: Lower left corner
-- Coordinates: `Left = 0, Top = ScreenHeight - WindowHeight`
-- **0px distance** to left edge and taskbar
-
-### LowerRight  
-- Position: Lower right corner
-- Coordinates: `Left = ScreenWidth - WindowWidth, Top = ScreenHeight - WindowHeight`
-- **0px distance** to right edge and taskbar
-
-## Troubleshooting
-
-### PowerShell Execution Policy
+### ❌ PowerShell Execution Policies
+**Problem:** `Execution of scripts is disabled on this system`
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
-### XAML Files Not Found
-Ensure both XAML files are present:
-- `app-ui-main.xaml` (Main window - 520x200)
-- `app-ui-popup.xaml` (Confirmation dialog - 520x200)
+### ❌ Missing .NET Framework Assemblies
+**Problem:** `Type "System.Windows.Application" was not found`
+- Run Windows Update
+- Install .NET Framework 4.7.2 or higher
 
-### Window Positioning Not Working
-Check the `$global:globalWindowPosition` variable:
-- Valid values: `"center"`, `"lowerleft"`, `"lowerright"`
-- Invalid values automatically fall back to `"center"`
+### ❌ Icons Not Displaying
+**Problem:** Gray rectangles instead of icons
+- Restart Windows
+- Run application as Administrator
+- Check Shell32.dll integrity: `sfc /scannow`
 
-### Popup Doesn't Return to Main
-- Verify both XAML files have the same size
-- Ensure event handlers are correctly registered
-- `Return-ToMainWindow` function handles the transition
+### ❌ Inaccurate Window Positioning
+**Problem:** Windows not positioned exactly
+- Check screen resolution/scaling
+- Verify Windows Display settings
+- Multiple monitors: Define primary monitor
 
-### Console Not Restored
-- Console handle is initialized at program start
-- Normal X-button click on Main calls `Close-Application $true`
-- Action execution calls `Close-Application $false` (no console restoration)
+### ❌ Language Files Not Found
+**Problem:** `Language file not found`
+- Ensure `de-de.json` and `en-us.json` are in the same folder
+- Check file permissions
+- Use paths without special characters
 
-## Customizations
+### ❌ Logging Not Working
+**Problem:** Log file not created
+- Check write permissions in application folder
+- Configure `$globalCreateLogFile = $true`
+- Run application as Administrator
 
-### Change Window Sizes
-**IMPORTANT**: Both XAML files must have identical sizes!
+## 🛡️ Security
 
-**Main Window AND Popup** (change both files):
-```xml
-Width="520" Height="200"
-```
+- **Confirmation dialogs** prevent accidental system actions
+- **No network connections** - Purely local application
+- **Shell32.dll integration** - Uses only Windows-native resources
+- **Clean PowerShell execution** - No hidden processes
 
-### Adjust Button Heights
-**Popup Buttons** (app-ui-popup.xaml):
-```xml
-<Setter Property="MinHeight" Value="35"/>
-```
+## 🔄 Updates & Maintenance
 
-### Extend Positioning Modes
-Extend the `Set-WindowPosition` function:
-```powershell
-"topleft" {
-    $Window.WindowStartupLocation = [System.Windows.WindowStartupLocation]::Manual
-    $Window.Left = 0
-    $Window.Top = 0
-}
-"topright" {
-    $Window.WindowStartupLocation = [System.Windows.WindowStartupLocation]::Manual
-    $Window.Left = $screenWidth - $Window.Width
-    $Window.Top = 0
-}
-```
+- **Automatic Updates:** Not available
+- **Manual Updates:** Download new version and replace files
+- **Configuration:** Preserved during updates (global variables)
+- **Compatibility:** Backward compatible with previous configurations
 
-### Customize Console Behavior
-```powershell
-# Don't minimize console at startup
-# Comment out this line:
-# Hide-ConsoleWindow
+## 📞 Support & Contact
 
-# Never restore console
-# Change Close-Application calls to:
-Close-Application $false
-```
+**Power.Ctrl.app** is an open-source project. For questions or issues:
 
-## Technical Details
+- 📖 **Documentation:** See `Changelog.md` for version history
+- 🔧 **Configuration:** All settings in global variables
+- 🛠️ **Troubleshooting:** See section above
 
-### System Requirements
-- Windows 7 or higher
-- PowerShell 5.0 or higher
-- .NET Framework 4.5 or higher
-- Minimum 1024x768 screen resolution
+## 📜 License
 
-### Technologies Used
-- **PowerShell with WPF** (Windows Presentation Foundation)
-- **XAML** for user interfaces (2 identical window sizes)
-- **JSON** for complete localization
-- **Win32 API** for icon extraction and console management
+This project is available under an open-source license. Use at your own responsibility.
 
-### Security Notes
-- Uses Windows standard commands (shutdown.exe, rundll32.exe)
-- **Immediate execution** without delay for Restart/Shutdown
-- **Confirmation dialog** optionally activatable for additional security
-- **Intelligent program termination**: Only on actions or Main-X
-- No elevated privileges required
+---
 
-### Window Specifications
-```
-Main Window (app-ui-main.xaml):
-- Size: 520x200 pixels (identical to Popup)
-- 4 Action buttons (48x48 pixels)
-- Icons: 32x32 pixels
-- Position: Configurable
-
-Popup Window (app-ui-popup.xaml):
-- Size: 520x200 pixels (identical to Main)
-- 2 Buttons (Yes/No, MinHeight: 35px)
-- Position: Synchronized with main window
-- Modal: Blocks interaction with main window
-```
-
-### Console Management
-```
-At startup:     Minimize console
-On Main-X:      Restore console + exit program
-On Popup-X:     Only return to Main
-On No:          Only return to Main
-On Yes:         Execute action + exit program (without console)
-```
-
-### Event Handler Logic
-```
-Main-Window:
-- Action buttons → Handle-ActionClick
-- X-Button → Close-Application $true
-
-Popup-Window:
-- Yes button → Execute-PendingAction
-- No button → Return-ToMainWindow  
-- X-Button → Return-ToMainWindow (Cancel = true)
-```
-
-Power.Ctrl.app v1.00.04 now provides a perfectly tuned, error-free user experience with seamless window switching, precise positioning, and intelligent console management for maximum usability.
+**Developed with ❤️ for the Windows PowerShell Community**

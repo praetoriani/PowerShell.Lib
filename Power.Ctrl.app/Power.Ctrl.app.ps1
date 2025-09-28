@@ -7,7 +7,7 @@
 .NOTES
     Creation Date: 28.09.2025
     Last Update: 28.09.2025
-    Version: v1.00.09
+    Version: v1.00.10
     Author: Praetoriani
     Website: https://github.com/praetoriani
 #>
@@ -24,7 +24,7 @@ Add-Type -AssemblyName System.Drawing
 # GLOBAL APPLICATION VARIABLES
 # ====================================
 $global:globalAppName = "Power.Ctrl.app"
-$global:globalAppVers = "v1.00.09"
+$global:globalAppVers = "v1.00.10"
 $global:globalAppPath = $PSScriptRoot
 $global:globalAppIcon = Join-Path $globalAppPath "appicon.ico"
 $global:globalLanguage = "de-de" # Change this to "en-us" for English
@@ -319,7 +319,7 @@ function Write-ConsoleMessage {
     # Early startup fallback messages before language file is loaded
     if (-not $global:languageData) {
         $fallbackMessages = @{
-            "ApplicationStarting" = if ($global:globalLanguage -eq "de-de") { "Power.Ctrl.app v1.00.09 wird gestartet" } else { "Starting Power.Ctrl.app v1.00.09" }
+            "ApplicationStarting" = if ($global:globalLanguage -eq "de-de") { "Power.Ctrl.app v1.00.10 wird gestartet" } else { "Starting Power.Ctrl.app v1.00.10" }
             "LogFileInitialized" = if ($global:globalLanguage -eq "de-de") { "Log-Datei initialisiert" } else { "Log file initialized" }
             "ApplicationInstanceCreating" = if ($global:globalLanguage -eq "de-de") { "Neue WPF Application-Instanz wird erstellt" } else { "Creating new WPF Application instance" }
             "ApplicationInstanceCreated" = if ($global:globalLanguage -eq "de-de") { "Neue WPF Application-Instanz erfolgreich erstellt" } else { "New WPF Application instance created successfully" }
@@ -390,17 +390,17 @@ function Set-WindowPosition {
             }
             "lowerleft" {
                 $Window.WindowStartupLocation = [System.Windows.WindowStartupLocation]::Manual
-                # Position at left edge (0px from left border)
+                # Position at left edge (optimized with tested offset)
                 $Window.Left = -6
-                # Position above taskbar (window bottom touches taskbar top)
-                $Window.Top = ($workingTop + $workingHeight - $Window.Height)+6
+                # Position above taskbar (optimized with tested offset)
+                $Window.Top = ($workingTop + $workingHeight - $Window.Height) + 6
             }
             "lowerright" {
                 $Window.WindowStartupLocation = [System.Windows.WindowStartupLocation]::Manual
-                # Position at right edge (0px from right border)
-                $Window.Left = ($workingLeft + $workingWidth - $Window.Width)+6
-                # Position above taskbar (window bottom touches taskbar top)
-                $Window.Top = ($workingTop + $workingHeight - $Window.Height)+6
+                # Position at right edge (optimized with tested offset)
+                $Window.Left = ($workingLeft + $workingWidth - $Window.Width) + 6
+                # Position above taskbar (optimized with tested offset)
+                $Window.Top = ($workingTop + $workingHeight - $Window.Height) + 6
             }
             default {
                 $Window.WindowStartupLocation = [System.Windows.WindowStartupLocation]::CenterScreen

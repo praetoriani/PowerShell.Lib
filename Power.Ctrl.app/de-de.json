@@ -21,7 +21,7 @@
     "ActionCompleted": "Aktion erfolgreich ausgeführt",
     "ActionFailed": "Aktion konnte nicht ausgeführt werden",
     "Console": {
-        "ApplicationStarting": "Power.Ctrl.app v1.00.09 wird gestartet",
+        "ApplicationStarting": "Power.Ctrl.app v1.00.10 wird gestartet",
         "ApplicationClosed": "Power.Ctrl.app Anwendung beendet",
         "ApplicationClosedWithoutAction": "Anwendung beendet ohne Ausführung einer Systemaktion",
         "ApplicationError": "Anwendungsfehler: {0}",
