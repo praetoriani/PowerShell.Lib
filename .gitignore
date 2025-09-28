@@ -1,0 +1,14 @@
+# EXCULDE VSCODE WORKSPACE AND AFFINITY PHOTO FILES
+*.code-workspace
+*.afphoto
+
+# EXCLUDE BACKUPS/LOGS FOLDER
+**/backup/
+**/backups/
+**/logs/
+
+# EXCLUDE SPECIFIC FILES/FOLDERS
+#*/docs/conten/
+#/docs/conten/
+#/assets/check-error-icons.afphoto
+#/assets/Web-Components-Profile-Image.afphoto
