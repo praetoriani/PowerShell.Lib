@@ -1,0 +1,41 @@
+{
+    "app": {
+        "title": "DAMSA - Download App for Microsoft Store Apps",
+        "version": "1.00.00"
+    },
+    "mainWindow": {
+        "title": "DAMSA - Microsoft Store App Downloader",
+        "infoText": "DAMSA ermöglicht es Ihnen, Microsoft Store Apps herunterzuladen, ohne den Microsoft Store verwenden zu müssen. Geben Sie einfach die URL einer Microsoft Store App ein und wählen Sie die gewünschten Dateien zum Download aus.",
+        "urlLabel": "Microsoft Store App URL:",
+        "urlPlaceholder": "https://apps.microsoft.com/detail/...",
+        "downloadButton": "Download",
+        "exitButton": "Beenden"
+    },
+    "linklistWindow": {
+        "title": "DAMSA - Download-Links auswählen",
+        "infoText": "Die folgenden Download-URLs wurden gefunden. Bitte wählen Sie alle Pakete aus, die heruntergeladen werden sollen:",
+        "downloadButton": "Download",
+        "exitButton": "Beenden"
+    },
+    "urlErrorWindow": {
+        "title": "DAMSA - URL Fehler",
+        "emptyUrlError": "Das URL-Eingabefeld ist leer. Bitte geben Sie eine gültige Microsoft Store App URL ein.",
+        "invalidUrlError": "Die eingegebene URL ist keine gültige Microsoft Store App URL. Bitte überprüfen Sie die URL und versuchen Sie es erneut.",
+        "okButton": "OK"
+    },
+    "console": {
+        "starting": "DAMSA wird gestartet...",
+        "loadingConfig": "Lade Konfiguration...",
+        "loadingLanguage": "Lade Sprachpaket...",
+        "loadingFonts": "Lade Schriftarten...",
+        "fontsLoaded": "Schriftarten erfolgreich geladen",
+        "fontsError": "Fehler beim Laden der Schriftarten",
+        "configLoaded": "Konfiguration geladen",
+        "configError": "Fehler beim Laden der Konfiguration",
+        "languageLoaded": "Sprachpaket geladen",
+        "languageError": "Fehler beim Laden des Sprachpakets",
+        "minimizingConsole": "Konsole wird minimiert...",
+        "showingMainWindow": "Hauptfenster wird angezeigt...",
+        "exit": "DAMSA wird beendet..."
+    }
+}

@@ -1,0 +1,41 @@
+{
+    "app": {
+        "title": "DAMSA - Download App for Microsoft Store Apps",
+        "version": "1.00.00"
+    },
+    "mainWindow": {
+        "title": "DAMSA - Microsoft Store App Downloader",
+        "infoText": "DAMSA allows you to download Microsoft Store apps without using the Microsoft Store. Simply enter the URL of a Microsoft Store app and select the desired files for download.",
+        "urlLabel": "Microsoft Store App URL:",
+        "urlPlaceholder": "https://apps.microsoft.com/detail/...",
+        "downloadButton": "Download",
+        "exitButton": "Exit"
+    },
+    "linklistWindow": {
+        "title": "DAMSA - Select Download Links",
+        "infoText": "The following download URLs were found. Please select all packages that should be downloaded:",
+        "downloadButton": "Download",
+        "exitButton": "Exit"
+    },
+    "urlErrorWindow": {
+        "title": "DAMSA - URL Error",
+        "emptyUrlError": "The URL input field is empty. Please enter a valid Microsoft Store app URL.",
+        "invalidUrlError": "The entered URL is not a valid Microsoft Store app URL. Please check the URL and try again.",
+        "okButton": "OK"
+    },
+    "console": {
+        "starting": "Starting DAMSA...",
+        "loadingConfig": "Loading configuration...",
+        "loadingLanguage": "Loading language package...",
+        "loadingFonts": "Loading fonts...",
+        "fontsLoaded": "Fonts loaded successfully",
+        "fontsError": "Error loading fonts",
+        "configLoaded": "Configuration loaded",
+        "configError": "Error loading configuration",
+        "languageLoaded": "Language package loaded",
+        "languageError": "Error loading language package",
+        "minimizingConsole": "Minimizing console...",
+        "showingMainWindow": "Showing main window...",
+        "exit": "Exiting DAMSA..."
+    }
+}
