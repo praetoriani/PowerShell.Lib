@@ -4,7 +4,7 @@ A comprehensive collection of PowerShell scripts demonstrating how to integrate 
 
 ## 📦 Quick Download
 
-**[Download Demo.Fonts-2025-10-03.zip](./Demo.Fonts-2025-10-03.zip)** - Complete package containing all demo files, fonts, and scripts.
+**[Download Demo.Fonts-2025-10-03.zip](https://github.com/praetoriani/PowerShell.Lib/raw/refs/heads/main/Demo.Fonts/Demo.Fonts-2025-10-03.zip)** - Complete package containing all demo files, fonts, and scripts.
 
 ## 🎯 Overview
 
@@ -34,11 +34,7 @@ Demo.Fonts/
 │   └── ui/
 │       └── PowerShell-XAML-Demo.xaml  # External XAML file
 ├── PowerShell-XAML-Demo.ps1           # ⭐ Recommended main demo
-├── Demo-WPF-Anwendung.txt             # Original font demo example
-├── Font-Demo-1.txt                    # Basic font integration
-├── Font-Demo-2.txt                    # Advanced font integration
 ├── install-fonts.ps1                  # Font installation script
-├── Application-Rules.txt              # Development guidelines
 └── README.md                          # This file
 ```
 
@@ -100,20 +96,6 @@ This is the **flagship demonstration** featuring:
 - Multiple font sizes per typeface
 - Comprehensive font descriptions
 - Professional card-based layout
-
-### Demo-WPF-Anwendung.txt
-Original demonstration showing:
-- Basic external font loading
-- Ubuntu Regular and Bold fonts
-- Memory management with `AddFontMemResourceEx`
-- Inline XAML definition
-
-### Font-Demo-1.txt & Font-Demo-2.txt
-Progressive examples demonstrating:
-- Simple font integration techniques
-- WPF window creation
-- Font resource management
-- Various implementation approaches
 
 ### install-fonts.ps1
 Automated font installation script for system-wide font deployment.
@@ -177,14 +159,6 @@ The demo includes 15 carefully selected fonts showcasing different styles:
 **Permission Errors:**
 - Run PowerShell as Administrator for font installation
 - Check Windows font directory permissions
-
-## 🏗️ Development Guidelines
-
-Refer to `Application-Rules.txt` for:
-- PowerShell coding standards
-- WPF development best practices
-- Font integration patterns
-- UI design guidelines
 
 ## 📄 License
 
