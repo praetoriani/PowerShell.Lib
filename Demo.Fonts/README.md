@@ -15,26 +15,38 @@ This directory contains multiple demonstrations of external font loading and int
 ```
 Demo.Fonts/
 ├── Fonts/                          # Font files (.ttf)
+│   ├── AveriaLibre-Bold.ttf
+│   ├── AveriaLibre-Regular.ttf
+│   ├── Coda-Regular.ttf
+│   ├── CutiveMono-Regular.ttf
+│   ├── Dosis-Bold.ttf
+│   ├── Dosis-Regular.ttf
 │   ├── Exo2-Regular.ttf
 │   ├── Exo2-SemiBold.ttf
-│   ├── Coda-Regular.ttf
-│   ├── Ubuntu-Regular.ttf
-│   ├── SpaceMono-Regular.ttf
-│   ├── TitilliumWeb-Regular.ttf
-│   ├── Monda-Regular.ttf
+│   ├── Lato-Bold.ttf
+│   ├── Lato-Regular.ttf
 │   ├── Monda-Bold.ttf
-│   ├── Roboto-Regular.ttf
+│   ├── Monda-Regular.ttf
+│   ├── Oxanium-Bold.ttf
 │   ├── Oxanium-Regular.ttf
-│   ├── AveriaLibre-Regular.ttf
-│   ├── CutiveMono-Regular.ttf
-│   ├── Dosis-Regular.ttf
+│   ├── Play-Bold.ttf
+│   ├── Play-Regular.ttf
+│   ├── PoiretOne-Regular.ttf
+│   ├── Roboto-Bold.ttf
+│   ├── Roboto-Medium.ttf
+│   ├── Roboto-Regular.ttf
+│   ├── SpaceMono-Regular.ttf
 │   ├── Telex-Regular.ttf
-│   └── Play-Regular.ttf
+│   ├── TitilliumWeb-Bold.ttf
+│   ├── TitilliumWeb-Regular.ttf
+│   ├── Ubuntu-Bold.ttf
+│   └── Ubuntu-Regular.ttf
 ├── data/
 │   └── ui/
 │       └── PowerShell-XAML-Demo.xaml  # External XAML file
 ├── PowerShell-XAML-Demo.ps1           # ⭐ Recommended main demo
 ├── install-fonts.ps1                  # Font installation script
+├── debug-system-fonts.ps1             # 🔧 Font analysis & WPF compatibility checker
 └── README.md                          # This file
 ```
 
@@ -44,7 +56,7 @@ Demo.Fonts/
 
 - **PowerShell 5.1** or **PowerShell 7+**
 - **Windows** with WPF support
-- **Administrator privileges** (for font installation only)
+- **Administrator privileges** (for font installation and analysis)
 
 ### ⚠️ Important: Font Installation Required
 
@@ -69,7 +81,7 @@ Demo.Fonts/
 #### 🌟 Recommended Demo: PowerShell-XAML-Demo.ps1
 
 This is the **flagship demonstration** featuring:
-- **15 different external fonts**
+- **26 different external fonts** (Regular and Bold variants)
 - **Professional dark theme UI**
 - **Multiple font sizes** (24pt, 18pt, 14pt) per font
 - **Modern card-based layout**
@@ -87,10 +99,28 @@ This is the **flagship demonstration** featuring:
 - ✅ Modern WPF design patterns
 - ✅ Proper resource management
 
+#### 🔧 Font Analysis Tool: debug-system-fonts.ps1
+
+Advanced diagnostic script for analyzing installed fonts and WPF compatibility:
+
+```powershell
+# Run as Administrator
+.\debug-system-fonts.ps1
+```
+
+> **⚠️ ADMINISTRATOR PRIVILEGES REQUIRED**: This script requires administrator privileges to perform comprehensive font system analysis.
+
+**Features:**
+- ✅ Analyzes all installed system fonts
+- ✅ Tests WPF compatibility for each font
+- ✅ Generates detailed log files with results
+- ✅ Identifies problematic or incompatible fonts
+- ✅ Provides font loading diagnostics
+
 ## 📚 Demo Scripts Overview
 
 ### PowerShell-XAML-Demo.ps1
-**The premier font demonstration** - A professional-grade application showcasing all 15 fonts with:
+**The premier font demonstration** - A professional-grade application showcasing all available fonts with:
 - Modern dark theme UI
 - External XAML file integration
 - Multiple font sizes per typeface
@@ -98,7 +128,15 @@ This is the **flagship demonstration** featuring:
 - Professional card-based layout
 
 ### install-fonts.ps1
-Automated font installation script for system-wide font deployment.
+Automated font installation script for system-wide font deployment from the `Fonts/` directory.
+
+### debug-system-fonts.ps1
+**Advanced font analysis tool** - Comprehensive diagnostic script that:
+- Scans all installed system fonts
+- Tests WPF compatibility and loading capabilities
+- Creates detailed log files with analysis results
+- Identifies font loading issues and conflicts
+- Provides troubleshooting information for font problems
 
 ## 🛠️ Technical Implementation
 
@@ -124,23 +162,25 @@ public static extern bool RemoveFontMemResourceEx(IntPtr fh);
 
 ## 🎨 Included Fonts
 
-The demo includes 15 carefully selected fonts showcasing different styles:
+The demo includes 26 carefully selected fonts showcasing different styles:
 
-| Font Family | Style | Use Case |
-|-------------|-------|----------|
-| Exo2 | Regular, SemiBold | Modern digital applications |
+| Font Family | Available Styles | Use Case |
+|-------------|------------------|----------|
+| AveriaLibre | Regular, Bold | Handwritten, personal touch |
 | Coda | Regular | Geometric, attention-grabbing designs |
-| Ubuntu | Regular | Warm, friendly Linux-style interface |
-| Space Mono | Regular | Monospaced code display |
-| Titillium Web | Regular | Web-optimized readability |
+| CutiveMono | Regular | Vintage typewriter aesthetic |
+| Dosis | Regular, Bold | Clean, minimalistic design |
+| Exo2 | Regular, SemiBold | Modern digital applications |
+| Lato | Regular, Bold | Professional web typography |
 | Monda | Regular, Bold | Playful, creative projects |
-| Roboto | Regular | Android-style modern interfaces |
-| Oxanium | Regular | Futuristic, sci-fi applications |
-| Averia Libre | Regular | Handwritten, personal touch |
-| Cutive Mono | Regular | Vintage typewriter aesthetic |
-| Dosis | Regular | Clean, minimalistic design |
+| Oxanium | Regular, Bold | Futuristic, sci-fi applications |
+| Play | Regular, Bold | Clear, direct sans-serif |
+| PoiretOne | Regular | Elegant, decorative headings |
+| Roboto | Regular, Medium, Bold | Android-style modern interfaces |
+| SpaceMono | Regular | Monospaced code display |
 | Telex | Regular | Classical proportions with modern details |
-| Play | Regular | Clear, direct sans-serif |
+| TitilliumWeb | Regular, Bold | Web-optimized readability |
+| Ubuntu | Regular, Bold | Warm, friendly Linux-style interface |
 
 ## 🔧 Troubleshooting
 
@@ -150,15 +190,26 @@ The demo includes 15 carefully selected fonts showcasing different styles:
 - Ensure fonts are installed system-wide
 - Run `install-fonts.ps1` as Administrator
 - Verify XAML files are in correct locations
+- Use `debug-system-fonts.ps1` to analyze font compatibility
 
 **Fonts Not Displaying:**
 - Check if fonts are properly installed in Windows
 - Verify font names match installed font families
 - Restart PowerShell session after font installation
+- Run font analysis tool for detailed diagnostics
 
 **Permission Errors:**
 - Run PowerShell as Administrator for font installation
 - Check Windows font directory permissions
+- Ensure proper execution policy settings
+
+### Diagnostic Tools
+
+Use the included `debug-system-fonts.ps1` script to:
+- Identify font loading issues
+- Check WPF compatibility
+- Generate detailed system font reports
+- Troubleshoot specific font problems
 
 ## 📄 License
 
@@ -179,4 +230,4 @@ For issues, questions, or contributions, please refer to the main PowerShell.Lib
 
 ---
 
-**Note**: This demo collection represents advanced PowerShell WPF development techniques. The `PowerShell-XAML-Demo.ps1` script showcases enterprise-level font integration with modern UI design patterns.
+**Note**: This demo collection represents advanced PowerShell WPF development techniques. The `PowerShell-XAML-Demo.ps1` script showcases enterprise-level font integration with modern UI design patterns, while `debug-system-fonts.ps1` provides professional-grade font analysis capabilities.
