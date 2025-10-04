@@ -1,7 +1,7 @@
 # Context Menu Switcher
 # A PowerShell script to toggle between Windows 11 and classic context menu
 # Version: 1.00.01
-# Author: System Administrator
+# Author: Praetoriani
 # Date: 2025-10-04
 
 <#

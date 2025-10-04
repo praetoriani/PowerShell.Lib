@@ -15,9 +15,9 @@ The script works by manipulating specific Windows Registry keys that control the
 
 ## Current Release
 
-- **Version:** 1.0
+- **Version:** 1.00.01
 - **Release Date:** October 4, 2025
-- **Author:** System Administrator
+- **Author:** Praetoriani
 - **License:** MIT License
 - **Platform:** Windows 11 (All versions: 21H2, 22H2, 23H2, 24H2, 25H2)
 - **PowerShell Version:** 5.1 or higher
