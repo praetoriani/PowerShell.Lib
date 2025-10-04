@@ -8,6 +8,11 @@ The new Windows 11 context menu, while visually appealing, can sometimes be limi
 
 The script works by manipulating specific Windows Registry keys that control the context menu behavior, and automatically restarts Windows Explorer to apply changes immediately.
 
+
+## Download latest release
+[Context Menu Switcher](https://github.com/praetoriani/PowerShell.Lib/raw/refs/heads/main/Context%20Menu%20Switcher/release.zip)
+
+
 ## Current Release
 
 - **Version:** 1.0
