@@ -1,0 +1,20 @@
+﻿[2025.10.05 - 17:56:46] [DEBUG] Attempting to load initial language pack: C:\Users\pendo\Github\PowerShell.Lib\SysDaemon\en-us.json
+[2025.10.05 - 17:56:46] [INFO]  Language pack loaded successfully: en-us.json
+[2025.10.05 - 17:56:46] [DEBUG] User requested different language pack: de-de.json
+[2025.10.05 - 17:56:46] [INFO]  Sprachpaket erfolgreich geladen: de-de.json
+[2025.10.05 - 17:56:46] [DEBUG] SysDaemon v1.00.10 wird initialisiert...
+[2025.10.05 - 17:56:46] [DEBUG] Skript-Verzeichnis: C:\Users\pendo\Github\PowerShell.Lib\SysDaemon
+[2025.10.05 - 17:56:46] [DEBUG] Log-Datei: C:\Users\pendo\Github\PowerShell.Lib\SysDaemon\sysdaemon.main.log
+[2025.10.05 - 17:56:46] [DEBUG] PrÃ¼fe Administrator-Berechtigungen...
+[2025.10.05 - 17:56:46] [DEBUG] Administrator-Berechtigungen bestÃ¤tigt.
+[2025.10.05 - 17:56:46] [DEBUG] Action-Parameter validiert: del-job (normalisiert: del-job)
+[2025.10.05 - 17:56:46] [INFO]  SysDaemon v1.00.10 erfolgreich gestartet
+[2025.10.05 - 17:56:46] [DEBUG] Beginne Hauptverarbeitung fÃ¼r Aktion: del-job
+[2025.10.05 - 17:56:46] [INFO]  Starte del-job Vorgang: LÃ¶sche geplante Aufgabe
+[2025.10.05 - 17:56:46] [DEBUG] Suche nach geplanter Aufgabe zum LÃ¶schen...
+[2025.10.05 - 17:56:47] [DEBUG] Aufgabe gefunden, fahre mit LÃ¶schung fort...
+[2025.10.05 - 17:56:48] [INFO]  Geplante Aufgabe erfolgreich gelÃ¶scht
+[2025.10.05 - 17:56:49] [DEBUG] Aufgaben-Verzeichnis '\sysdaemon\' ist leer, versuche es zu entfernen...
+[2025.10.05 - 17:56:49] [INFO]  Leeres Aufgaben-Verzeichnis erfolgreich entfernt
+[2025.10.05 - 17:56:49] [INFO]  SysDaemon Vorgang erfolgreich abgeschlossen
+[2025.10.05 - 17:56:49] [DEBUG] SysDaemon AusfÃ¼hrung erfolgreich beendet.
