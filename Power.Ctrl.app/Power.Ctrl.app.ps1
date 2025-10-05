@@ -30,7 +30,7 @@ $global:globalAppIcon = Join-Path $globalAppPath "appicon.ico"
 $global:globalLanguage = "de-de" # Change this to "en-us" for English
 
 # Window positioning: "center", "lowerleft", "lowerright"
-$global:globalWindowPosition = "center"
+$global:globalWindowPosition = "lowerleft"
 
 # Show confirmation dialog: $true or $false
 $global:globalShowConfirmationDialog = $true
