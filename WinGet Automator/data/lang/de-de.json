@@ -1,0 +1,22 @@
+{
+    "app_starting": "WinGet Automator wird gestartet...",
+    "config_loading": "Lade Konfiguration...",
+    "config_loaded": "Konfiguration erfolgreich geladen",
+    "config_error": "Fehler beim Laden der Konfiguration",
+    "language_loading": "Lade Sprachdatei...",
+    "language_loaded": "Sprachdatei erfolgreich geladen",
+    "language_error": "Fehler beim Laden der Sprachdatei",
+    "updatefile_loading": "Lade Update-Datei...",
+    "updatefile_loaded": "Update-Datei erfolgreich geladen",
+    "updatefile_error": "Fehler beim Laden der Update-Datei",
+    "winget_checking": "Prüfe WinGet Verfügbarkeit...",
+    "winget_available": "WinGet ist verfügbar",
+    "winget_not_available": "WinGet ist nicht verfügbar oder nicht installiert",
+    "update_starting": "Starte Aktualisierungsprozess...",
+    "update_completed": "Aktualisierungsprozess abgeschlossen",
+    "processing_app": "Verarbeite Anwendung",
+    "install_success": "Erfolgreich installiert/aktualisiert",
+    "install_error": "Fehler bei Installation/Aktualisierung",
+    "logfile_created": "Log-Datei erstellt",
+    "execution_completed": "Ausführung erfolgreich abgeschlossen"
+}
