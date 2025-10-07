@@ -2,6 +2,7 @@
 *.code-workspace
 *.afphoto
 *.lnk
+*.7z
 
 # EXCLUDE BACKUPS/LOGS FOLDER
 **/backup/
