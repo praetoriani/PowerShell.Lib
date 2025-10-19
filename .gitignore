@@ -19,3 +19,20 @@
 /SysDaemon/TODO.TXT
 /SysDaemon/sysdaemon.main.log
 /SysDaemon/RunSystemJob.xml.txt
+# EXCLUDE SPECIFIC FILES/FOLDERS FOR "HashGen UI/v1.00.06"
+/HashGen UI/v1.00.06/HashGen UI Documentation.txt
+/HashGen UI/v1.00.06/changelog.md
+/HashGen UI/v1.00.06/changelog-update-1.md
+/HashGen UI/v1.00.06/changelog-update-2.md
+/HashGen UI/v1.00.06/changelog-update-3.md
+/HashGen UI/v1.00.06/changelog-update-4.md
+/HashGen UI/v1.00.06/developer-ref.md
+/HashGen UI/v1.00.06/hashgen-ui-files.csv
+/HashGen UI/v1.00.06/installation-guide.md
+/HashGen UI/v1.00.06/projekt-summary-de.md
+/HashGen UI/v1.00.06/backup-v1.00.06.7z
+# EXCLUDE SPECIFIC FILES/FOLDERS FOR "HashGen UI/v1.01.00"
+/HashGen UI/v1.01.00/*
+# EXCLUDE SPECIFIC FILES/FOLDERS FOR "DAMSA"
+/DAMSA/*
+
