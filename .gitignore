@@ -42,3 +42,5 @@ App Development Instructions.txt
 /WinGet Automator/*
 # EXCLUDE SPECIFIC FILES/FOLDERS FOR "UserData-LDAP-Export"
 /UserData-LDAP-Export/*
+# EXCLUDE SPECIFIC FILES/FOLDERS FOR "SysDaemon"
+/SysDaemon/v1.01.xx/*
