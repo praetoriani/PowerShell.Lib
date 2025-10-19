@@ -40,3 +40,5 @@ App Development Instructions.txt
 /WPF-XAML-Preview/*
 # EXCLUDE SPECIFIC FILES/FOLDERS FOR "WinGet Automator"
 /WinGet Automator/*
+# EXCLUDE SPECIFIC FILES/FOLDERS FOR "UserData-LDAP-Export"
+/UserData-LDAP-Export/*
