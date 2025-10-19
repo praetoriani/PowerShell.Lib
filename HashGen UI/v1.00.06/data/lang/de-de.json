@@ -1,0 +1,49 @@
+{
+  "app": {
+    "title": "HashGen UI",
+    "version": "v1.00.00"
+  },
+  "main": {
+    "intro_text": "HashGen UI ist ein Tool zur Generierung kryptografischer Hash-Werte für Dateien.\nSchritt 1) Wählen Sie eine Datei mit dem Durchsuchen-Button aus\nSchritt 2) Wählen Sie Ihren bevorzugten Hash-Algorithmus (SHA256, SHA384 oder SHA512)\nSchritt 3) Klicken Sie auf Hash generieren, um den Hash-Wert zu erstellen.\nSie können einzelne Dateien verarbeiten oder eine filelist.txt für die Stapelverarbeitung verwenden.",
+    "file_label": "Ausgewählte Datei:",
+    "browse_button": "Durchsuchen...",
+    "algo_label": "Bitte Hash-Algorithmus wählen:",
+    "generate_button": "Hash generieren",
+    "exit_button": "Beenden"
+  },
+  "output": {
+    "title": "Hash-Ausgabe",
+    "intro_text": "Der Hash-Wert wurde erfolgreich generiert:",
+    "copy_button": "In Zwischenablage kopieren",
+    "close_button": "Schließen"
+  },
+  "info": {
+    "title": "Information",
+    "hash_saved": "Der Hash-Wert wurde erfolgreich generiert\nund in der Ausgabedatei gespeichert.",
+    "filelist_complete": "Die Verarbeitung der Dateiliste wurde abgeschlossen.\nAlle Hash-Werte wurden in hash-filelist.json gespeichert.",
+    "copied_clipboard": "Der Hash-Wert wurde erfolgreich in die Zwischenablage kopiert.",
+    "ok_button": "OK"
+  },
+  "warning": {
+    "title": "Warnung",
+    "no_file_selected": "Bitte wählen Sie eine Datei aus,\nbevor Sie einen Hash-Wert generieren.",
+    "file_not_found": "Die ausgewählte Datei konnte nicht gefunden werden.",
+    "hash_generation_failed": "Fehler beim Generieren des Hash-Werts für die Datei.",
+    "ok_button": "OK"
+  },
+  "error": {
+    "title": "Fehler",
+    "invalid_file": "Die ausgewählte Datei ist ungültig oder kann nicht aufgerufen werden.",
+    "hash_failed": "Ein Fehler ist beim Generieren des Hash-Werts aufgetreten.",
+    "output_write_failed": "Fehler beim Schreiben des Hash-Werts in die Ausgabedatei.",
+    "file_not_found": "Die ausgewählte Datei ist ungültig oder kann nicht gefunden werden.",
+    "ok_button": "OK"
+  },
+  "output_file": {
+    "file_label": "Datei:",
+    "path_label": "Pfad:",
+    "algo_label": "Algorithmus:",
+    "hash_label": "Hash:",
+    "created_label": "Erstellt am:"
+  }
+}

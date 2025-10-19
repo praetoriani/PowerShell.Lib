@@ -1,0 +1,69 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Error" Height="180" Width="600"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanMinimize"
+        Topmost="True"
+        Name="ErrorWindow">
+    
+    <Window.Resources>
+        <Style x:Key="RedButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#D83B01"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#B93200"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="15"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Icon and Message -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="70"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <Image Grid.Column="0" Name="ErrorIcon"
+                   Width="40" Height="40"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"/>
+            
+            <TextBlock Grid.Column="1" Name="ErrorMessageText"
+                       TextWrapping="Wrap" FontSize="14"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       Foreground="#333333"
+                       Text="Error message will be displayed here."/>
+        </Grid>
+        
+        <!-- OK Button -->
+        <Button Grid.Row="2" Name="OKButton"
+                Height="36" Width="120"
+                Content="OK" HorizontalAlignment="Center"
+                FontSize="14" Style="{StaticResource RedButtonStyle}"/>
+    </Grid>
+</Window>

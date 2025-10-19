@@ -1,0 +1,15 @@
+{
+  "langpack": "de-de.json",
+  "hashfile": "hash-output.txt",
+  "debugger": {
+    "usagemode": "enabled",
+    "debugfile": "hashgen-ui.log"
+  },
+  "batchcfg": {
+    "inputfile": "filelist.txt",
+    "outputcfg": {
+      "filetype": "txt",
+      "filename": "hash-filelist"
+    }
+  }
+}

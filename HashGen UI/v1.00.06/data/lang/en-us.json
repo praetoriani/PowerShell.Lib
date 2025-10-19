@@ -1,0 +1,49 @@
+{
+  "app": {
+    "title": "HashGen UI",
+    "version": "v1.00.00"
+  },
+  "main": {
+    "intro_text": "HashGen UI is a tool for generating cryptographic hash values for files.\nStep 1) Select a file using the Browse button\nStep 2) Choose your preferred hash algorithm (SHA256, SHA384, or SHA512)\nStep 3) Click Generate Hash to create the hash value.\nYou can process individual files or use a filelist.txt for batch processing.",
+    "file_label": "Selected File:",
+    "browse_button": "Browse...",
+    "algo_label": "Please select hash algorithm:",
+    "generate_button": "Generate Hash",
+    "exit_button": "Exit"
+  },
+  "output": {
+    "title": "Hash Output",
+    "intro_text": "The hash value has been successfully generated:",
+    "copy_button": "Copy to Clipboard",
+    "close_button": "Close"
+  },
+  "info": {
+    "title": "Information",
+    "hash_saved": "The hash value has been successfully generated\nand saved to the output file.",
+    "filelist_complete": "Processing of the file list has been completed.\nAll hash values have been saved to hash-filelist.json.",
+    "copied_clipboard": "The hash value has been successfully copied to the clipboard.",
+    "ok_button": "OK"
+  },
+  "warning": {
+    "title": "Warning",
+    "no_file_selected": "Please select a file\nbefore generating a hash value.",
+    "file_not_found": "The specified file could not be found.",
+    "hash_generation_failed": "Failed to generate hash value for the file.",
+    "ok_button": "OK"
+  },
+  "error": {
+    "title": "Error",
+    "invalid_file": "The selected file is invalid or cannot be accessed.",
+    "hash_failed": "An error occurred while generating the hash value.",
+    "output_write_failed": "Failed to write the hash value to the output file.",
+    "file_not_found": "The specified file could not be found.",
+    "ok_button": "OK"
+  },
+  "output_file": {
+    "file_label": "File:",
+    "path_label": "Path:",
+    "algo_label": "Algorithm:",
+    "hash_label": "Hash:",
+    "created_label": "Created on:"
+  }
+}
