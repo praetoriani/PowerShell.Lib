@@ -9,6 +9,7 @@
 **/logs/
 
 # EXCLUDE SPECIFIC FILES/FOLDERS
+App Development Instructions.txt
 #*/docs/conten/
 #/docs/conten/
 #/assets/check-error-icons.afphoto
