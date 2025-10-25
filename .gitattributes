@@ -1,0 +1,9 @@
+# Exclude folders from automatic source archives
+Context Menu Switcher/ export-ignore
+DLL-Icon-Viewer/ export-ignore
+Demo.Fonts/ export-ignore  
+HashGen UI/ export-ignore
+Power.Ctrl.app/ export-ignore
+SysDaemon/ export-ignore
+.github/ export-ignore
+*.md export-ignore
