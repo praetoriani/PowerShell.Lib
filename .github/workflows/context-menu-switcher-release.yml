@@ -24,7 +24,7 @@ on:
       tag_name:
         description: 'Tag name for the release (e.g., cms-v1.00.02)'
         required: true
-        default: 'cms-v1.00.01'
+        #default: 'cms-v1.00.01'
         type: string
       create_tag:
         description: 'Create the tag if it does not exist'
