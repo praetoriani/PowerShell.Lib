@@ -27,7 +27,7 @@ on:
         default: 'pca-v1.00.10'
         type: string
       create_tag:
-        description: 'Create the tag if it doesn\'t exist'
+        description: 'Create the tag if it does not exist'
         required: true
         default: true
         type: boolean
