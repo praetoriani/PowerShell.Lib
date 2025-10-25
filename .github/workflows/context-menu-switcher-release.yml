@@ -1,0 +1,137 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+# =============================================================================
+# GITHUB ACTIONS WORKFLOW FÜR CONTEXT MENU SWITCHER RELEASES
+# =============================================================================
+# Diese Datei definiert einen automatisierten Workflow, der ausgeführt wird,
+# wenn ein Tag erstellt wird, das mit "cms-" beginnt (z.B. cms-v1.0.1)
+
+name: Context Menu Switcher Release
+
+# TRIGGER-KONFIGURATION
+# Definiert, wann dieser Workflow ausgeführt werden soll
+on:
+  push:
+    tags:
+      - 'cms-*'  # Workflow startet nur bei Tags die mit "cms-" beginnen
+                 # Beispiele: cms-v1.0.1, cms-v2.0.0, cms-beta-1
+
+# BERECHTIGUNGEN
+# GitHub Actions benötigt explizite Berechtigung zum Erstellen von Releases
+permissions:
+  contents: write    # Erlaubt das Erstellen und Bearbeiten von Repository-Inhalten
+
+# JOB-DEFINITION
+# Ein Workflow kann mehrere Jobs enthalten, hier haben wir nur einen
+jobs:
+  release:
+    runs-on: ubuntu-latest    # Der Workflow läuft auf einem Ubuntu Linux Server
+    
+    # ZUSÄTZLICHE SICHERHEITSPRÜFUNG
+    # Doppelt sicherstellen, dass nur cms-Tags diesen Workflow triggern
+    if: startsWith(github.ref, 'refs/tags/cms-')
+    
+    # SCHRITTE DES WORKFLOWS
+    # Jeder Step wird sequenziell ausgeführt
+    steps:
+      # SCHRITT 1: Repository-Code herunterladen
+      # GitHub Actions läuft auf einem frischen Server und benötigt Zugriff auf Ihren Code
+      - name: Repository auschecken
+        uses: actions/checkout@v4    # Offizieller GitHub Action zum Code-Download
+        # Nach diesem Schritt sind alle Ihre Repository-Dateien verfügbar
+
+      # SCHRITT 2: Release-Paket erstellen
+      # Hier wird nur der Context Menu Switcher Ordner in ein ZIP-Paket gepackt
+      - name: Context Menu Switcher Release-Paket erstellen
+        run: |
+          # Ausgabe für Debugging - wird im Actions-Log angezeigt
+          echo "🚀 Starte Release-Paket Erstellung für Context Menu Switcher"
+          
+          # Temporären Ordner für das Release erstellen
+          mkdir -p release-temp/Context-Menu-Switcher
+          echo "📁 Temporärer Release-Ordner erstellt"
+          
+          # WICHTIG: Alle Dateien aus dem Context Menu Switcher Ordner kopieren
+          # Der Ordnername hat Leerzeichen, daher Anführungszeichen nötig
+          cp -r "Context Menu Switcher"/* release-temp/Context-Menu-Switcher/
+          echo "📋 Context Menu Switcher Dateien kopiert:"
+          ls -la "Context Menu Switcher"/
+          
+          # In den temporären Ordner wechseln
+          cd release-temp
+          
+          # ZIP-Datei erstellen mit allen Context Menu Switcher Dateien
+          # -r = rekursiv (alle Unterordner einbeziehen)
+          zip -r ../context-menu-switcher-release.zip Context-Menu-Switcher/
+          
+          # Zurück zum Root-Verzeichnis
+          cd ..
+          
+          # Bestätigung und Größe der ZIP-Datei anzeigen
+          echo "✅ ZIP-Datei erstellt:"
+          ls -lh context-menu-switcher-release.zip
+
+      # SCHRITT 3: GitHub Release erstellen
+      # Dies ist der wichtigste Schritt - hier wird das tatsächliche Release erstellt
+      - name: GitHub Release mit Assets erstellen
+        uses: softprops/action-gh-release@v1    # Bewährte Third-Party Action für Releases
+        with:
+          # RELEASE-TITEL
+          # Verwendet den Tag-Namen (z.B. "Context Menu Switcher cms-v1.0.1")
+          name: Context Menu Switcher ${{ github.ref_name }}
+          
+          # RELEASE-BESCHREIBUNG (Markdown-Format unterstützt)
+          body: |
+            # 🎯 Context Menu Switcher Release ${{ github.ref_name }}
+            
+            Dieses Release enthält **ausschließlich** die Dateien für den Context Menu Switcher.
+            
+            ## 📦 Paket-Inhalt:
+            - ✅ **Context-Menu-Switcher.ps1** - Haupt-PowerShell-Skript
+            - ✅ **ReadMe.md** - Detaillierte Dokumentation und Anleitung
+            - ✅ **en-us.json** - Englische Sprachdatei
+            - ✅ **release.zip** - Vorkompilierte Version (falls vorhanden)
+            
+            ## 🚀 Installation:
+            1. ZIP-Datei herunterladen
+            2. In gewünschten Ordner extrahieren
+            3. PowerShell als Administrator öffnen
+            4. Skript ausführen: `.\Context-Menu-Switcher.ps1`
+            
+            ## ⚠️ Systemanforderungen:
+            - Windows 10/11
+            - PowerShell 5.1 oder höher
+            - Administrator-Berechtigung erforderlich
+            
+            ## 🔄 Changelog:
+            - Automatisch generiert am ${{ github.event.head_commit.timestamp }}
+            - Commit: ${{ github.sha }}
+            
+            ---
+            *Dieses Release wurde automatisch durch GitHub Actions erstellt.*
+          
+          # RELEASE-EINSTELLUNGEN
+          files: context-menu-switcher-release.zip    # Die ZIP-Datei als Download-Asset
+          draft: false          # false = Release wird sofort veröffentlicht
+          prerelease: false     # false = Normales Release (nicht als Beta markiert)
+          
+          # FEHLERBEHANDLUNG
+          fail_on_unmatched_files: true    # Workflow schlägt fehl, wenn ZIP-Datei nicht existiert
+          
+        # AUTHENTIFIZIERUNG
+        # GitHub Actions verwendet automatisch den GITHUB_TOKEN für Authentifizierung
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      # SCHRITT 4: Erfolg bestätigen (Optional, aber hilfreich für Debugging)
+      - name: Release-Erstellung bestätigen
+        run: |
+          echo "🎉 Context Menu Switcher Release erfolgreich erstellt!"
+          echo "📊 Release-Info:"
+          echo "   - Tag: ${{ github.ref_name }}"
+          echo "   - Repository: ${{ github.repository }}"
+          echo "   - Commit: ${{ github.sha }}"
+          echo "   - Erstellt am: $(date)"
+          echo ""
+          echo "🌐 Release verfügbar unter:"
+          echo "   https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
