@@ -1,9 +1,26 @@
-# Exclude folders from automatic source archives
-Context Menu Switcher/ export-ignore
-DLL-Icon-Viewer/ export-ignore
-Demo.Fonts/ export-ignore  
-HashGen UI/ export-ignore
-Power.Ctrl.app/ export-ignore
-SysDaemon/ export-ignore
-.github/ export-ignore
+# .gitattributes file for PowerShell.Lib Repository
+# This file excludes specified folders and all their subfolders/files from git archive operations
+# which affects how GitHub generates source code archives/releases
+
+# Exclude specific project folders and all their contents recursively
+Context Menu Switcher/** export-ignore
+DLL-Icon-Viewer/** export-ignore  
+Demo.Fonts/** export-ignore
+HashGen UI/** export-ignore
+Power.Ctrl.app/** export-ignore
+SysDaemon/** export-ignore
+
+# Exclude GitHub specific files and folders
+.github/** export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+
+# Exclude documentation files that shouldn't be in releases
 *.md export-ignore
+README.md export-ignore
+
+# Additional common development files to exclude (if present)
+.vscode/** export-ignore
+.vs/** export-ignore
+*.code-workspace export-ignore
+.editorconfig export-ignore
