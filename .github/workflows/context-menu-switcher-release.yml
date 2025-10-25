@@ -27,7 +27,7 @@ on:
         default: 'cms-v1.00.01'
         type: string
       create_tag:
-        description: 'Create the tag if it doesnt exist'
+        description: 'Create the tag if it does not exist'
         required: true
         default: true
         type: boolean
