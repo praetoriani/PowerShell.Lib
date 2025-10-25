@@ -11,7 +11,8 @@
 # EXCLUDE SPECIFIC FILES/FOLDERS
 App Development Instructions.txt
 github-actions-anleitung.md
-context-menu-switcher-release.yml
+context-menu-switcher-release-v1.yml
+context-menu-switcher-release-v2.yml
 #*/docs/conten/
 #/docs/conten/
 #/assets/check-error-icons.afphoto
