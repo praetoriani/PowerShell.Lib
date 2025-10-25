@@ -1,0 +1,150 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Power.Ctrl.app"
+        Width="520"
+        Height="200"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        WindowStyle="SingleBorderWindow"
+        Background="#FF1E1E1E"
+        Foreground="#FFFFFFFF">
+    
+    <!-- Window Resources for Styling -->
+    <Window.Resources>
+        <!-- Enhanced Dark Theme Button Style with Lighter Colors -->
+        <Style x:Key="DarkButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#FF6A6A6A"/>
+            <Setter Property="Foreground" Value="#FFFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#FF8A8A8A"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Hover Effect -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#FF7A7A7A"/>
+                                <Setter Property="BorderBrush" Value="#FF4A9EFF"/>
+                            </Trigger>
+                            <!-- Pressed Effect -->
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#FF4A9EFF"/>
+                                <Setter Property="BorderBrush" Value="#FF2E7FE0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Text Style for Action Labels -->
+        <Style x:Key="ActionTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FFFFFFFF"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,6,0,0"/>
+        </Style>
+    </Window.Resources>
+    
+    <!-- Main Container -->
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Action Buttons Row -->
+        <StackPanel Grid.Row="0" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center">
+            
+            <!-- Lock Action -->
+            <StackPanel Margin="12,0">
+                <Button x:Name="LockButton"
+                        Style="{StaticResource DarkButtonStyle}"
+                        Width="48"
+                        Height="48">
+                    <Image x:Name="LockIcon"
+                           Width="32"
+                           Height="32"
+                           Stretch="Uniform"/>
+                </Button>
+                <TextBlock x:Name="LockText"
+                           Style="{StaticResource ActionTextStyle}"
+                           Text="Lock"/>
+            </StackPanel>
+            
+            <!-- Logoff Action -->
+            <StackPanel Margin="12,0">
+                <Button x:Name="LogoffButton"
+                        Style="{StaticResource DarkButtonStyle}"
+                        Width="48"
+                        Height="48">
+                    <Image x:Name="LogoffIcon"
+                           Width="32"
+                           Height="32"
+                           Stretch="Uniform"/>
+                </Button>
+                <TextBlock x:Name="LogoffText"
+                           Style="{StaticResource ActionTextStyle}"
+                           Text="Log Off"/>
+            </StackPanel>
+            
+            <!-- Restart Action -->
+            <StackPanel Margin="12,0">
+                <Button x:Name="RestartButton"
+                        Style="{StaticResource DarkButtonStyle}"
+                        Width="48"
+                        Height="48">
+                    <Image x:Name="RestartIcon"
+                           Width="32"
+                           Height="32"
+                           Stretch="Uniform"/>
+                </Button>
+                <TextBlock x:Name="RestartText"
+                           Style="{StaticResource ActionTextStyle}"
+                           Text="Restart"/>
+            </StackPanel>
+            
+            <!-- Shutdown Action -->
+            <StackPanel Margin="12,0">
+                <Button x:Name="ShutdownButton"
+                        Style="{StaticResource DarkButtonStyle}"
+                        Width="48"
+                        Height="48">
+                    <Image x:Name="ShutdownIcon"
+                           Width="32"
+                           Height="32"
+                           Stretch="Uniform"/>
+                </Button>
+                <TextBlock x:Name="ShutdownText"
+                           Style="{StaticResource ActionTextStyle}"
+                           Text="Shut Down"/>
+            </StackPanel>
+            
+        </StackPanel>
+        
+        <!-- Status/Info Row -->
+        <TextBlock Grid.Row="1"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Bottom"
+                   Foreground="#FF666666"
+                   FontSize="10"
+                   Text="Power.Ctrl.app v1.00.10 - System Control Application"
+                   Margin="0,12,0,0"/>
+    </Grid>
+</Window>
