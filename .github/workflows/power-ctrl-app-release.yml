@@ -1,0 +1,298 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+# =============================================================================
+# ENHANCED GITHUB ACTIONS WORKFLOW FOR POWER.CTRL.APP RELEASES
+# =============================================================================
+# This file defines an automated workflow that can be triggered in two ways:
+# 1. Automatically when a tag starting with "pca-" is created (e.g. pca-v1.0.1)
+# 2. Manually through the GitHub Actions interface with custom parameters
+
+name: Power.Ctrl.app Release
+
+# TRIGGER CONFIGURATION - MULTIPLE TRIGGERS SUPPORTED
+# Defines when this workflow should be executed
+on:
+  # AUTOMATIC TRIGGER: Tag-based execution
+  push:
+    tags:
+      - 'pca-*'  # Workflow starts only for tags beginning with "pca-"
+                 # Examples: pca-v1.0.1, pca-v2.0.0, pca-beta-1
+  
+  # MANUAL TRIGGER: Allows running workflow from GitHub Actions interface
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for the release (e.g., pca-v1.00.10)'
+        required: true
+        default: 'pca-v1.00.10'
+        type: string
+      create_tag:
+        description: 'Create the tag if it doesn\'t exist'
+        required: true
+        default: true
+        type: boolean
+      release_notes:
+        description: 'Additional release notes (optional)'
+        required: false
+        default: ''
+        type: string
+
+# PERMISSIONS
+# GitHub Actions requires explicit permission to create releases and tags
+permissions:
+  contents: write  # Allows creating and editing repository contents
+  actions: write   # Allows workflow management
+
+# JOB DEFINITION
+# A workflow can contain multiple jobs, here we have only one
+jobs:
+  release:
+    runs-on: ubuntu-latest  # The workflow runs on an Ubuntu Linux server
+    
+    # CONDITIONAL EXECUTION
+    # Execute for pca-tagged pushes OR manual dispatch
+    if: |
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/pca-')) ||
+      github.event_name == 'workflow_dispatch'
+    
+    # WORKFLOW STEPS
+    # Each step is executed sequentially
+    steps:
+      # STEP 1: Download repository code
+      # GitHub Actions runs on a fresh server and needs access to your code
+      - name: Checkout repository
+        uses: actions/checkout@v4  # Official GitHub Action for code download
+        # After this step, all your repository files are available
+      
+      # STEP 2: Setup variables for different trigger types
+      # Handle both automatic (tag push) and manual (workflow_dispatch) triggers
+      - name: Setup release variables
+        id: setup
+        run: |
+          # Determine tag name based on trigger type
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual trigger - use user input
+            TAG_NAME="${{ github.event.inputs.tag_name }}"
+            echo "🔧 Manual trigger detected"
+            echo "📝 Using tag: $TAG_NAME"
+          else
+            # Automatic trigger - use pushed tag
+            TAG_NAME="${{ github.ref_name }}"
+            echo "🏷️ Automatic tag trigger detected"
+            echo "📝 Using tag: $TAG_NAME"
+          fi
+          
+          # Validate tag format
+          if [[ ! $TAG_NAME =~ ^pca-.*$ ]]; then
+            echo "❌ Error: Tag name must start with 'pca-'"
+            echo "❌ Provided: $TAG_NAME"
+            exit 1
+          fi
+          
+          # Export variables for later steps
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "✅ Tag validation successful: $TAG_NAME"
+      
+      # STEP 3: Create tag if manual trigger and tag doesn't exist
+      # This step only runs for manual triggers when create_tag is enabled
+      - name: Create tag if manual trigger
+        if: |
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.create_tag == 'true'
+        run: |
+          TAG_NAME="${{ steps.setup.outputs.tag_name }}"
+          
+          # Configure Git with GitHub Actions bot identity
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+          # Check if tag already exists
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "⚠️ Tag $TAG_NAME already exists"
+            echo "ℹ️ Continuing with existing tag..."
+          else
+            # Create and push new tag
+            echo "🏷️ Creating new tag: $TAG_NAME"
+            git tag "$TAG_NAME"
+            git push origin "$TAG_NAME"
+            echo "✅ Tag created and pushed successfully"
+          fi
+      
+      # STEP 4: Create release package
+      # Only the Power.Ctrl.app folder is packed into a ZIP package
+      - name: Create Power.Ctrl.app release package
+        run: |
+          # Debug output - displayed in the Actions log
+          echo "🚀 Starting release package creation for Power.Ctrl.app"
+          
+          # Create temporary folder for the release
+          mkdir -p release-temp/Power-Ctrl-app
+          echo "📁 Temporary release folder created"
+          
+          # Verify source folder exists
+          if [ ! -d "Power.Ctrl.app" ]; then
+            echo "❌ Error: 'Power.Ctrl.app' folder not found!"
+            echo "📂 Available folders:"
+            ls -la
+            exit 1
+          fi
+          
+          # IMPORTANT: Copy all files from the Power.Ctrl.app folder
+          # Folder name contains dots, but no spaces in this case
+          cp -r Power.Ctrl.app/* release-temp/Power-Ctrl-app/
+          echo "📋 Power.Ctrl.app files copied:"
+          ls -la Power.Ctrl.app/
+          
+          # Change to temporary folder
+          cd release-temp
+          
+          # Create ZIP file with all Power.Ctrl.app files
+          # -r = recursive (include all subdirectories)
+          zip -r ../power-ctrl-app-release.zip Power-Ctrl-app/
+          
+          # Return to root directory
+          cd ..
+          
+          # Confirmation and display ZIP file size
+          echo "✅ ZIP file created:"
+          ls -lh power-ctrl-app-release.zip
+          
+          # Verify ZIP file contents
+          echo "📦 ZIP file contents:"
+          unzip -l power-ctrl-app-release.zip
+      
+      # STEP 5: Create GitHub release with enhanced descriptions
+      # This is the most important step - the actual release is created here
+      - name: Create GitHub release with assets
+        uses: softprops/action-gh-release@v1  # Proven third-party action for releases
+        with:
+          # DYNAMIC TAG NAME handling for both trigger types
+          tag_name: ${{ steps.setup.outputs.tag_name }}
+          
+          # RELEASE TITLE
+          # Uses the tag name (e.g. "Power.Ctrl.app pca-v1.00.10")
+          name: Power.Ctrl.app ${{ steps.setup.outputs.tag_name }}
+          
+          # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
+          body: |
+            # 🚀 Power.Ctrl.app Release ${{ steps.setup.outputs.tag_name }}
+            
+            ## ⬇️ **DOWNLOAD THIS FILE:**
+            **📁 `power-ctrl-app-release.zip`** ← Click here to download!
+            
+            ## ⚠️ **IGNORE the following files:**
+            - ❌ Source code (zip) - Contains entire repository
+            - ❌ Source code (tar.gz) - Contains entire repository
+            
+            ---
+            
+            This release contains **exclusively** the files for Power.Ctrl.app.
+            
+            ## 📦 Package Contents:
+            - ✅ **Power.Ctrl.app.ps1** - Main PowerShell WPF application
+            - ✅ **app-ui-main.xaml** - Main window UI definition
+            - ✅ **app-ui-popup.xaml** - Confirmation dialog UI
+            - ✅ **README-EN.md** - English documentation
+            - ✅ **README-DE.md** - German documentation  
+            - ✅ **Changelog.md** - Version history and changes
+            - ✅ **en-us.json** - English language file
+            - ✅ **de-de.json** - German language file
+            
+            ## 🚀 Installation:
+            1. Download the `power-ctrl-app-release.zip` file above
+            2. Extract to your desired folder
+            3. Open PowerShell as Administrator
+            4. Navigate to the extracted folder
+            5. Run application: `.\Power.Ctrl.app.ps1`
+            
+            ## ⚠️ System Requirements:
+            - Windows 10/11
+            - PowerShell 5.0 or higher
+            - .NET Framework 4.7.2 or higher
+            - Administrator privileges recommended
+            
+            ## ✨ Features:
+            - 🎨 Modern Dark Mode WPF Interface
+            - 🌍 Full Localization (German/English)
+            - 📍 Flexible Window Positioning
+            - ✅ Confirmation Dialogs for Safety
+            - 📝 Optional Detailed Logging
+            - 🔒 Lock Workstation
+            - 👤 Log Off User
+            - 🔄 Restart Computer
+            - ⚡ Shut Down Computer
+            
+            ## 🔧 Configuration:
+            All settings are configured via global variables in the main script:
+            - Language selection (de-de/en-us)
+            - Window positioning (center/lowerleft/lowerright)
+            - Confirmation dialogs (enabled/disabled)
+            - Logging system (enabled/disabled)
+            
+            ## 🔧 Trigger Information:
+            - **Trigger Type:** ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Automatic (Tag Push)' }}
+            - **Generated:** ${{ github.event.head_commit.timestamp || 'Manual trigger' }}
+            - **Commit:** ${{ github.sha }}
+            
+            ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes:\n{0}', github.event.inputs.release_notes) || '' }}
+            
+            ---
+            
+            *This release was automatically created by GitHub Actions.*
+          
+          # RELEASE SETTINGS
+          files: power-ctrl-app-release.zip  # The ZIP file as download asset
+          draft: false                       # false = Release is published immediately
+          prerelease: false                  # false = Normal release (not marked as beta)
+          
+          # ERROR HANDLING
+          fail_on_unmatched_files: true      # Workflow fails if ZIP file doesn't exist
+        
+        # AUTHENTICATION
+        # GitHub Actions automatically uses GITHUB_TOKEN for authentication
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # STEP 6: Confirm success with enhanced logging
+      # Optional, but helpful for debugging and monitoring
+      - name: Confirm release creation and provide usage instructions
+        run: |
+          TAG_NAME="${{ steps.setup.outputs.tag_name }}"
+          TRIGGER_TYPE="${{ github.event_name }}"
+          
+          echo "🎉 Power.Ctrl.app release successfully created!"
+          echo ""
+          echo "📊 Release Information:"
+          echo "  🏷️ Tag: $TAG_NAME"
+          echo "  🔄 Trigger: $TRIGGER_TYPE"
+          echo "  📁 Repository: ${{ github.repository }}"
+          echo "  🔗 Commit: ${{ github.sha }}"
+          echo "  ⏰ Created: $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          echo ""
+          echo "🌐 Release Links:"
+          echo "  📖 Release Page: https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
+          echo "  💾 Direct Download: https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/power-ctrl-app-release.zip"
+          echo ""
+          echo "🚀 Next Steps for Users:"
+          echo "  1. Visit the release page above"
+          echo "  2. Download 'power-ctrl-app-release.zip'"
+          echo "  3. Ignore the 'Source code' files"
+          echo "  4. Extract and run as Administrator"
+          echo "  5. Configure settings via global variables in script"
+          echo ""
+          echo "🔧 For Developers:"
+          if [ "$TRIGGER_TYPE" = "workflow_dispatch" ]; then
+            echo "  • This release was created manually via GitHub Actions"
+            echo "  • To create another release, go to Actions → Power.Ctrl.app Release → Run workflow"
+          else
+            echo "  • This release was created automatically by pushing tag: $TAG_NAME"
+            echo "  • To create another release, push a new pca-* tag or use manual trigger"
+          fi
+          echo "  • Manual trigger available at: https://github.com/${{ github.repository }}/actions/workflows/power-ctrl-app-release.yml"
+          echo ""
+          echo "💡 Configuration Tips:"
+          echo "  • Edit global variables in Power.Ctrl.app.ps1 for customization"
+          echo "  • Language: \$global:globalLanguage = 'de-de' or 'en-us'"
+          echo "  • Position: \$global:globalWindowPosition = 'center', 'lowerleft', 'lowerright'"
+          echo "  • Confirmations: \$global:globalShowConfirmationDialog = \$true/\$false"
+          echo "  • Logging: \$global:globalCreateLogFile = \$true/\$false"
