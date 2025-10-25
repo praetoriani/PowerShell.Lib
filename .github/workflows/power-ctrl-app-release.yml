@@ -186,20 +186,6 @@ jobs:
             - ❌ Source code (tar.gz)
             
             THE SOURCE CODE ARCHIVES ARE EMPTY AND THEREFORE USELESS!
-
-            ---
-            
-            This release contains **exclusively** the files for Power.Ctrl.app.
-            
-            ## 📦 Package Contents:
-            - ✅ **Power.Ctrl.app.ps1** - Main PowerShell WPF application
-            - ✅ **app-ui-main.xaml** - Main window UI definition
-            - ✅ **app-ui-popup.xaml** - Confirmation dialog UI
-            - ✅ **README-EN.md** - English documentation
-            - ✅ **README-DE.md** - German documentation  
-            - ✅ **Changelog.md** - Version history and changes
-            - ✅ **en-us.json** - English language file
-            - ✅ **de-de.json** - German language file
             
             ---
             
@@ -229,27 +215,7 @@ jobs:
             - Administrator privileges recommended
             
             ---
-            
-            ## ✨ Features:
-            - 🎨 Modern Dark Mode WPF Interface
-            - 🌍 Full Localization (German/English)
-            - 📍 Flexible Window Positioning
-            - ✅ Confirmation Dialogs for Safety
-            - 📝 Optional Detailed Logging
-            - 🔒 Lock Workstation
-            - 👤 Log Off User
-            - 🔄 Restart Computer
-            - ⚡ Shut Down Computer
-            
-            ---
-            
-            ## 🔧 Configuration:
-            All settings are configured via global variables in the main script:
-            - Language selection (de-de/en-us)
-            - Window positioning (center/lowerleft/lowerright)
-            - Confirmation dialogs (enabled/disabled)
-            - Logging system (enabled/disabled)
-            
+                        
             ## 🔧 Trigger Information:
             - **Trigger Type:** ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Automatic (Tag Push)' }}
             - **Generated:** ${{ github.event.head_commit.timestamp || 'Manual trigger' }}

@@ -189,15 +189,6 @@ jobs:
             
             ---
             
-            This release contains **exclusively** the files for the Context Menu Switcher.
-            
-            ## 📦 Package Contents:
-            - ✅ **Context-Menu-Switcher.ps1** - Main PowerShell script
-            - ✅ **ReadMe.md** - Detailed documentation and instructions
-            - ✅ **en-us.json** - English language file
-            
-            ---
-            
             ## 🚀 Installation & Usage:
             1. Download the `context-menu-switcher-release.zip` file above
             2. Extract to your desired folder
