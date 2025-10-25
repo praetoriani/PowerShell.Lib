@@ -196,6 +196,8 @@ jobs:
             - ✅ **ReadMe.md** - Detailed documentation and instructions
             - ✅ **en-us.json** - English language file
             
+            ---
+            
             ## 🚀 Installation & Usage:
             1. Download the `context-menu-switcher-release.zip` file above
             2. Extract to your desired folder
@@ -223,6 +225,8 @@ jobs:
             - Windows 10/11
             - PowerShell 5.1 or higher
             - Administrator privileges required
+            
+            ---
             
             ## 🔧 Trigger Information:
             - **Trigger Type:** ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Automatic (Tag Push)' }}

@@ -176,14 +176,17 @@ jobs:
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
             # 🚀 Power.Ctrl.app Release ${{ steps.setup.outputs.tag_name }}
+
+            ## ⬇️ **DOWNLOAD INFORMATION:** 
+            DOWNLOAD THE FOLLOWING FILE
+            **📁 `power-ctrl-app-release.zip`**
             
-            ## ⬇️ **DOWNLOAD THIS FILE:**
-            **📁 `power-ctrl-app-release.zip`** ← Click here to download!
+            ⚠️ **IGNORE the following files:**
+            - ❌ Source code (zip) 
+            - ❌ Source code (tar.gz)
             
-            ## ⚠️ **IGNORE the following files:**
-            - ❌ Source code (zip) - Contains entire repository
-            - ❌ Source code (tar.gz) - Contains entire repository
-            
+            THE SOURCE CODE ARCHIVES ARE EMPTY AND THEREFORE USELESS!
+
             ---
             
             This release contains **exclusively** the files for Power.Ctrl.app.
@@ -198,6 +201,8 @@ jobs:
             - ✅ **en-us.json** - English language file
             - ✅ **de-de.json** - German language file
             
+            ---
+            
             ## 🚀 Installation:
             1. Download the `power-ctrl-app-release.zip` file above
             2. Extract to your desired folder
@@ -205,11 +210,25 @@ jobs:
             4. Navigate to the extracted folder
             5. Run application: `.\Power.Ctrl.app.ps1`
             
+            ---
+            
+            ## 💡 Insider tip:
+            Create a shortcut and paste the following command as the target.:
+            ```
+            C:\Windows\System32\conhost.exe --headless powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "C:\PATH\TO\Power.Ctrl.app.ps1"
+            ```
+            Change -File "C:\PATH\TO\Power.Ctrl.app.ps1" to the actual location of Power.Ctrl.app.ps1
+            Save the changes, run the Shortcut and thank me later 😉
+            
+            ---
+            
             ## ⚠️ System Requirements:
             - Windows 10/11
             - PowerShell 5.0 or higher
             - .NET Framework 4.7.2 or higher
             - Administrator privileges recommended
+            
+            ---
             
             ## ✨ Features:
             - 🎨 Modern Dark Mode WPF Interface
@@ -221,6 +240,8 @@ jobs:
             - 👤 Log Off User
             - 🔄 Restart Computer
             - ⚡ Shut Down Computer
+            
+            ---
             
             ## 🔧 Configuration:
             All settings are configured via global variables in the main script:
