@@ -177,12 +177,15 @@ jobs:
           body: |
             # 🎯 Context Menu Switcher Release ${{ steps.setup.outputs.tag_name }}
             
-            ## ⬇️ **DOWNLOAD THIS FILE:** 
-            **📁 `context-menu-switcher-release.zip`** ← Click here to download!
+            ## ⬇️ **DOWNLOAD INFORMATION:** 
+            DOWNLOAD THE FOLLOWING FILE
+            **📁 `context-menu-switcher-release.zip`**
             
-            ## ⚠️ **IGNORE the following files:**
-            - ❌ Source code (zip) - Contains entire repository 
-            - ❌ Source code (tar.gz) - Contains entire repository
+            ⚠️ **IGNORE the following files:**
+            - ❌ Source code (zip) 
+            - ❌ Source code (tar.gz)
+            
+            THE SOURCE CODE ARCHIVES ARE EMPTY AND THEREFORE USELESS!
             
             ---
             
@@ -192,14 +195,29 @@ jobs:
             - ✅ **Context-Menu-Switcher.ps1** - Main PowerShell script
             - ✅ **ReadMe.md** - Detailed documentation and instructions
             - ✅ **en-us.json** - English language file
-            - ✅ **release.zip** - Pre-compiled version (if available)
             
-            ## 🚀 Installation:
+            ## 🚀 Installation & Usage:
             1. Download the `context-menu-switcher-release.zip` file above
             2. Extract to your desired folder
             3. Open PowerShell as Administrator
             4. Navigate to the extracted folder
             5. Run script: `.\Context-Menu-Switcher.ps1`
+            
+            ---
+            
+            ## 💡 Usage Examples:
+
+            #### Activate Classic Context Menu
+            ```powershell
+            .\Context-Menu-Switcher.ps1 -PopupMenu classic
+            ```
+
+            #### Activate Windows 11 Context Menu
+            ```powershell
+            .\Context-Menu-Switcher.ps1 -PopupMenu new
+            ```
+            
+            ---
             
             ## ⚠️ System Requirements:
             - Windows 10/11
