@@ -4,14 +4,16 @@
 
 # Exclude specific project folders and all their contents recursively
 SysDaemon/** export-ignore
+Power.Ctrl.app/** export-ignore
 
 # Exclude specific project folders by using C-Style Quoting
-"Context Menu Switcher"/** export-ignore
-"DLL-Icon-Viewer"/** export-ignore  
-"Demo.Fonts"/** export-ignore
-"Power.Ctrl.app"/** export-ignore
+
+# Exclude specific project folders by using Backslash Escaping
+Context\ Menu\ Switcher/** export-ignore
 
 # Exclude specific project folders by using POSIX Character Classes
+DLL[-]Icon[-]Viewer/** export-ignore  
+Demo[.]Fonts/** export-ignore
 HashGen[[:space:]]UI/** export-ignore
 HashGen[[:space:]]UI/v1.00.06/** export-ignore
 HashGen[[:space:]]UI/v1.01.00/** export-ignore
