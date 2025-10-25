@@ -1,0 +1,20 @@
+{
+  "script_title": "Context Menu Switcher",
+  "script_running": "Running Context Menu Switcher...",
+  "wrong_param": "Wrong parameter found! Using default value.",
+  "classic_activated": "Classic Context Menu activated successfully!",
+  "windows11_activated": "Windows 11 Context Menu activated successfully!",
+  "script_finished": "Context Menu Switcher finished.",
+  "registry_error": "Error modifying registry:",
+  "explorer_restart_required": "Explorer restart required for changes to take effect.",
+  "explorer_restarting": "Restarting Windows Explorer...",
+  "explorer_restarted": "Windows Explorer restarted successfully.",
+  "current_style": "Current Context Menu Style:",
+  "switching_to_classic": "Switching to Classic Context Menu...",
+  "switching_to_windows11": "Switching to Windows 11 Context Menu...",
+  "registry_key_created": "Registry key created successfully.",
+  "registry_key_deleted": "Registry key deleted successfully.",
+  "language_pack_loaded": "Language pack loaded successfully.",
+  "admin_rights_required": "Administrator rights required for registry modification.",
+  "operation_completed": "Operation completed successfully."
+}
