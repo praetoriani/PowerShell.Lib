@@ -3,19 +3,13 @@
 # which affects how GitHub generates source code archives/releases
 
 # Exclude specific project folders and all their contents recursively
-Context Menu Switcher/** export-ignore
-DLL-Icon-Viewer/** export-ignore  
-Demo.Fonts/** export-ignore
-HashGen UI/** export-ignore
-Power.Ctrl.app/** export-ignore
-SysDaemon/** export-ignore
 # Exclude specific project folders - using C-style quoting for spaces
 "Context Menu Switcher"/** export-ignore
 "DLL-Icon-Viewer"/** export-ignore  
 "Demo.Fonts"/** export-ignore
 "HashGen UI"/** export-ignore
-"Power.Ctrl.app"/** export-ignore
-"SysDaemon"/** export-ignore
+Power.Ctrl.app/** export-ignore
+SysDaemon/** export-ignore
 
 # Exclude GitHub specific files and folders
 .github/** export-ignore
