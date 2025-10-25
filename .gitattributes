@@ -6,14 +6,21 @@
 SysDaemon/** export-ignore
 Power.Ctrl.app/** export-ignore
 Context Menu Switcher/** export-ignore
+DLL-Icon-Viewer/** export-ignore  
+Demo.Fonts/** export-ignore
 
 # Exclude specific project folders by using C-Style Quoting
 "Context Menu Switcher"/** export-ignore
+"SysDaemon"/** export-ignore
+"Power.Ctrl.app"/** export-ignore
+"DLL-Icon-Viewer"/** export-ignore  
+"Demo.Fonts"/** export-ignore
 
 # Exclude specific project folders by using Backslash Escaping
 Context\ Menu\ Switcher/** export-ignore
 
 # Exclude specific project folders by using POSIX Character Classes
+Power[.]Ctrl[.]app/** export-ignore
 Context[[:space:]]Menu[[:space:]]Switcher/** export-ignore
 DLL[-]Icon[-]Viewer/** export-ignore  
 Demo[.]Fonts/** export-ignore
