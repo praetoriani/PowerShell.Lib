@@ -3,11 +3,10 @@
 # which affects how GitHub generates source code archives/releases
 
 # Exclude specific project folders and all their contents recursively
-# Exclude specific project folders - using C-style quoting for spaces
-"Context Menu Switcher"/** export-ignore
-"DLL-Icon-Viewer"/** export-ignore  
-"Demo.Fonts"/** export-ignore
-"HashGen UI"/** export-ignore
+Context[[:space:]]Menu[[:space:]]Switcher/** export-ignore
+DLL-Icon-Viewer/** export-ignore  
+Demo.Fonts/** export-ignore
+HashGen[[:space:]]UI/** export-ignore
 Power.Ctrl.app/** export-ignore
 SysDaemon/** export-ignore
 
