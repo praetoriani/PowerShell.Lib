@@ -177,14 +177,14 @@ jobs:
           body: |
             ## ⬇️ **DOWNLOAD INFORMATION:** 
             DOWNLOAD THE FOLLOWING FILE
-            **📦 [`font-demos-release.zip`](https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/font-demos-release.zip)**
+            **📦 [`font-demos-release.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/font-demos-release.zip)**
             
             ⚠️ **IGNORE the following files:**
             - ❌ Source code (zip) 
             - ❌ Source code (tar.gz)
             
             THE SOURCE CODE ARCHIVES ARE EMPTY AND THEREFORE USELESS!
-            <br><br><br>
+            <br>
             ### ⚠️ Important: Font Installation Required
 
             **Before running any demos, fonts must be installed system-wide.**
@@ -194,14 +194,18 @@ jobs:
             # Run as Administrator
             .\install-fonts.ps1
             ```
-            <br><br>
+            <br>
+
             > **⚠️ ADMINISTRATOR PRIVILEGES REQUIRED**: The `install-fonts.ps1` script must be executed with administrator privileges to install fonts system-wide.
-            <br><br><br>
+            
+            <br>
+
             ## ⚠️ System Requirements:
             - Windows 10/11
             - PowerShell 5.1 or higher
             - Administrator privileges required
-            <br><br><br>
+            <br>
+            
             ## 🔧 Trigger Information:
             - **Trigger Type:** ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Automatic (Tag Push)' }}
             - **Generated:** ${{ github.event.head_commit.timestamp || 'Manual trigger' }}
