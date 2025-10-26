@@ -175,12 +175,11 @@ jobs:
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
-            ## **DOWNLOAD INFORMATION:**
+            ## 📂 **File Download:**
             
-            DOWNLOAD THE FOLLOWING FILE
             **📦 [`context-menu-switcher-release.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/context-menu-switcher-release.zip)**
             <br>
-            
+
             ## 🚀 Installation & Usage:
             1. Download the `context-menu-switcher-release.zip` file above
             2. Extract to your desired folder
