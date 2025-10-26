@@ -2,10 +2,6 @@
 
 A comprehensive collection of PowerShell scripts demonstrating how to integrate external fonts in WPF/XAML applications using various techniques and approaches.
 
-## 📦 Quick Download
-
-**[Download Demo.Fonts-2025-10-03.zip](https://github.com/praetoriani/PowerShell.Lib/raw/refs/heads/main/Demo.Fonts/Demo.Fonts-2025-10-03.zip)** - Complete package containing all demo files, fonts, and scripts.
-
 ## 🎯 Overview
 
 This directory contains multiple demonstrations of external font loading and integration in PowerShell WPF applications. The examples range from basic font loading to advanced professional UI implementations with modern dark themes.
