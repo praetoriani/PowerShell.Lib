@@ -206,11 +206,6 @@ jobs:
             - Administrator privileges required
             <br>
             
-            ## 🔧 Trigger Information:
-            - **Trigger Type:** ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Automatic (Tag Push)' }}
-            - **Generated:** ${{ github.event.head_commit.timestamp || 'Manual trigger' }}
-            - **Commit:** ${{ github.sha }}
-            
             ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes:\n{0}', github.event.inputs.release_notes) || '' }}
             
             ---
