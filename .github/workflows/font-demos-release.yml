@@ -175,16 +175,11 @@ jobs:
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
-            ## ⬇️ **DOWNLOAD INFORMATION:** 
-            DOWNLOAD THE FOLLOWING FILE
+            ## 📂 **File Download:**
+            
             **📦 [`font-demos-release.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/font-demos-release.zip)**
-            
-            ⚠️ **IGNORE the following files:**
-            - ❌ Source code (zip) 
-            - ❌ Source code (tar.gz)
-            
-            THE SOURCE CODE ARCHIVES ARE EMPTY AND THEREFORE USELESS!
             <br>
+
             ### ⚠️ Important: Font Installation Required
 
             **Before running any demos, fonts must be installed system-wide.**
@@ -205,7 +200,7 @@ jobs:
             - PowerShell 5.1 or higher
             - Administrator privileges required
             <br>
-            
+
             ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes:\n{0}', github.event.inputs.release_notes) || '' }}
             
             ---
