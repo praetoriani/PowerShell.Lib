@@ -175,19 +175,11 @@ jobs:
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
-            # 🎯 Context Menu Switcher Release ${{ steps.setup.outputs.tag_name }}
+            ## **DOWNLOAD INFORMATION:**
             
-            ## ⬇️ **DOWNLOAD INFORMATION:** 
             DOWNLOAD THE FOLLOWING FILE
-            **📁 `context-menu-switcher-release.zip`**
-            
-            ⚠️ **IGNORE the following files:**
-            - ❌ Source code (zip) 
-            - ❌ Source code (tar.gz)
-            
-            THE SOURCE CODE ARCHIVES ARE EMPTY AND THEREFORE USELESS!
-            
-            ---
+            **📦 [`context-menu-switcher-release.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/context-menu-switcher-release.zip)**
+            <br>
             
             ## 🚀 Installation & Usage:
             1. Download the `context-menu-switcher-release.zip` file above
@@ -195,9 +187,8 @@ jobs:
             3. Open PowerShell as Administrator
             4. Navigate to the extracted folder
             5. Run script: `.\Context-Menu-Switcher.ps1`
-            
-            ---
-            
+            <br>
+
             ## 💡 Usage Examples:
 
             #### Activate Classic Context Menu
@@ -209,20 +200,13 @@ jobs:
             ```powershell
             .\Context-Menu-Switcher.ps1 -PopupMenu new
             ```
-            
-            ---
-            
+            <br>
+
             ## ⚠️ System Requirements:
             - Windows 10/11
             - PowerShell 5.1 or higher
             - Administrator privileges required
-            
-            ---
-            
-            ## 🔧 Trigger Information:
-            - **Trigger Type:** ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Automatic (Tag Push)' }}
-            - **Generated:** ${{ github.event.head_commit.timestamp || 'Manual trigger' }}
-            - **Commit:** ${{ github.sha }}
+            <br>
             
             ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes:\n{0}', github.event.inputs.release_notes) || '' }}
             
