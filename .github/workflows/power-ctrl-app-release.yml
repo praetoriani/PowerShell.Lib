@@ -175,56 +175,39 @@ jobs:
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
-            # 🚀 Power.Ctrl.app Release ${{ steps.setup.outputs.tag_name }}
-
-            ## ⬇️ **DOWNLOAD INFORMATION:** 
+            ## **DOWNLOAD INFORMATION:**
+            
             DOWNLOAD THE FOLLOWING FILE
-            **📁 `power-ctrl-app-release.zip`**
-            
-            ⚠️ **IGNORE the following files:**
-            - ❌ Source code (zip) 
-            - ❌ Source code (tar.gz)
-            
-            THE SOURCE CODE ARCHIVES ARE EMPTY AND THEREFORE USELESS!
-            
-            ---
-            
+            **📦 [`power-ctrl-app-release.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/power-ctrl-app-release.zip)**
+            <br>
+
             ## 🚀 Installation:
             1. Download the `power-ctrl-app-release.zip` file above
             2. Extract to your desired folder
             3. Open PowerShell as Administrator
             4. Navigate to the extracted folder
             5. Run application: `.\Power.Ctrl.app.ps1`
-            
-            ---
+            <br>
             
             ## 💡 Insider tip:
             Create a shortcut and paste the following command as the target.:
             ```
             C:\Windows\System32\conhost.exe --headless powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "C:\PATH\TO\Power.Ctrl.app.ps1"
             ```
-            Change -File "C:\PATH\TO\Power.Ctrl.app.ps1" to the actual location of Power.Ctrl.app.ps1
+            Change `-File "C:\PATH\TO\Power.Ctrl.app.ps1"` to the actual location of `Power.Ctrl.app.ps1`
             Save the changes, run the Shortcut and thank me later 😉
-            
-            ---
+            <br>
             
             ## ⚠️ System Requirements:
             - Windows 10/11
             - PowerShell 5.0 or higher
             - .NET Framework 4.7.2 or higher
             - Administrator privileges recommended
-            
-            ---
-                        
-            ## 🔧 Trigger Information:
-            - **Trigger Type:** ${{ github.event_name == 'workflow_dispatch' && 'Manual' || 'Automatic (Tag Push)' }}
-            - **Generated:** ${{ github.event.head_commit.timestamp || 'Manual trigger' }}
-            - **Commit:** ${{ github.sha }}
+            <br>
             
             ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes:\n{0}', github.event.inputs.release_notes) || '' }}
             
             ---
-            
             *This release was automatically created by GitHub Actions.*
           
           # RELEASE SETTINGS
