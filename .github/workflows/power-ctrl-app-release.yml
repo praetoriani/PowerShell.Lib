@@ -175,9 +175,8 @@ jobs:
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
-            ## **DOWNLOAD INFORMATION:**
+            ## 📂 **File Download:**
             
-            DOWNLOAD THE FOLLOWING FILE
             **📦 [`power-ctrl-app-release.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/power-ctrl-app-release.zip)**
             <br>
 
