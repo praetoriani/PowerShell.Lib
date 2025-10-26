@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="PowerShell XAML Demo - Professional Font Showcase" 
+    Width="950" Height="700"
+    WindowStartupLocation="CenterScreen"
+    Background="#1E1E1E">
+    
+    <Window.Resources>
+        <!-- Gradient Background -->
+        <LinearGradientBrush x:Key="DarkGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#2D2D30" Offset="0"/>
+            <GradientStop Color="#1E1E1E" Offset="1"/>
+        </LinearGradientBrush>
+        
+        <!-- Card Background for Font Sections -->
+        <SolidColorBrush x:Key="CardBackground" Color="#252526"/>
+        <SolidColorBrush x:Key="CardBorder" Color="#3C3C3C"/>
+    </Window.Resources>
+    
+    <Grid Background="{StaticResource DarkGradient}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="30">
+            <StackPanel>
+                <!-- Header Section -->
+                <Border Background="#007ACC" CornerRadius="8" Margin="0,0,0,40" Padding="30,20">
+                    <StackPanel>
+                        <TextBlock Text="PowerShell XAML Font Showcase" FontSize="36" FontWeight="Bold" HorizontalAlignment="Center" Foreground="White" Margin="0,0,0,10"/>
+                        <TextBlock Text="Professional External Font Integration in WPF Applications" FontSize="16" HorizontalAlignment="Center" Foreground="#E1E1E1" FontStyle="Italic"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Exo2 Regular Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="Exo2-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtExo2Large" Text="Large Size (24pt): Modern sans-serif font perfect for digital applications" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtExo2Medium" Text="Medium Size (18pt): Excellent readability at various screen resolutions and sizes" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtExo2Small" Text="Small Size (14pt): Perfect for body text with great character recognition and clarity" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Exo2 SemiBold Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="Exo2-SemiBold.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtExo2SemiBoldLarge" Text="Large Size (24pt): Bold variant maintaining modern aesthetic appeal" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtExo2SemiBoldMedium" Text="Medium Size (18pt): Ideal for headlines and emphasized content sections" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtExo2SemiBoldSmall" Text="Small Size (14pt): Strong presence while maintaining excellent readability" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Coda Regular Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="Coda-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtCodaLarge" Text="Large Size (24pt): Distinctive geometric forms with modern character" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtCodaMedium" Text="Medium Size (18pt): Strong visual impact perfect for attention-grabbing designs" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtCodaSmall" Text="Small Size (14pt): Unique character maintaining legibility at smaller sizes" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Ubuntu Regular Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="Ubuntu-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtUbuntuLarge" Text="Large Size (24pt): Warm and friendly appearance with professional quality" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtUbuntuMedium" Text="Medium Size (18pt): Versatile typeface suitable for various design contexts" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtUbuntuSmall" Text="Small Size (14pt): Known from Linux systems, excellent for UI applications" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Space Mono Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="SpaceMono-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtSpaceMonoLarge" Text="Large Size (24pt): Monospaced font perfect for code display" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtSpaceMonoMedium" Text="Medium Size (18pt): Equal character spacing for technical documentation" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtSpaceMonoSmall" Text="Small Size (14pt): Developer-friendly with excellent alignment properties" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Titillium Web Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="TitilliumWeb-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtTitilliumWebLarge" Text="Large Size (24pt): Designed specifically for superior web readability" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtTitilliumWebMedium" Text="Medium Size (18pt): Combines elegance with practical screen functionality" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtTitilliumWebSmall" Text="Small Size (14pt): Optimized for both body text and heading applications" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Monda Regular Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="Monda-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtMondaRegularLarge" Text="Large Size (24pt): Round and friendly character with playful appeal" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtMondaRegularMedium" Text="Medium Size (18pt): Perfect for creative projects requiring warm atmosphere" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtMondaRegularSmall" Text="Small Size (14pt): Inviting design suitable for friendly user interfaces" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Monda Bold Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="Monda-Bold.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtMondaBoldLarge" Text="Large Size (24pt): Bold variant maintaining friendly rounded characteristics" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtMondaBoldMedium" Text="Medium Size (18pt): Excellent for emphasis while preserving approachable feel" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtMondaBoldSmall" Text="Small Size (14pt): Strong presence with maintained rounded form appeal" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Roboto Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="Roboto-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtRobotoLarge" Text="Large Size (24pt): Android's default font optimized for multiple screen sizes" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtRobotoMedium" Text="Medium Size (18pt): Geometric forms combined with friendly open curves" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtRobotoSmall" Text="Small Size (14pt): Modern appearance suitable for contemporary interfaces" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Oxanium Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="Oxanium-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtOxaniumLarge" Text="Large Size (24pt): Futuristic design with modern technological appearance" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtOxaniumMedium" Text="Medium Size (18pt): Perfect for sci-fi projects and gaming applications" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtOxaniumSmall" Text="Small Size (14pt): High-tech aesthetic ideal for technical interfaces" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Averia Libre Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="AveriaLibre-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtAveriaLibreLarge" Text="Large Size (24pt): Individual handwritten character with personal warmth" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtAveriaLibreMedium" Text="Medium Size (18pt): Appears hand-crafted, perfect for personal touch projects" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtAveriaLibreSmall" Text="Small Size (14pt): Authentic feel ideal for creative and artistic applications" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Cutive Mono Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="CutiveMono-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtCutiveMonoLarge" Text="Large Size (24pt): Classic typewriter style with nostalgic character" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtCutiveMonoMedium" Text="Medium Size (18pt): Provides authentic vintage atmosphere to any design" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtCutiveMonoSmall" Text="Small Size (14pt): Perfect for quotes, code, or retro-themed content" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Dosis Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="Dosis-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtDosisLarge" Text="Large Size (24pt): Clean and minimalistic with attractive rounded forms" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtDosisMedium" Text="Medium Size (18pt): Modern and friendly without being intrusive or aggressive" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtDosisSmall" Text="Small Size (14pt): Ideal for contemporary designs and user-friendly interfaces" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Telex Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="Telex-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtTelexLarge" Text="Large Size (24pt): Combines classical proportions with modern details" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtTelexMedium" Text="Medium Size (18pt): Versatile design working in both formal and creative contexts" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtTelexSmall" Text="Small Size (14pt): Perfect balance between traditional elegance and innovation" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Play Font -->
+                <Border Background="{StaticResource CardBackground}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,25" Padding="25">
+                    <StackPanel>
+                        <TextBlock Text="Play-Regular.ttf" FontSize="18" FontWeight="Bold" Foreground="#4CAF50" Margin="0,0,0,15"/>
+                        <TextBlock Name="txtPlayLarge" Text="Large Size (24pt): Modern sans-serif with clear and direct appearance" FontSize="24" Foreground="#E1E1E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtPlayMedium" Text="Medium Size (18pt): Excellent for digital media with superior readability" FontSize="18" Foreground="#CCCCCC" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Name="txtPlaySmall" Text="Small Size (14pt): Outstanding performance across various sizes and resolutions" FontSize="14" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Footer -->
+                <Border Background="#007ACC" CornerRadius="6" Margin="0,20,0,30" Padding="20">
+                    <TextBlock Text="End of Professional Font Demonstration" FontSize="16" HorizontalAlignment="Center" Foreground="White" FontWeight="SemiBold"/>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
