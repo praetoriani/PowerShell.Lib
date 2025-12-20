@@ -188,7 +188,6 @@
                     Orientation="Horizontal" 
                     HorizontalAlignment="Center" 
                     Margin="0,30,0,0"
-                    Height="Auto"
                     Height="50">
             <Button Style="{StaticResource PrimaryButton}" 
                     Content="Speichern" 
