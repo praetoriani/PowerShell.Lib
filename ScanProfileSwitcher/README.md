@@ -50,18 +50,21 @@ Wenn Sie das profil speichern:
 2. Die Einstellung wird in der Konfiguration gespeichert
 3. Ein Erfolgsdialog wird angezeigt
 4. Das Programm wird automatisch beendet
-5. Die neue Einstellung ist sofort nach Neustart verfügbar
+5. Das Programm mit dem gescannt wird, muss beendet werden!
+6. Erst nach Neustart des Scanner-Programms sind die Änderungen verfügbar!
 
 ## ⚠️ Fehlermeldungen
 
 Das Programm kann folgende Fehler anzeigen:
 
-| Fehler | Bedeutung | Lösung |
-|--------|-----------|--------|
-| "Die Konfigurations-Datei konnte nicht geladen werden" | Die config.json ist beschädigt oder fehlt | Kontaktieren Sie Ihren Administrator |
-| "Das Verzeichnis für Scanner-Profile konnte nicht gefunden werden" | Der Pfad zu den Scanner-Profilen existiert nicht | Wenden Sie sich an Ihren IT-Administrator |
-| "Die erforderlichen Scanner-Profil-Dateien wurden nicht gefunden" | Standard oder Duplex Profil fehlen | Führen Sie eine Neuinstallation durch |
-| "Die Änderungen am Scanner-Profil konnten nicht gespeichert werden" | Schreibzugriff auf Profile-Dateien fehlt | Starten Sie das Programm neu oder kontaktieren Sie Ihren Administrator |
+| Fehler | Bedeutung | 
+|--------|-----------|
+| "Die Konfigurations-Datei konnte nicht geladen werden" | Das Programm kann nicht gestartet werden, da eine wichtige Datei fehlt. |
+| "Das Verzeichnis für Scanner-Profile konnte nicht gefunden werden" | Es konnte kein installierter TWAIN-Treiber gefunden werden. |
+| "Die erforderlichen Scanner-Profil-Dateien wurden nicht gefunden" | Es fehlen Vorlagen für wichtige Scanner-Profile. |
+| "Die Änderungen am Scanner-Profil konnten nicht gespeichert werden" | Es ist kein Schreibzugriff auf Profil-Dateien möglich. |
+
+In den meisten Fällen sollte es helfen, wenn Sie zuerst das eigentliche Scanner-Programm beenden und im Anschluss eine Neusinstallation des TWAIN-Treibers über den Kiosk durchführen. Im Anschluss doppelklicken Sie das **"ScanProfileSwitcher"**-Symbol auf Ihrem Desktop. Sollten nach wie Vor Fehler auftreten, kontaktieren Sie bitte ihre IT-Abteilung. 
 
 ## 🔧 Anforderungen
 
@@ -76,4 +79,4 @@ Die aktuelle Einstellung wird beim Programmstart automatisch angezeigt. Das derz
 
 ## 📞 Support
 
-Bei Problemen oder Fragen kontaktieren Sie bitte Ihren IT-Administrator.
+Bei Problemen oder Fragen kontaktieren Sie bitte Ihre IT-Abteilung.

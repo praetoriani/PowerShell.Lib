@@ -67,7 +67,7 @@
                        Margin="0,0,20,0"/>
             
             <!-- Message Text -->
-            <TextBlock Text="Die Änderungen wurden erfolgreich gespeichert.&#x0a;Das Programm wird jetzt beendet."
+            <TextBlock Text="Die Änderungen wurden erfolgreich gespeichert.&#x0a;Das Programm wird jetzt beendet.&#x0a;Bitte starten Sie ihr Scan-Progamm neu,&#x0a;damit die Änderungen wirksam werden!"
                        TextWrapping="Wrap"
                        FontSize="12"
                        Foreground="#134252"
