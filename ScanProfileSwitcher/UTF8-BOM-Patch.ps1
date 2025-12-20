@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     UTF-8 with BOM Encoding Patch Script (v1.1 FIXED)
     Konvertiert ALLE Dateien im aktuellen Verzeichnis und allen Unterverzeichnissen
