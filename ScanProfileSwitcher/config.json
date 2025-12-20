@@ -1,49 +1,50 @@
 {
   "applicationName": "ScanProfileSwitcher",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "TWAIN Scanner Profile Management Application",
   "currentProfile": "STANDARD",
   "language": "de-DE",
   "windows": {
     "main-app-win": {
       "title": "Scanner-Profil konfigurieren",
-      "width": 500,
-      "height": 350,
+      "width": 600,
+      "height": 420,
       "resizable": false,
       "minimizable": false,
       "maximizable": false
     },
     "popup-close": {
       "title": "Programm schließen?",
-      "width": 450,
-      "height": 200,
+      "width": 520,
+      "height": 260,
       "resizable": false
     },
     "popup-save": {
-      "title": "Änderungen gespeichert",
-      "width": 450,
-      "height": 200,
+      "title": "Anderungen gespeichert",
+      "width": 520,
+      "height": 260,
       "resizable": false
     },
     "popup-warn": {
       "title": "Ohne Speichern beenden?",
-      "width": 500,
-      "height": 220,
+      "width": 580,
+      "height": 300,
       "resizable": false
     },
     "popup-error": {
       "title": "Interner Fehler!",
-      "width": 500,
-      "height": 220,
+      "width": 550,
+      "height": 280,
       "resizable": false
     }
   },
   "ui": {
     "theme": "light",
-    "primaryColor": "#2180141",
+    "primaryColor": "#218014",
     "textColor": "#134252",
     "backgroundColor": "#F5F5F2",
-    "borderColor": "#5E5240"
+    "borderColor": "#5E5240",
+    "note": "All button colors are now uniform green (#218014) across all dialogs. Window sizes have been optimized for better button visibility and user experience."
   },
   "scanner": {
     "profilePath": "AppData\\Local\\Scanner\\Twain",
@@ -55,5 +56,10 @@
     "enabled": true,
     "errorLogFile": "error.log",
     "dateFormat": "dd.MM.yyyy ; HH:mm:ss"
+  },
+  "changelog": {
+    "v1.0.3": "UI Enhancement: Increase all window sizes for better visibility. Uniform button colors across all dialogs. Improved spacing and margins. Fixed hex color value #2180141 -> #218014.",
+    "v1.0.2": "Critical Fix: Remove DropShadow Effect from XAML (not supported in PowerShell XamlReader).",
+    "v1.0.1": "Bug Fix: Correct invalid 7-character hex color values to 6-character format."
   }
 }
