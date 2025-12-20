@@ -198,7 +198,7 @@ jobs:
             2. Extract to your desired folder
             3. Open PowerShell as Administrator
             4. Navigate to the extracted folder
-            5. First, run: `.\Install-ScanProfileSwitcher.ps1.ps1`
+            5. First, run: `.\Install-ScanProfileSwitcher.ps1`
             6. Then run the `ScanProfileSwitcher`-Shortcut from the users Desktop
             <br>
             
@@ -218,7 +218,7 @@ jobs:
             - Administrator privileges recommended for Installation
             <br>
             
-            ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes: <br> {0}', github.event.inputs.release_notes) || '' }}
+            ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes: <br><br> {0} <br><br>', github.event.inputs.release_notes) || '' }}
             
             ---
             *This release was automatically created by GitHub Actions.*
