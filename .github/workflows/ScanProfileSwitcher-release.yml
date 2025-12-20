@@ -1,492 +1,264 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 # =============================================================================
-
-# ENHANCED GITHUB ACTIONS WORKFLOW FOR SCANPROFILESWITCHER RELEASES
-
+# ENHANCED GITHUB ACTIONS WORKFLOW FOR ScanProfileSwitcher RELEASES
 # =============================================================================
-
 # This file defines an automated workflow that can be triggered in two ways:
-
-# 1. Automatically when a tag starting with "sps-" is created (e.g sps-v1.0.0)
-
+# 1. Automatically when a tag starting with "spsapp-" is created (e.g. spsapp-v1.0.1)
 # 2. Manually through the GitHub Actions interface with custom parameters
 
 name: ScanProfileSwitcher Release
 
 # TRIGGER CONFIGURATION - MULTIPLE TRIGGERS SUPPORTED
-
 # Defines when this workflow should be executed
-
 on:
-
-# AUTOMATIC TRIGGER: Tag-based execution
-
-push:
-
-tags:
-
-- 'sps-*' # Workflow starts only for tags beginning with "sps-"
-
-# Examples: sps-v1.0.0, sps-v1.0.1, sps-beta-1
-
-# MANUAL TRIGGER: Allows running workflow from GitHub Actions interface
-
-workflow_dispatch:
-
-inputs:
-
-tag_name:
-
-description: 'Tag name for the release (e.g., sps-v1.0.0)'
-
-required: true
-
-default: 'sps-v1.0.0'
-
-type: string
-
-create_tag:
-
-description: 'Create the tag if it does not exist'
-
-required: true
-
-default: true
-
-type: boolean
-
-release_notes:
-
-description: 'Additional release notes (optional)'
-
-required: false
-
-default: ''
-
-type: string
+  # AUTOMATIC TRIGGER: Tag-based execution
+  push:
+    tags:
+      - 'spsapp-*'  # Workflow starts only for tags beginning with "spsapp-"
+                    # Examples: spsapp-v1.0.1, spsapp-v2.0.0, spsapp-beta-1
+  
+  # MANUAL TRIGGER: Allows running workflow from GitHub Actions interface
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for the release (e.g., spsapp-v1.00.10)'
+        required: true
+        default: 'spsapp-v1.00.10'
+        type: string
+      create_tag:
+        description: 'Create the tag if it does not exist'
+        required: true
+        default: true
+        type: boolean
+      release_notes:
+        description: 'Additional release notes (optional)'
+        required: false
+        default: ''
+        type: string
 
 # PERMISSIONS
-
 # GitHub Actions requires explicit permission to create releases and tags
-
 permissions:
-
-contents: write # Allows creating and editing repository contents
-
-actions: write # Allows workflow management
+  contents: write  # Allows creating and editing repository contents
+  actions: write   # Allows workflow management
 
 # JOB DEFINITION
-
 # A workflow can contain multiple jobs, here we have only one
-
 jobs:
-
-release:
-
-runs-on: ubuntu-latest # The workflow runs on an Ubuntu Linux server
-
-# CONDITIONAL EXECUTION
-
-# Execute for sps-tagged pushes OR manual dispatch
-
-if: |
-
-(github.event_name == 'push' && startsWith(github.ref, 'refs/tags/sps-')) ||
-
-github.event_name == 'workflow_dispatch'
-
-# WORKFLOW STEPS
-
-# Each step is executed sequentially
-
-steps:
-
-# STEP 1: Download repository code
-
-# GitHub Actions runs on a fresh server and needs access to your code
-
-- name: Checkout repository
-
-uses: actions/checkout@v4 # Official GitHub Action for code download
-
-# After this step, all your repository files are available
-
-# STEP 2: Setup variables for different trigger types
-
-# Handle both automatic (tag push) and manual (workflow_dispatch) triggers
-
-- name: Setup release variables
-
-id: setup
-
-run: |
-
-# Determine tag name based on trigger type
-
-if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-
-# Manual trigger - use user input
-
-TAG_NAME="${{ github.event.inputs.tag_name }}"
-
-echo "🔧 Manual trigger detected"
-
-echo "📝 Using tag: $TAG_NAME"
-
-else
-
-# Automatic trigger - use pushed tag
-
-TAG_NAME="${{ github.ref_name }}"
-
-echo "🏷️ Automatic tag trigger detected"
-
-echo "📝 Using tag: $TAG_NAME"
-
-fi
-
-# Validate tag format
-
-if [[ ! $TAG_NAME =~ ^sps-.*$ ]]; then
-
-echo "❌ Error: Tag name must start with 'sps-'"
-
-echo "❌ Provided: $TAG_NAME"
-
-exit 1
-
-fi
-
-# Export variables for later steps
-
-echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-
-echo "✅ Tag validation successful: $TAG_NAME"
-
-# STEP 3: Create tag if manual trigger and tag doesn't exist
-
-# This step only runs for manual triggers when create_tag is enabled
-
-- name: Create tag if manual trigger
-
-if: |
-
-github.event_name == 'workflow_dispatch' &&
-
-github.event.inputs.create_tag == 'true'
-
-run: |
-
-TAG_NAME="${{ steps.setup.outputs.tag_name }}"
-
-# Configure Git with GitHub Actions bot identity
-
-git config user.name "GitHub Actions Bot"
-
-git config user.email "actions@github.com"
-
-# Check if tag already exists
-
-if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-
-echo "⚠️ Tag $TAG_NAME already exists"
-
-echo "ℹ️ Continuing with existing tag..."
-
-else
-
-# Create and push new tag
-
-echo "🏷️ Creating new tag: $TAG_NAME"
-
-git tag "$TAG_NAME"
-
-git push origin "$TAG_NAME"
-
-echo "✅ Tag created and pushed successfully"
-
-fi
-
-# STEP 4: Create release package
-
-# Only the ScanProfileSwitcher folder is packed into a ZIP package
-
-- name: Create ScanProfileSwitcher release package
-
-run: |
-
-# Debug output - displayed in the Actions log
-
-echo "🚀 Starting release package creation for ScanProfileSwitcher"
-
-# Create temporary folder for the release
-
-mkdir -p release-temp/ScanProfileSwitcher
-
-echo "📁 Temporary release folder created"
-
-# Verify source folder exists
-
-if [ ! -d "ScanProfileSwitcher" ]; then
-
-echo "❌ Error: 'ScanProfileSwitcher' folder not found!"
-
-echo "📂 Available folders:"
-
-ls -la
-
-exit 1
-
-fi
-
-# IMPORTANT: Copy all files from the ScanProfileSwitcher folder
-
-cp -r ScanProfileSwitcher/* release-temp/ScanProfileSwitcher/
-
-echo "📋 ScanProfileSwitcher files copied:"
-
-ls -la ScanProfileSwitcher/
-
-# Change to temporary folder
-
-cd release-temp
-
-# Create ZIP file with all ScanProfileSwitcher files
-
-# -r = recursive (include all subdirectories)
-
-zip -r ../scanprofileswitcher-release.zip ScanProfileSwitcher/
-
-# Return to root directory
-
-cd ..
-
-# Confirmation and display ZIP file size
-
-echo "✅ ZIP file created:"
-
-ls -lh scanprofileswitcher-release.zip
-
-# Verify ZIP file contents
-
-echo "📦 ZIP file contents:"
-
-unzip -l scanprofileswitcher-release.zip
-
-# STEP 5: Create GitHub release with enhanced descriptions
-
-# This is the most important step - the actual release is created here
-
-- name: Create GitHub release with assets
-
-uses: softprops/action-gh-release@v1 # Proven third-party action for releases
-
-with:
-
-# DYNAMIC TAG NAME handling for both trigger types
-
-tag_name: ${{ steps.setup.outputs.tag_name }}
-
-# RELEASE TITLE
-
-# Uses the tag name (e.g. "ScanProfileSwitcher sps-v1.0.0")
-
-name: ScanProfileSwitcher ${{ steps.setup.outputs.tag_name }}
-
-# ENHANCED RELEASE DESCRIPTION (Markdown format supported)
-
-body: |
-
-## 📂 **File Download:**
-
-**📦 [`scanprofileswitcher-release.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/scanprofileswitcher-release.zip)**
-
-## 🚀 Installation:
-
-1. Download the `scanprofileswitcher-release.zip` file above
-
-2. Extract to a temporary folder
-
-3. Right-click on `Install-ScanProfileSwitcher.ps1`
-
-4. Select **"Run with PowerShell"**
-
-5. Confirm the User Account Control prompt (Administrator privileges required)
-
-6. The installation script will automatically:
-   - Create the installation directory (`C:\kkh\ScanProfileSwitcher`)
-   - Copy all application files
-   - Create a desktop shortcut
-   - Set appropriate file permissions
-
-## 📖 User Guide:
-
-After installation, look for the **ScanProfileSwitcher** shortcut on your desktop.
-
-1. **Launch** the application by double-clicking the shortcut
-
-2. **Select Profile**:
-   - ☐ Standard-Profil (Scans front side only)
-   - ☐ Duplex-Profil (Scans both front and back sides)
-
-3. **Save** your selection by clicking the "Speichern" button
-
-4. The application will:
-   - Switch the scanner profile
-   - Save your selection
-   - Close automatically
-
-## 💡 Usage Tips:
-
-- **Profiles are mutually exclusive**: Only one profile can be active at a time
-- **Changes are persistent**: Your selection is saved and restored on next launch
-- **No administrator needed**: After installation, users can run the application without admin rights
-- **Quick access**: Use the desktop shortcut for fast profile switching
-
-## ⚠️ System Requirements:
-
-- Windows 10/11
-- PowerShell 5.0 or higher
-- TWAIN scanner driver (must be installed and configured)
-- Administrator privileges required for installation only
-
-## 📋 What's Included:
-
-- `ScanProfileSwitcher.ps1` - Main application (PowerShell/WPF)
-- `Install-ScanProfileSwitcher.ps1` - Automated installation script
-- `config.json` - Application configuration file
-- `GUI/` - XAML UI definitions for all dialogs
-- `README.md` - User documentation
-- `INSTALL.md` - Administrator guide
-- `QUICKSTART.md` - Quick reference guide
-
-## 🔧 Configuration:
-
-Advanced users can edit `config.json` to customize:
-- Application language (de-DE, en-us)
-- Window dimensions and appearance
-- Scanner profile paths
-- Logging behavior
-
-${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes:\n{0}', github.event.inputs.release_notes) || '' }}
-
----
-
-*This release was automatically created by GitHub Actions.*
-
-# RELEASE SETTINGS
-
-files: scanprofileswitcher-release.zip # The ZIP file as download asset
-
-draft: false # false = Release is published immediately
-
-prerelease: false # false = Normal release (not marked as beta)
-
-# ERROR HANDLING
-
-fail_on_unmatched_files: true # Workflow fails if ZIP file doesn't exist
-
-# AUTHENTICATION
-
-# GitHub Actions automatically uses GITHUB_TOKEN for authentication
-
-env:
-
-GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-# STEP 6: Confirm success with enhanced logging
-
-- name: Confirm release creation and provide usage instructions
-
-run: |
-
-TAG_NAME="${{ steps.setup.outputs.tag_name }}"
-
-TRIGGER_TYPE="${{ github.event_name }}"
-
-echo "🎉 ScanProfileSwitcher release successfully created!"
-
-echo ""
-
-echo "📊 Release Information:"
-
-echo " 🏷️ Tag: $TAG_NAME"
-
-echo " 🔄 Trigger: $TRIGGER_TYPE"
-
-echo " 📁 Repository: ${{ github.repository }}"
-
-echo " 🔗 Commit: ${{ github.sha }}"
-
-echo " ⏰ Created: $(date '+%Y-%m-%d %H:%M:%S UTC')"
-
-echo ""
-
-echo "🌐 Release Links:"
-
-echo " 📖 Release Page: https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
-
-echo " 💾 Direct Download: https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/scanprofileswitcher-release.zip"
-
-echo ""
-
-echo "🚀 Next Steps for Users:"
-
-echo " 1. Visit the release page above"
-
-echo " 2. Download 'scanprofileswitcher-release.zip'"
-
-echo " 3. Extract to a temporary folder"
-
-echo " 4. Run 'Install-ScanProfileSwitcher.ps1' as Administrator"
-
-echo " 5. Look for 'ScanProfileSwitcher' shortcut on desktop"
-
-echo ""
-
-echo "🔧 For Developers:"
-
-if [ "$TRIGGER_TYPE" = "workflow_dispatch" ]; then
-
-echo " • This release was created manually via GitHub Actions"
-
-echo " • To create another release, go to Actions → ScanProfileSwitcher Release → Run workflow"
-
-else
-
-echo " • This release was created automatically by pushing tag: $TAG_NAME"
-
-echo " • To create another release, push a new sps-* tag or use manual trigger"
-
-fi
-
-echo " • Manual trigger available at: https://github.com/${{ github.repository }}/actions/workflows/ScanProfileSwitcher-release.yml"
-
-echo ""
-
-echo "📦 Release Package Contents:"
-
-echo " • ScanProfileSwitcher.ps1 - Main application"
-
-echo " • Install-ScanProfileSwitcher.ps1 - Installation script"
-
-echo " • config.json - Configuration file"
-
-echo " • GUI/ folder - XAML UI definitions"
-
-echo " • Documentation files (README, INSTALL, QUICKSTART)"
-
-echo ""
-
-echo "✅ Installation Checklist:"
-
-echo " 1. Extract ZIP file"
-
-echo " 2. Run Install-ScanProfileSwitcher.ps1 as Administrator"
-
-echo " 3. Confirm installation"
-
-echo " 4. Use desktop shortcut to launch application"
-
-echo " 5. Select scanner profile and save"
+  release:
+    runs-on: ubuntu-latest  # The workflow runs on an Ubuntu Linux server
+    
+    # CONDITIONAL EXECUTION
+    # Execute for spsapp-tagged pushes OR manual dispatch
+    if: |
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/spsapp-')) ||
+      github.event_name == 'workflow_dispatch'
+    
+    # WORKFLOW STEPS
+    # Each step is executed sequentially
+    steps:
+      # STEP 1: Download repository code
+      # GitHub Actions runs on a fresh server and needs access to your code
+      - name: Checkout repository
+        uses: actions/checkout@v4  # Official GitHub Action for code download
+        # After this step, all your repository files are available
+      
+      # STEP 2: Setup variables for different trigger types
+      # Handle both automatic (tag push) and manual (workflow_dispatch) triggers
+      - name: Setup release variables
+        id: setup
+        run: |
+          # Determine tag name based on trigger type
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual trigger - use user input
+            TAG_NAME="${{ github.event.inputs.tag_name }}"
+            echo "🔧 Manual trigger detected"
+            echo "📝 Using tag: $TAG_NAME"
+          else
+            # Automatic trigger - use pushed tag
+            TAG_NAME="${{ github.ref_name }}"
+            echo "🏷️ Automatic tag trigger detected"
+            echo "📝 Using tag: $TAG_NAME"
+          fi
+          
+          # Validate tag format
+          if [[ ! $TAG_NAME =~ ^spsapp-.*$ ]]; then
+            echo "❌ Error: Tag name must start with 'spsapp-'"
+            echo "❌ Provided: $TAG_NAME"
+            exit 1
+          fi
+          
+          # Export variables for later steps
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "✅ Tag validation successful: $TAG_NAME"
+      
+      # STEP 3: Create tag if manual trigger and tag doesn't exist
+      # This step only runs for manual triggers when create_tag is enabled
+      - name: Create tag if manual trigger
+        if: |
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.create_tag == 'true'
+        run: |
+          TAG_NAME="${{ steps.setup.outputs.tag_name }}"
+          
+          # Configure Git with GitHub Actions bot identity
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          
+          # Check if tag already exists
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "⚠️ Tag $TAG_NAME already exists"
+            echo "ℹ️ Continuing with existing tag..."
+          else
+            # Create and push new tag
+            echo "🏷️ Creating new tag: $TAG_NAME"
+            git tag "$TAG_NAME"
+            git push origin "$TAG_NAME"
+            echo "✅ Tag created and pushed successfully"
+          fi
+      
+      # STEP 4: Create release package
+      # Only the ScanProfileSwitcher folder is packed into a ZIP package
+      - name: Create ScanProfileSwitcher release package
+        run: |
+          # Debug output - displayed in the Actions log
+          echo "🚀 Starting release package creation for ScanProfileSwitcher"
+          
+          # Create temporary folder for the release
+          mkdir -p release-temp/ScanProfileSwitcher
+          echo "📁 Temporary release folder created"
+          
+          # Verify source folder exists
+          if [ ! -d "ScanProfileSwitcher" ]; then
+            echo "❌ Error: 'ScanProfileSwitcher' folder not found!"
+            echo "📂 Available folders:"
+            ls -la
+            exit 1
+          fi
+          
+          # IMPORTANT: Copy all files from the ScanProfileSwitcher folder
+          # Folder name contains dots, but no spaces in this case
+          cp -r ScanProfileSwitcher/* release-temp/ScanProfileSwitcher/
+          echo "📋 ScanProfileSwitcher files copied:"
+          ls -la ScanProfileSwitcher/
+          
+          # Change to temporary folder
+          cd release-temp
+          
+          # Create ZIP file with all ScanProfileSwitcher files
+          # -r = recursive (include all subdirectories)
+          zip -r ../ScanProfileSwitcher.zip ScanProfileSwitcher/
+          
+          # Return to root directory
+          cd ..
+          
+          # Confirmation and display ZIP file size
+          echo "✅ ZIP file created:"
+          ls -lh ScanProfileSwitcher.zip
+          
+          # Verify ZIP file contents
+          echo "📦 ZIP file contents:"
+          unzip -l ScanProfileSwitcher.zip
+      
+      # STEP 5: Create GitHub release with enhanced descriptions
+      # This is the most important step - the actual release is created here
+      - name: Create GitHub release with assets
+        uses: softprops/action-gh-release@v1  # Proven third-party action for releases
+        with:
+          # DYNAMIC TAG NAME handling for both trigger types
+          tag_name: ${{ steps.setup.outputs.tag_name }}
+          
+          # RELEASE TITLE
+          # Uses the tag name (e.g. "ScanProfileSwitcher spsapp-v1.00.10")
+          name: ScanProfileSwitcher ${{ steps.setup.outputs.tag_name }}
+          
+          # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
+          body: |
+            ## 📂 **File Download:**
+            
+            **📦 [`ScanProfileSwitcher.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/ScanProfileSwitcher.zip)**
+            <br>
+
+            ## 🚀 Installation:
+            1. Download the `ScanProfileSwitcher.zip` file above
+            2. Extract to your desired folder
+            3. Open PowerShell as Administrator
+            4. Navigate to the extracted folder
+            5. First, run: `.\Install-ScanProfileSwitcher.ps1.ps1`
+            6. Then run the `ScanProfileSwitcher`-Shortcut from the users Desktop
+            <br>
+            
+            ## 💡 Insider tip:
+            You can create a shortcut by your own by creating a shortcut and using the following command as the target.:
+            ```
+            C:\Windows\System32\conhost.exe --headless powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "C:\PATH\TO\ScanProfileSwitcher.ps1"
+            ```
+            Change `-File "C:\PATH\TO\ScanProfileSwitcher.ps1"` to the actual location of `ScanProfileSwitcher.ps1`
+            Save the changes, run the Shortcut and thank me later 😉
+            <br>
+            
+            ## ⚠️ System Requirements:
+            - Windows 10/11
+            - PowerShell 5.0 or higher
+            - .NET Framework 4.7.2 or higher
+            - Administrator privileges recommended for Installation
+            <br>
+            
+            ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes:\n{0}', github.event.inputs.release_notes) || '' }}
+            
+            ---
+            *This release was automatically created by GitHub Actions.*
+          
+          # RELEASE SETTINGS
+          files: ScanProfileSwitcher.zip     # The ZIP file as download asset
+          draft: false                       # false = Release is published immediately
+          prerelease: false                  # false = Normal release (not marked as beta)
+          
+          # ERROR HANDLING
+          fail_on_unmatched_files: true      # Workflow fails if ZIP file doesn't exist
+        
+        # AUTHENTICATION
+        # GitHub Actions automatically uses GITHUB_TOKEN for authentication
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # STEP 6: Confirm success with enhanced logging
+      # Optional, but helpful for debugging and monitoring
+      - name: Confirm release creation and provide usage instructions
+        run: |
+          TAG_NAME="${{ steps.setup.outputs.tag_name }}"
+          TRIGGER_TYPE="${{ github.event_name }}"
+          
+          echo "🎉 ScanProfileSwitcher release successfully created!"
+          echo ""
+          echo "📊 Release Information:"
+          echo "  🏷️ Tag: $TAG_NAME"
+          echo "  🔄 Trigger: $TRIGGER_TYPE"
+          echo "  📁 Repository: ${{ github.repository }}"
+          echo "  🔗 Commit: ${{ github.sha }}"
+          echo "  ⏰ Created: $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          echo ""
+          echo "🌐 Release Links:"
+          echo "  📖 Release Page: https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
+          echo "  💾 Direct Download: https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/ScanProfileSwitcher.zip"
+          echo ""
+          echo "🚀 Next Steps for Users:"
+          echo "  1. Visit the release page above"
+          echo "  2. Download 'ScanProfileSwitcher.zip'"
+          echo "  3. Ignore the 'Source code' files"
+          echo "  4. Extract ScanProfileSwitcher.zip"
+          echo "  5. Run PowerShell Console as Administrator"
+          echo "  6. Go to the extrcted folder"
+          echo "  7. Run Install-ScanProfileSwitcher.ps1 as Administrator"
+          echo ""
+          echo "🔧 For Developers:"
+          if [ "$TRIGGER_TYPE" = "workflow_dispatch" ]; then
+            echo "  • This release was created manually via GitHub Actions"
+            echo "  • To create another release, go to Actions → ScanProfileSwitcher Release → Run workflow"
+          else
+            echo "  • This release was created automatically by pushing tag: $TAG_NAME"
+            echo "  • To create another release, push a new spsapp-* tag or use manual trigger"
+          fi
+          echo "  • Manual trigger available at: https://github.com/${{ github.repository }}/actions/workflows/ScanProfileSwitcher.yml"
+          echo ""
