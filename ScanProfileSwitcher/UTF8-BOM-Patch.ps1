@@ -1,12 +1,16 @@
-﻿<#
+<#
 .SYNOPSIS
-    UTF-8 with BOM Encoding Patch Script (v1.1 FIXED)
+    UTF-8 with BOM Encoding Patch Script (v1.2 COMPLETE REWRITE)
     Konvertiert ALLE Dateien im aktuellen Verzeichnis und allen Unterverzeichnissen
     zu UTF-8 with BOM Format.
 
 .DESCRIPTION
-    Dieses Skript durchsucht rekursiv alle Dateien in der Verzeichnisstruktur
-    und konvertiert sie zu UTF-8 with BOM Encoding.
+    KRITISCH: Dieses Skript behebt die UTF-8 BOM Codierungsprobleme!
+    
+    WICHTIG:
+    - Verwendet EXPLIZITES UTF-8 ohne BOM zum Lesen (nicht autodetect!)
+    - Schreibt EXPLIZIT UTF-8 MIT BOM
+    - Keine Autodetection, keine Seiteneffekte!
     
     UTF-8 with BOM ist essentiell für:
     - XAML-Dateien mit Umlauten (ä, ö, ü)
@@ -37,7 +41,7 @@
 .NOTES
     Author: PowerShell Development Team
     Date: 2025-12-20
-    Version: 1.1 (FIXED - BOM wird jetzt korrekt geschrieben)
+    Version: 1.2 (COMPLETE REWRITE - Fixed encoding issues)
 #>
 
 param(
@@ -55,7 +59,7 @@ param(
 $ErrorActionPreference = "Stop"
 $VerbosePreference = "Continue"
 
-# Funktion: Datei zu UTF-8 with BOM konvertieren (FIXED)
+# Funktion: Datei zu UTF-8 with BOM konvertieren (COMPLETE REWRITE)
 function Convert-FileToUTF8BOM {
     param(
         [Parameter(Mandatory = $true)]
@@ -63,15 +67,16 @@ function Convert-FileToUTF8BOM {
     )
     
     try {
-        # Datei komplett lesen (beliebiges Encoding)
-        $content = [System.IO.File]::ReadAllText($FilePath)
+        # KRITISCH: Explizit UTF-8 OHNE BOM lesen (nicht autodetect!)
+        # Das ist der Schlüssel!
+        $encoding = New-Object System.Text.UTF8Encoding($false) # $false = NO BOM
+        $content = [System.IO.File]::ReadAllText($FilePath, $encoding)
         
-        # UTF-8 with BOM Encoding
-        # Der Parameter $true bei UTF8Encoding erzwingt das BOM-Schreiben!
-        $utf8WithBOM = New-Object System.Text.UTF8Encoding($true)
+        # UTF-8 WITH BOM Encoding - der $true Parameter ist essentiell!
+        $utf8WithBOM = New-Object System.Text.UTF8Encoding($true) # $true = WITH BOM
         $bytes = $utf8WithBOM.GetBytes($content)
         
-        # Mit BOM schreiben (WriteAllBytes schöndet keine BOM)
+        # Schreibe mit BOM
         [System.IO.File]::WriteAllBytes($FilePath, $bytes)
         
         return $true
@@ -82,7 +87,7 @@ function Convert-FileToUTF8BOM {
     }
 }
 
-# Funktion: BOM-Status prüfen (IMPROVED)
+# Funktion: BOM-Status prüfen
 function Test-UTF8BOM {
     param(
         [Parameter(Mandatory = $true)]
@@ -90,14 +95,11 @@ function Test-UTF8BOM {
     )
     
     try {
-        # Erste 3 Bytes auslesen
-        $fileStream = [System.IO.File]::OpenRead($FilePath)
-        $bytes = New-Object byte[] 3
-        $bytesRead = $fileStream.Read($bytes, 0, 3)
-        $fileStream.Close()
+        # Lese erste 3 Bytes
+        $bytes = [System.IO.File]::ReadAllBytes($FilePath)
         
-        # UTF-8 BOM = EF BB BF (3 Bytes)
-        if ($bytesRead -eq 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+        # UTF-8 BOM = EF BB BF (exakt diese 3 Bytes am Anfang)
+        if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
             return $true
         }
         
@@ -110,9 +112,10 @@ function Test-UTF8BOM {
 
 # Main Script
 Write-Host "`n" -ForegroundColor Cyan
-Write-Host "================================================================================" -ForegroundColor Cyan
-Write-Host "    UTF-8 with BOM ENCODING PATCH (v1.1 - FIXED)" -ForegroundColor Yellow
-Write-Host "================================================================================" -ForegroundColor Cyan
+Write-Host "=================================================================================" -ForegroundColor Cyan
+Write-Host "    UTF-8 with BOM ENCODING PATCH (v1.2 - COMPLETE REWRITE)" -ForegroundColor Yellow
+Write-Host "    KRITISCH: Explizites Encoding (nicht autodetect!)" -ForegroundColor Red
+Write-Host "=================================================================================" -ForegroundColor Cyan
 Write-Host "`n" -ForegroundColor Cyan
 
 # Pfad validieren
@@ -186,9 +189,9 @@ foreach ($file in $filesToPatch) {
 
 # Zusammenfassung
 Write-Host "`n" -ForegroundColor Cyan
-Write-Host "================================================================================" -ForegroundColor Cyan
+Write-Host "=================================================================================" -ForegroundColor Cyan
 Write-Host "    ZUSAMMENFASSUNG" -ForegroundColor Yellow
-Write-Host "================================================================================" -ForegroundColor Cyan
+Write-Host "=================================================================================" -ForegroundColor Cyan
 Write-Host "`n" -ForegroundColor Cyan
 
 Write-Host "Erfolgreich konvertiert: " -ForegroundColor Green -NoNewline
@@ -204,11 +207,12 @@ Write-Host "Gesamt:                 " -ForegroundColor Green -NoNewline
 Write-Host $filesToPatch.Count -ForegroundColor Cyan
 
 Write-Host "`n" -ForegroundColor Cyan
-Write-Host "================================================================================" -ForegroundColor Cyan
-Write-Host "    BOM erfolgreich aktualisiert!" -ForegroundColor Yellow
-Write-Host "    V-Code zeigt jetzt: UTF-8 with BOM" -ForegroundColor Green
-Write-Host "================================================================================" -ForegroundColor Cyan
+if ($successCount -gt 0) {
+    Write-Host "✓ BOM erfolgreich aktualisiert!" -ForegroundColor Green
+    Write-Host "✓ Öffne eine Datei in VS-Code: Sollte 'UTF-8 with BOM' anzeigen!" -ForegroundColor Green
+}
+Write-Host "`n" -ForegroundColor Cyan
+Write-Host "=================================================================================" -ForegroundColor Cyan
 Write-Host "`n" -ForegroundColor Cyan
 
-# Erfolgreicher Exit
 exit 0
