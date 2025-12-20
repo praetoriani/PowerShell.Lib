@@ -9,7 +9,7 @@
     Supports Standard (single-sided) and Duplex (double-sided) scanning configurations.
     
 .NOTES
-    Version:        1.0.8
+    Version:        1.0.9
     Author:         System Administrator
     Created:        2025-12-20
     Updated:        2025-12-20
