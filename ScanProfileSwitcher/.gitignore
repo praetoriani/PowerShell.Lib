@@ -1,0 +1,34 @@
+# PowerShell and Runtime
+*.ps1.bak
+*.log
+error.log
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+Thumbs.db
+.DS_Store
+*.lnk
+
+# Git
+.git/
+.gitignore
+
+# Build output
+bin/
+obj/
+
+# Package output
+*.zip
+*.7z
+*.rar
+
+# Temporary
+~*
+*.swp
+*.swo
+*~
