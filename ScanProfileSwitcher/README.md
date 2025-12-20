@@ -1,4 +1,4 @@
-# ScanProfileSwitcher
+﻿# ScanProfileSwitcher
 
 ## Übersicht
 

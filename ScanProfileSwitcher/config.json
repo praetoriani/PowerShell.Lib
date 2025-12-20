@@ -1,4 +1,4 @@
-{
+﻿{
   "applicationName": "ScanProfileSwitcher",
   "version": "1.0.6",
   "description": "TWAIN Scanner Profile Management Application",
@@ -58,7 +58,7 @@
     "dateFormat": "dd.MM.yyyy ; HH:mm:ss"
   },
   "changelog": {
-    "v1.0.6": "UTF-8 with BOM encoding for ALL files (XAML, PowerShell, JSON, Markdown). Fixes character display issues with German umlauts ("a","o","u","ss").",
+    "v1.0.6": "UTF-8 with BOM encoding for ALL files (XAML, PowerShell, JSON, Markdown). Fixes character display issues with German umlauts ('a','o','u','ss').",
     "v1.0.5": "CRITICAL FIX: Fixed Setter.View error (should be Value). Optimized window sizes to avoid 'too large' issue.",
     "v1.0.4": "Major UI Overhaul: UTF-8 BOM encoding, larger fonts, gray buttons, correct checkmark symbols, bigger icons, improved spacing.",
     "v1.0.3": "UI Enhancement: Window sizes increased, uniform button colors, improved spacing.",

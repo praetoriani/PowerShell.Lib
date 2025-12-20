@@ -1,4 +1,4 @@
-# ScanProfileSwitcher - Quick Start Reference
+﻿# ScanProfileSwitcher - Quick Start Reference
 
 ## 🚀 Für Benutzer (60 Sekunden)
 

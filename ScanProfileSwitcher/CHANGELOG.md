@@ -1,4 +1,4 @@
-# Changelog - ScanProfileSwitcher
+﻿# Changelog - ScanProfileSwitcher
 
 ## [1.0.6] - 2025-12-20
 

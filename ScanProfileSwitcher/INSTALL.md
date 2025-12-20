@@ -1,4 +1,4 @@
-# ScanProfileSwitcher - Administratorhandbuch & Installation
+﻿# ScanProfileSwitcher - Administratorhandbuch & Installation
 
 ## 📋 Systemanforderungen
 
