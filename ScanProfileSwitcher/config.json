@@ -1,50 +1,50 @@
 {
   "applicationName": "ScanProfileSwitcher",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "TWAIN Scanner Profile Management Application",
   "currentProfile": "STANDARD",
   "language": "de-DE",
   "windows": {
     "main-app-win": {
       "title": "Scanner-Profil konfigurieren",
-      "width": 600,
-      "height": 420,
+      "width": 700,
+      "height": 520,
       "resizable": false,
       "minimizable": false,
       "maximizable": false
     },
     "popup-close": {
       "title": "Programm schließen?",
-      "width": 520,
-      "height": 260,
-      "resizable": false
-    },
-    "popup-save": {
-      "title": "Anderungen gespeichert",
-      "width": 520,
-      "height": 260,
-      "resizable": false
-    },
-    "popup-warn": {
-      "title": "Ohne Speichern beenden?",
       "width": 580,
       "height": 300,
       "resizable": false
     },
+    "popup-save": {
+      "title": "Änderungen gespeichert",
+      "width": 580,
+      "height": 300,
+      "resizable": false
+    },
+    "popup-warn": {
+      "title": "Ohne Speichern beenden?",
+      "width": 620,
+      "height": 340,
+      "resizable": false
+    },
     "popup-error": {
       "title": "Interner Fehler!",
-      "width": 550,
-      "height": 280,
+      "width": 600,
+      "height": 320,
       "resizable": false
     }
   },
   "ui": {
     "theme": "light",
-    "primaryColor": "#218014",
+    "primaryColor": "#757575",
     "textColor": "#134252",
     "backgroundColor": "#F5F5F2",
     "borderColor": "#5E5240",
-    "note": "All button colors are now uniform green (#218014) across all dialogs. Window sizes have been optimized for better button visibility and user experience."
+    "note": "All buttons are now gray (#757575). Window sizes optimized for better visibility. UTF-8 BOM encoding. Larger fonts throughout. Proper checkmark symbols."
   },
   "scanner": {
     "profilePath": "AppData\\Local\\Scanner\\Twain",
@@ -58,8 +58,9 @@
     "dateFormat": "dd.MM.yyyy ; HH:mm:ss"
   },
   "changelog": {
-    "v1.0.3": "UI Enhancement: Increase all window sizes for better visibility. Uniform button colors across all dialogs. Improved spacing and margins. Fixed hex color value #2180141 -> #218014.",
-    "v1.0.2": "Critical Fix: Remove DropShadow Effect from XAML (not supported in PowerShell XamlReader).",
-    "v1.0.1": "Bug Fix: Correct invalid 7-character hex color values to 6-character format."
+    "v1.0.4": "MAJOR UI Overhaul: UTF-8 BOM encoding, larger fonts (title 24, text 13-14), gray buttons (#757575), proper checkmark symbols (✓), bigger icons, optimized window sizes (700x520 main, 580-620 popups), improved spacing and padding throughout all dialogs.",
+    "v1.0.3": "UI Enhancement: Increase window sizes, uniform button colors, improved spacing.",
+    "v1.0.2": "Critical Fix: Remove DropShadow Effect from XAML.",
+    "v1.0.1": "Bug Fix: Correct invalid hex color values."
   }
 }
