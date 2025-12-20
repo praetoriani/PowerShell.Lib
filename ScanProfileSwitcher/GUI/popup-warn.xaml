@@ -14,7 +14,7 @@
     
     <Window.Resources>
         <Style x:Key="DialogButton" TargetType="Button">
-            <Setter Property="Background" Value="#2180141"/>
+            <Setter Property="Background" Value="#218014"/>
             <Setter Property="Foreground" Value="#FFFBFD"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="Medium"/>
