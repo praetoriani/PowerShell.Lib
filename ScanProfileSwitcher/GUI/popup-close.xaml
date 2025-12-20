@@ -2,6 +2,8 @@
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Programm schließen?"
+        Width="480"
+        Height="240"
         WindowStyle="SingleBorderWindow"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
@@ -15,7 +17,7 @@
         <Style x:Key="DialogButton" TargetType="Button">
             <Setter Property="Background" Value="#757575"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="15"/>
             <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="Padding" Value="18,10"/>
             <Setter Property="MinWidth" Value="110"/>
@@ -46,13 +48,13 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,10,0,14">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,12,0,16">
             <TextBlock Text="?" FontSize="48" FontWeight="Bold" Foreground="#757575" Width="52" Height="52" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,16,0"/>
-            <TextBlock Text="Möchten Sie das Programm wirklich beenden?&#x0a;Nicht gespeicherte Änderungen am Scanner-Profil gehen verloren!" TextWrapping="Wrap" FontSize="13" Foreground="#134252" LineHeight="21" VerticalAlignment="Center"/>
+            <TextBlock Text="Möchten Sie das Programm wirklich beenden?&#x0a;Nicht gespeicherte Änderungen am Scanner-Profil gehen verloren!" TextWrapping="Wrap" FontSize="14" Foreground="#134252" LineHeight="22" VerticalAlignment="Center"/>
         </StackPanel>
         
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0" Height="Auto">
-            <Button Style="{StaticResource DialogButton}" Content="Ja" Width="110" Margin="0,0,16,0" x:Name="YesButton"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0" Height="Auto">
+            <Button Style="{StaticResource DialogButton}" Content="Ja" Width="110" Margin="0,0,18,0" x:Name="YesButton"/>
             <Button Style="{StaticResource DialogButton}" Content="Nein" Width="110" x:Name="NoButton"/>
         </StackPanel>
     </Grid>
