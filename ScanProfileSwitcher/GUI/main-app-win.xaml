@@ -1,0 +1,209 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Scanner-Profil konfigurieren"
+        Width="500"
+        Height="350"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F2"
+        Foreground="#134252"
+        Icon="pack://application:,,,/Windows/System32/shell32.dll?128"
+        x:Name="MainWindow">
+    
+    <Window.Resources>
+        <Style x:Key="RoundedCornerBorder" TargetType="Border">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="#FFFBFD"/>
+            <Setter Property="BorderBrush" Value="#5E5240"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadow BlurRadius="4" ShadowDepth="2" Opacity="0.1" Color="#000000"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#2180141"/>
+            <Setter Property="Foreground" Value="#FFFBFD"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}"
+                                x:Name="border">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1D7480"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1A6C73"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#FAFAF8"/>
+            <Setter Property="Foreground" Value="#134252"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#5E5240"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}"
+                                x:Name="border">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#F0F0ED"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#E8E8E5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="CustomCheckbox" TargetType="CheckBox">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,8"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Foreground" Value="#134252"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Border CornerRadius="6" 
+                                Padding="{TemplateBinding Padding}"
+                                Background="#FFFBFD"
+                                BorderBrush="#5E5240"
+                                BorderThickness="1"
+                                x:Name="border">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" 
+                                        Width="20" 
+                                        Height="20" 
+                                        CornerRadius="4"
+                                        Background="#FAFAF8"
+                                        BorderBrush="#2180141"
+                                        BorderThickness="2"
+                                        x:Name="checkBox"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="✓" 
+                                             FontSize="14" 
+                                             Foreground="#2180141" 
+                                             FontWeight="Bold"
+                                             VerticalAlignment="Center"
+                                             HorizontalAlignment="Center"
+                                             x:Name="checkMark"
+                                             Visibility="Collapsed"/>
+                                </Border>
+                                <ContentPresenter Grid.Column="1" 
+                                                VerticalAlignment="Center" 
+                                                Margin="12,0,0,0"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="checkMark" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="border" Property="Background" Value="#E8F5F7"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#F0F8FA"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Title Bar -->
+        <TextBlock Grid.Row="0" 
+                   Text="Scanner-Profil konfigurieren" 
+                   FontSize="18" 
+                   FontWeight="Bold" 
+                   Foreground="#134252" 
+                   Margin="0,0,0,10"
+                   x:Name="TitleBar"/>
+        
+        <!-- Instructions -->
+        <TextBlock Grid.Row="1" 
+                   Text="Bitte wählen Sie eine der unten stehenden Scanner-Profile aus und bestätigen Sie ihre Auswahl anschließend mit einem Klick auf den Speichern-Button" 
+                   TextWrapping="Wrap" 
+                   FontSize="12" 
+                   Foreground="#5E5240" 
+                   LineHeight="18"
+                   Margin="0,0,0,30"/>
+        
+        <!-- Profile Selection Container -->
+        <StackPanel Grid.Row="2" VerticalAlignment="Top" Margin="0,0,0,30">
+            <!-- Standard Profile Checkbox -->
+            <CheckBox Style="{StaticResource CustomCheckbox}"
+                      Content="Standard-Profil (Scannt nur die Vorderseite)"
+                      x:Name="StandardCheckbox"
+                      IsChecked="False"/>
+            
+            <!-- Duplex Profile Checkbox -->
+            <CheckBox Style="{StaticResource CustomCheckbox}"
+                      Content="Duplex-Profil (Scannt Vorder- und Rückseite)"
+                      x:Name="DuplexCheckbox"
+                      IsChecked="False"
+                      Margin="0,16,0,0"/>
+        </StackPanel>
+        
+        <!-- Button Container -->
+        <StackPanel Grid.Row="4" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,20,0,0"
+                    Height="Auto">
+            <Button Style="{StaticResource PrimaryButton}" 
+                    Content="Speichern" 
+                    Width="120" 
+                    Margin="0,0,20,0"
+                    x:Name="SaveButton"/>
+            <Button Style="{StaticResource SecondaryButton}" 
+                    Content="Beenden" 
+                    Width="120"
+                    x:Name="CloseButton"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,59 @@
+{
+  "applicationName": "ScanProfileSwitcher",
+  "version": "1.0.0",
+  "description": "TWAIN Scanner Profile Management Application",
+  "currentProfile": "STANDARD",
+  "language": "de-DE",
+  "windows": {
+    "main-app-win": {
+      "title": "Scanner-Profil konfigurieren",
+      "width": 500,
+      "height": 350,
+      "resizable": false,
+      "minimizable": false,
+      "maximizable": false
+    },
+    "popup-close": {
+      "title": "Programm schließen?",
+      "width": 450,
+      "height": 200,
+      "resizable": false
+    },
+    "popup-save": {
+      "title": "Änderungen gespeichert",
+      "width": 450,
+      "height": 200,
+      "resizable": false
+    },
+    "popup-warn": {
+      "title": "Ohne Speichern beenden?",
+      "width": 500,
+      "height": 220,
+      "resizable": false
+    },
+    "popup-error": {
+      "title": "Interner Fehler!",
+      "width": 500,
+      "height": 220,
+      "resizable": false
+    }
+  },
+  "ui": {
+    "theme": "light",
+    "primaryColor": "#2180141",
+    "textColor": "#134252",
+    "backgroundColor": "#F5F5F2",
+    "borderColor": "#5E5240"
+  },
+  "scanner": {
+    "profilePath": "AppData\\Local\\Scanner\\Twain",
+    "standardProfileFile": "profile.ini.standard",
+    "duplexProfileFile": "profile.ini.duplex",
+    "activeProfileFile": "profile.ini"
+  },
+  "logging": {
+    "enabled": true,
+    "errorLogFile": "error.log",
+    "dateFormat": "dd.MM.yyyy ; HH:mm:ss"
+  }
+}
