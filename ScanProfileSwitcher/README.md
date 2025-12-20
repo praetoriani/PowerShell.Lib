@@ -1,82 +1,105 @@
-# ScanProfileSwitcher - Benutzerhandbuch
+# ScanProfileSwitcher
 
-## 📋 Überblick
+## Übersicht
 
-**ScanProfileSwitcher** ist eine benutzerfreundliche Windows-Anwendung zur Verwaltung von TWAIN-Scanner-Profilen. Das Programm ermöglicht es Ihnen, schnell zwischen zwei Scanner-Konfigurationen zu wechseln:
+**ScanProfileSwitcher** ist eine PowerShell-basierte GUI-Anwendung zum Verwalten von TWAIN-Scanner-Profilen unter Windows. Das Programm ermöglicht das einfache Wechseln zwischen verschiedenen Scanner-Konfigurationen.
 
-- **Standard-Profil**: Scannt nur die Vorderseite von Dokumenten
-- **Duplex-Profil**: Scannt automatisch Vorder- und Rückseite von Dokumenten
+### Features
 
-## 🚀 Schnellstart
+- ✅ **Einfache GUI** - Intuitive Oberfläche mit WPF
+- ✅ **Zwei Scanner-Profile** - Standard (einseitig) und Duplex (zweiseitig)
+- ✅ **Konfigurationsverwaltung** - Automatische Verwaltung von Scanner-Einstellungen
+- ✅ **Fehlerbehandlung** - Robustes Fehlerlogging und Benutzer-Benachrichtigungen
+- ✅ **UTF-8 Encoding** - Vollständige Unterstützung für deutsche Umlaute
+- ✅ **Keine Admin-Rechte erforderlich** - Läuft im Benutzerkontext
 
-### Programmstart
+## Installation
 
-1. Suchen Sie auf Ihrem Desktop nach dem Icon **"ScanProfileSwitcher"**
-2. Doppelklicken Sie auf das Icon, um das Programm zu starten
-3. Das Programm startet automatisch mit der aktuellen Konfiguration
+Siehe [INSTALL.md](INSTALL.md) für detaillierte Installationsanleitung.
 
-### Grundlegende Bedienung
+## Verwendung
 
-1. **Profil auswählen**: Klicken Sie auf eine der beiden Optionen:
-   - ☑ Standard-Profil (Scannt nur die Vorderseite)
-   - ☑ Duplex-Profil (Scannt Vorder- und Rückseite)
+```powershell
+C:\kkh\ScanProfileSwitcher\ScanProfileSwitcher.ps1
+```
 
-2. **Einstellung speichern**: Klicken Sie auf **"Speichern"**
+## Verzeichnisstruktur
 
-3. **Programm beenden**: Klicken Sie auf **"Beenden"** oder schließen Sie das Fenster
+```
+ScanProfileSwitcher/
+├── ScanProfileSwitcher.ps1          # Hauptanwendung
+├── config.json                     # Konfigurationsdatei
+├── UTF8-BOM-Patch.ps1              # Encoding-Patch-Skript
+├── GUI/                            # XAML-GUI-Dateien
+│   ├── main-app-win.xaml
+│   ├── popup-close.xaml
+│   ├── popup-save.xaml
+│   ├── popup-warn.xaml
+│   └── popup-error.xaml
+├── README.md                       # Diese Datei
+├── INSTALL.md                      # Installationsanleitung
+├── CHANGELOG.md                    # Änderungslog
+└── LICENSE                         # Lizenz
+```
 
-## 📝 Wichtige Hinweise
+## Anforderungen
 
-### Gegenseitige Ausschließlichkeit
+- Windows 10/11
+- PowerShell 5.0 oder höher
+- .NET Framework 4.5+
+- WPF-Unterstützung (standardmäßig vorhanden)
 
-Es ist **nicht möglich**, beide Profile gleichzeitig auszuwählen. Wenn Sie ein Profil auswählen, wird das andere automatisch abgewählt.
+## Konfiguration
 
-### Ungespeicherte Änderungen
+Die Anwendung wird durch die Datei `config.json` konfiguriert:
 
-Wenn Sie Änderungen vornehmen und das Programm schließen, ohne zu speichern, werden folgende Dialoge angezeigt:
+```json
+{
+  "applicationName": "ScanProfileSwitcher",
+  "version": "1.0.6",
+  "currentProfile": "STANDARD",
+  "language": "de-DE"
+}
+```
 
-- **Beim Klick auf "Beenden"-Button**: Ein Bestätigungsdialog fragt, ob Sie die Änderungen wirklich verwerfen möchten
-- **Beim Schließen des Fensters**: Ein ähnlicher Dialog wird angezeigt
+## Fehlerbehandlung
 
-### Keine Änderungen
+Fehler werden in der Datei `error.log` protokolliert. Im Fehlerfall:
 
-Wenn Sie keine Änderungen vorgenommen haben und auf "Speichern" klicken, passiert nichts - das ist normales Verhalten.
+1. Überprüfen Sie die `error.log`-Datei
+2. Vergewissern Sie sich, dass alle Scanner-Profile vorhanden sind
+3. Starten Sie das Programm neu
 
-## 💾 Das passiert beim Speichern
+## Technische Details
 
-Wenn Sie das profil speichern:
+### UTF-8 mit BOM
 
-1. Das aktuelle Scanner-Profil wird durch das ausgewählte Profil ersetzt
-2. Die Einstellung wird in der Konfiguration gespeichert
-3. Ein Erfolgsdialog wird angezeigt
-4. Das Programm wird automatisch beendet
-5. Das Programm mit dem gescannt wird, muss beendet werden!
-6. Erst nach Neustart des Scanner-Programms sind die Änderungen verfügbar!
+Alle Dateien werden mit UTF-8 BOM-Encoding gespeichert. Dies ist essentiell für:
 
-## ⚠️ Fehlermeldungen
+- Korrekte Anzeige von Umlauten (ä, ö, ü, ß)
+- Konsistente PowerShell-Ausführung
+- Korrekte XAML-Interpretation
 
-Das Programm kann folgende Fehler anzeigen:
+### Encoding-Patch
 
-| Fehler | Bedeutung | 
-|--------|-----------|
-| "Die Konfigurations-Datei konnte nicht geladen werden" | Das Programm kann nicht gestartet werden, da eine wichtige Datei fehlt. |
-| "Das Verzeichnis für Scanner-Profile konnte nicht gefunden werden" | Es konnte kein installierter TWAIN-Treiber gefunden werden. |
-| "Die erforderlichen Scanner-Profil-Dateien wurden nicht gefunden" | Es fehlen Vorlagen für wichtige Scanner-Profile. |
-| "Die Änderungen am Scanner-Profil konnten nicht gespeichert werden" | Es ist kein Schreibzugriff auf Profil-Dateien möglich. |
+Falls Encoding-Probleme auftreten, führen Sie aus:
 
-In den meisten Fällen sollte es helfen, wenn Sie zuerst das eigentliche Scanner-Programm beenden und im Anschluss eine Neusinstallation des TWAIN-Treibers über den Kiosk durchführen. Im Anschluss doppelklicken Sie das **"ScanProfileSwitcher"**-Symbol auf Ihrem Desktop. Sollten nach wie Vor Fehler auftreten, kontaktieren Sie bitte ihre IT-Abteilung. 
+```powershell
+.\UTF8-BOM-Patch.ps1
+```
 
-## 🔧 Anforderungen
+Dies konvertiert alle Dateien rekursiv zu UTF-8 mit BOM.
 
-- **Betriebssystem**: Windows 10 oder Windows 11
-- **PowerShell**: Version 5.0 oder höher (standardmäßig enthalten)
-- **Berechtigungen**: Benutzerberechtigungen ausreichend (keine Admin-Rechte erforderlich)
-- **TWAIN-Treiber**: Muss installiert sein
+## Support
 
-## 💡 Aktuelle Einstellung anzeigen
+Für Fragen oder Probleme siehe [INSTALL.md](INSTALL.md).
 
-Die aktuelle Einstellung wird beim Programmstart automatisch angezeigt. Das derzeit aktive Profil wird mit einem Häkchen gekennzeichnet.
+## Lizenz
 
-## 📞 Support
+Siehe [LICENSE](LICENSE) für Lizenzinformationen.
 
-Bei Problemen oder Fragen kontaktieren Sie bitte Ihre IT-Abteilung.
+---
+
+**Version:** 1.0.6  
+**Letztes Update:** 20.12.2025  
+**Status:** Production Ready ✔️
