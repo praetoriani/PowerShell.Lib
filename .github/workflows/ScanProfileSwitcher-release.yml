@@ -9,6 +9,14 @@
 
 name: ScanProfileSwitcher Release
 
+# UMGEBUNGSVARIABLEN. DIESE GLOBALEN VARIABLEN SIND AUSSCHLIESSLICH IM JOB-TEIL VERFÜGAR, DA DIESER DIE LAUFZEIT DARSTELLT!
+# ZUGRIFF AUF DIE GLOBALEN VARIABLEN IM JOB-TEIL VIA ${{ env.VARIABLENNAME }}
+env:
+   ZIP_FILENAME: "ScanProfileSwitcher.zip"      # Globale Variable für ZIP-Name.
+   APP_NAME: "ScanProfileSwitcher"              # Globale Variable für den Programm-Namen
+   APP_VERS: "v1.0.0"                           # Globale Variable für die Programm-Version
+   APPTAGID: "spsapp-"                          # Globale Variable für den Tag-Namen bzw. Tag-ID
+
 # TRIGGER CONFIGURATION - MULTIPLE TRIGGERS SUPPORTED
 # Defines when this workflow should be executed
 on:
@@ -22,9 +30,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag name for the release (e.g., spsapp-v1.00.10)'
+        description: 'Tag name for the release (e.g., spsapp-v1.0.0)'
         required: true
-        default: 'spsapp-v1.00.10'
+        default: 'spsapp-v1.0.0'
         type: string
       create_tag:
         description: 'Create the tag if it does not exist'
@@ -120,46 +128,46 @@ jobs:
       
       # STEP 4: Create release package
       # Only the ScanProfileSwitcher folder is packed into a ZIP package
-      - name: Create ScanProfileSwitcher release package
+      - name: Create ${{ env.APP_NAME }} release package
         run: |
           # Debug output - displayed in the Actions log
-          echo "🚀 Starting release package creation for ScanProfileSwitcher"
+          echo "🚀 Starting release package creation for ${{ env.APP_NAME }}"
           
           # Create temporary folder for the release
-          mkdir -p release-temp/ScanProfileSwitcher
+          mkdir -p release-temp/${{ env.APP_NAME }}
           echo "📁 Temporary release folder created"
           
           # Verify source folder exists
-          if [ ! -d "ScanProfileSwitcher" ]; then
-            echo "❌ Error: 'ScanProfileSwitcher' folder not found!"
+          if [ ! -d "${{ env.APP_NAME }}" ]; then
+            echo "❌ Error: '${{ env.APP_NAME }}' folder not found!"
             echo "📂 Available folders:"
             ls -la
             exit 1
           fi
           
-          # IMPORTANT: Copy all files from the ScanProfileSwitcher folder
+          # IMPORTANT: Copy all files from the ${{ env.APP_NAME }} folder
           # Folder name contains dots, but no spaces in this case
-          cp -r ScanProfileSwitcher/* release-temp/ScanProfileSwitcher/
-          echo "📋 ScanProfileSwitcher files copied:"
-          ls -la ScanProfileSwitcher/
+          cp -r ${{ env.APP_NAME }}/* release-temp/${{ env.APP_NAME }}/
+          echo "📋 ${{ env.APP_NAME }} files copied:"
+          ls -la ${{ env.APP_NAME }}/
           
           # Change to temporary folder
           cd release-temp
           
-          # Create ZIP file with all ScanProfileSwitcher files
+          # Create ZIP file with all ${{ env.APP_NAME }} files
           # -r = recursive (include all subdirectories)
-          zip -r ../ScanProfileSwitcher.zip ScanProfileSwitcher/
+          zip -r ../${{ env.ZIP_FILENAME }} ${{ env.APP_NAME }}/
           
           # Return to root directory
           cd ..
           
           # Confirmation and display ZIP file size
           echo "✅ ZIP file created:"
-          ls -lh ScanProfileSwitcher.zip
+          ls -lh ${{ env.ZIP_FILENAME }}
           
           # Verify ZIP file contents
           echo "📦 ZIP file contents:"
-          unzip -l ScanProfileSwitcher.zip
+          unzip -l ${{ env.ZIP_FILENAME }}
       
       # STEP 5: Create GitHub release with enhanced descriptions
       # This is the most important step - the actual release is created here
@@ -171,7 +179,7 @@ jobs:
           
           # RELEASE TITLE
           # Uses the tag name (e.g. "ScanProfileSwitcher spsapp-v1.00.10")
-          name: ScanProfileSwitcher ${{ steps.setup.outputs.tag_name }}
+          name: ${{ env.APP_NAME }} ${{ steps.setup.outputs.tag_name }}
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
@@ -190,11 +198,11 @@ jobs:
             THIS TOOL IS STILL IN PRODUCTION (ALPHA-STATE)!!
             WE RECOMMEND ONCE AGAIN NOT TO DOWNLOAD AND USE THIS TOOL!!
             </strong>
-            **📦 [`ScanProfileSwitcher.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/ScanProfileSwitcher.zip)**
+            **📦 [`${{ env.ZIP_FILENAME }}`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }})**
             <br>
 
             ## 🚀 Installation:
-            1. Download the `ScanProfileSwitcher.zip` file above
+            1. Download the `${{ env.ZIP_FILENAME }}` file above
             2. Extract to your desired folder
             3. Open PowerShell as Administrator
             4. Navigate to the extracted folder
@@ -224,9 +232,9 @@ jobs:
             *This release was automatically created by GitHub Actions.*
           
           # RELEASE SETTINGS
-          files: ScanProfileSwitcher.zip     # The ZIP file as download asset
+          files: ${{ env.ZIP_FILENAME }}     # The ZIP file as download asset
           draft: false                       # false = Release is published immediately
-          prerelease: false                  # false = Normal release (not marked as beta)
+          prerelease: true                  # false = Normal release (not marked as beta)
           
           # ERROR HANDLING
           fail_on_unmatched_files: true      # Workflow fails if ZIP file doesn't exist
@@ -243,9 +251,11 @@ jobs:
           TAG_NAME="${{ steps.setup.outputs.tag_name }}"
           TRIGGER_TYPE="${{ github.event_name }}"
           
-          echo "🎉 ScanProfileSwitcher release successfully created!"
+          echo "🎉 ${{ env.APP_NAME }}  ${{ env.APP_VERS }} release successfully created!"
           echo ""
           echo "📊 Release Information:"
+          echo "  🧩 App: ${{ env.APP_NAME }}"
+          echo "  🔢 Version: ${{ env.APP_VERS }}"
           echo "  🏷️ Tag: $TAG_NAME"
           echo "  🔄 Trigger: $TRIGGER_TYPE"
           echo "  📁 Repository: ${{ github.repository }}"
@@ -254,13 +264,13 @@ jobs:
           echo ""
           echo "🌐 Release Links:"
           echo "  📖 Release Page: https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
-          echo "  💾 Direct Download: https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/ScanProfileSwitcher.zip"
+          echo "  💾 Direct Download: https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/${{ env.ZIP_FILENAME }}"
           echo ""
           echo "🚀 Next Steps for Users:"
           echo "  1. Visit the release page above"
-          echo "  2. Download 'ScanProfileSwitcher.zip'"
+          echo "  2. Download '${{ env.ZIP_FILENAME }}'"
           echo "  3. Ignore the 'Source code' files"
-          echo "  4. Extract ScanProfileSwitcher.zip"
+          echo "  4. Extract ${{ env.ZIP_FILENAME }}"
           echo "  5. Run PowerShell Console as Administrator"
           echo "  6. Go to the extrcted folder"
           echo "  7. Run Install-ScanProfileSwitcher.ps1 as Administrator"
@@ -268,7 +278,7 @@ jobs:
           echo "🔧 For Developers:"
           if [ "$TRIGGER_TYPE" = "workflow_dispatch" ]; then
             echo "  • This release was created manually via GitHub Actions"
-            echo "  • To create another release, go to Actions → ScanProfileSwitcher Release → Run workflow"
+            echo "  • To create another release, go to Actions → ${{ env.APP_NAME }} Release → Run workflow"
           else
             echo "  • This release was created automatically by pushing tag: $TAG_NAME"
             echo "  • To create another release, push a new spsapp-* tag or use manual trigger"
