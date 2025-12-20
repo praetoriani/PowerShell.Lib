@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.0
+#Requires -Version 5.0
 
 <#
 .SYNOPSIS
@@ -9,7 +9,7 @@
     Supports Standard (single-sided) and Duplex (double-sided) scanning configurations.
     
 .NOTES
-    Version:        1.0.2
+    Version:        1.0.7
     Author:         System Administrator
     Created:        2025-12-20
     Updated:        2025-12-20
@@ -43,7 +43,6 @@ catch {
 
 try {
     # Define C# code for Windows API P/Invoke
-    # NOTE: Geschweifter Klammern und eckige Klammern sind bereits im Host-Parser definiert
     $csharpCode = @'
 using System;
 using System.Runtime.InteropServices;
@@ -136,16 +135,6 @@ if ($Global:CurrentUser -match '\\(.+)$') {
 # UTILITY FUNCTIONS
 # ============================================================================
 
-<#
-.SYNOPSIS
-    Writes error messages to error log file
-    
-.PARAMETER Message
-    Error message to log
-    
-.PARAMETER ErrorRecord
-    Optional PowerShell ErrorRecord for detailed error information
-#>
 function Write-ErrorLog {
     param(
         [Parameter(Mandatory=$true)]
@@ -173,16 +162,6 @@ function Write-ErrorLog {
     }
 }
 
-<#
-.SYNOPSIS
-    Loads XAML file from disk
-    
-.PARAMETER XamlFileName
-    Name of the XAML file to load (without path)
-    
-.RETURNS
-    [xml] XML object representing the XAML content
-#>
 function Get-XamlContent {
     param(
         [Parameter(Mandatory=$true)]
@@ -206,16 +185,6 @@ function Get-XamlContent {
     }
 }
 
-<#
-.SYNOPSIS
-    Creates WPF window from XAML with error handling
-    
-.PARAMETER Xaml
-    XML object containing XAML definition
-    
-.RETURNS
-    [System.Windows.Window] Created window object
-#>
 function New-WPFWindow {
     param(
         [Parameter(Mandatory=$true)]
@@ -239,13 +208,6 @@ function New-WPFWindow {
     }
 }
 
-<#
-.SYNOPSIS
-    Loads configuration from config.json and converts to hashtable
-    
-.RETURNS
-    [hashtable] Configuration object (NOT PSCustomObject)
-#>
 function Get-ConfigurationFile {
     try {
         if (-not (Test-Path -Path $Global:ConfigFile -PathType Leaf)) {
@@ -269,13 +231,6 @@ function Get-ConfigurationFile {
     }
 }
 
-<#
-.SYNOPSIS
-    Saves configuration to config.json
-    
-.PARAMETER Configuration
-    Configuration hashtable to save
-#>
 function Set-ConfigurationFile {
     param(
         [Parameter(Mandatory=$true)]
@@ -298,13 +253,6 @@ function Set-ConfigurationFile {
     }
 }
 
-<#
-.SYNOPSIS
-    Verifies required scanner profile files exist
-    
-.RETURNS
-    [bool] $true if all required files exist
-#>
 function Test-ScannerProfileFiles {
     try {
         $requiredFiles = @(
@@ -326,20 +274,50 @@ function Test-ScannerProfileFiles {
     }
 }
 
+<#
+.SYNOPSIS
+    Sets window size from configuration dynamically
+    
+.PARAMETER Window
+    The WPF window to resize
+    
+.PARAMETER WindowKey
+    The key in config.json windows section (e.g. 'main-app-win')
+#>
+function Set-WindowSize {
+    param(
+        [Parameter(Mandatory=$true)]
+        [System.Windows.Window]$Window,
+        
+        [Parameter(Mandatory=$true)]
+        [string]$WindowKey
+    )
+    
+    try {
+        # Get window configuration from config
+        $windowConfig = $Global:Config['windows']
+        
+        if ($windowConfig -and $windowConfig[$WindowKey]) {
+            $winCfg = $windowConfig[$WindowKey]
+            
+            # Set width and height from config
+            if ($winCfg['width']) {
+                $Window.Width = $winCfg['width']
+            }
+            if ($winCfg['height']) {
+                $Window.Height = $winCfg['height']
+            }
+        }
+    }
+    catch {
+        Write-ErrorLog -Message "Fehler beim Setzen der Fenstergroesse fuer $WindowKey" -ErrorRecord $_
+    }
+}
+
 # ============================================================================
 # DIALOG FUNCTIONS
 # ============================================================================
 
-<#
-.SYNOPSIS
-    Shows error dialog popup
-    
-.PARAMETER Message
-    Error message to display
-    
-.PARAMETER OwnerWindow
-    Optional parent window for modal behavior
-#>
 function Show-ErrorDialog {
     param(
         [Parameter(Mandatory=$true)]
@@ -350,9 +328,11 @@ function Show-ErrorDialog {
     )
     
     try {
-        # Load error dialog XAML
         [xml]$xaml = Get-XamlContent -XamlFileName 'popup-error.xaml'
         $errorWindow = New-WPFWindow -Xaml $xaml
+        
+        # Apply window sizing from config
+        Set-WindowSize -Window $errorWindow -WindowKey 'popup-error'
         
         # Find message text block and set content
         $messageBlock = $errorWindow.FindName('MessageText')
@@ -369,34 +349,20 @@ function Show-ErrorDialog {
             })
         }
         
-        # Set as topmost window
         $errorWindow.Topmost = $true
         
-        # Set owner if provided
         if ($OwnerWindow) {
             $errorWindow.Owner = $OwnerWindow
         }
         
-        # Show dialog and wait
         [void]$errorWindow.ShowDialog()
     }
     catch {
         Write-ErrorLog -Message "Fehler bei Anzeige des Fehler-Dialogs" -ErrorRecord $_
-        # Failsafe: exit application
         exit 1
     }
 }
 
-<#
-.SYNOPSIS
-    Shows close confirmation dialog
-    
-.PARAMETER OwnerWindow
-    Parent window for modal behavior
-    
-.RETURNS
-    [bool] $true if user confirmed close
-#>
 function Show-CloseDialog {
     param(
         [Parameter(Mandatory=$true)]
@@ -406,6 +372,9 @@ function Show-CloseDialog {
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'popup-close.xaml'
         $closeWindow = New-WPFWindow -Xaml $xaml
+        
+        # Apply window sizing from config
+        Set-WindowSize -Window $closeWindow -WindowKey 'popup-close'
         
         $result = $false
         
@@ -440,16 +409,6 @@ function Show-CloseDialog {
     }
 }
 
-<#
-.SYNOPSIS
-    Shows unsaved changes warning dialog
-    
-.PARAMETER OwnerWindow
-    Parent window for modal behavior
-    
-.RETURNS
-    [bool] $true if user confirmed to close without saving
-#>
 function Show-WarningDialog {
     param(
         [Parameter(Mandatory=$true)]
@@ -459,6 +418,9 @@ function Show-WarningDialog {
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'popup-warn.xaml'
         $warnWindow = New-WPFWindow -Xaml $xaml
+        
+        # Apply window sizing from config
+        Set-WindowSize -Window $warnWindow -WindowKey 'popup-warn'
         
         $result = $false
         
@@ -493,13 +455,6 @@ function Show-WarningDialog {
     }
 }
 
-<#
-.SYNOPSIS
-    Shows save confirmation dialog
-    
-.PARAMETER OwnerWindow
-    Parent window for modal behavior
-#>
 function Show-SaveDialog {
     param(
         [Parameter(Mandatory=$true)]
@@ -510,12 +465,15 @@ function Show-SaveDialog {
         [xml]$xaml = Get-XamlContent -XamlFileName 'popup-save.xaml'
         $saveWindow = New-WPFWindow -Xaml $xaml
         
-        # Wire OK button to close main application
+        # Apply window sizing from config
+        Set-WindowSize -Window $saveWindow -WindowKey 'popup-save'
+        
+        # Wire OK button to close only save dialog and return to main
         $okButton = $saveWindow.FindName('OkButton')
         if ($okButton) {
             $okButton.Add_Click({
                 $saveWindow.Close()
-                $OwnerWindow.Close()
+                # Return to main window - do NOT close main window
             })
         }
         
@@ -531,16 +489,6 @@ function Show-SaveDialog {
 # PROFILE MANAGEMENT FUNCTIONS
 # ============================================================================
 
-<#
-.SYNOPSIS
-    Swaps scanner profile files
-    
-.PARAMETER TargetProfile
-    Target profile: 'STANDARD' or 'DUPLEX'
-    
-.RETURNS
-    [bool] $true if swap was successful
-#>
 function Invoke-ProfileSwap {
     param(
         [Parameter(Mandatory=$true)]
@@ -575,16 +523,6 @@ function Invoke-ProfileSwap {
     }
 }
 
-<#
-.SYNOPSIS
-    Updates configuration with new profile selection
-    
-.PARAMETER Profile
-    Profile to set: 'STANDARD' or 'DUPLEX'
-    
-.RETURNS
-    [bool] $true if update was successful
-#>
 function Update-ProfileConfiguration {
     param(
         [Parameter(Mandatory=$true)]
@@ -617,13 +555,6 @@ function Update-ProfileConfiguration {
 # INITIALIZATION & VALIDATION FUNCTIONS
 # ============================================================================
 
-<#
-.SYNOPSIS
-    Performs all startup validations
-    
-.RETURNS
-    [bool] $true if all validations passed
-#>
 function Invoke-StartupValidation {
     try {
         # Validate configuration file can be loaded
@@ -662,22 +593,20 @@ function Invoke-StartupValidation {
 # MAIN APPLICATION WINDOW FUNCTIONS
 # ============================================================================
 
-<#
-.SYNOPSIS
-    Initializes and displays the main application window
-#>
 function Show-MainWindow {
     try {
         # Load main window XAML
         [xml]$xaml = Get-XamlContent -XamlFileName 'main-app-win.xaml'
         $Global:MainWindow = New-WPFWindow -Xaml $xaml
         
+        # Apply window sizing from config DYNAMICALLY
+        Set-WindowSize -Window $Global:MainWindow -WindowKey 'main-app-win'
+        
         # Get UI controls
         $standardCheckbox = $Global:MainWindow.FindName('StandardCheckbox')
         $duplexCheckbox = $Global:MainWindow.FindName('DuplexCheckbox')
         $saveButton = $Global:MainWindow.FindName('SaveButton')
         $closeButton = $Global:MainWindow.FindName('CloseButton')
-        $titleBar = $Global:MainWindow.FindName('TitleBar')
         
         # Initialize checkbox states based on current profile
         if ($standardCheckbox -and $duplexCheckbox) {
@@ -690,12 +619,19 @@ function Show-MainWindow {
             }
         }
         
-        # Wire checkbox change handlers (mutually exclusive)
+        # CRITICAL FIX: Prevent unchecking both checkboxes
+        # Wire checkbox UNCHECKED handlers to prevent deselection
         if ($standardCheckbox) {
-            $standardCheckbox.Add_Checked({
-                if ($duplexCheckbox.IsChecked) {
-                    $duplexCheckbox.IsChecked = $false
+            $standardCheckbox.Add_Unchecked({
+                if (-not $duplexCheckbox.IsChecked) {
+                    # Prevent unchecking if duplex is not checked
+                    $standardCheckbox.IsChecked = $true
                 }
+            })
+            
+            $standardCheckbox.Add_Checked({
+                # Uncheck duplex when standard is checked
+                $duplexCheckbox.IsChecked = $false
                 if ($Global:SelectedProfile -ne 'STANDARD') {
                     $Global:SelectedProfile = 'STANDARD'
                     $Global:HasChanges = $true
@@ -704,10 +640,16 @@ function Show-MainWindow {
         }
         
         if ($duplexCheckbox) {
-            $duplexCheckbox.Add_Checked({
-                if ($standardCheckbox.IsChecked) {
-                    $standardCheckbox.IsChecked = $false
+            $duplexCheckbox.Add_Unchecked({
+                if (-not $standardCheckbox.IsChecked) {
+                    # Prevent unchecking if standard is not checked
+                    $duplexCheckbox.IsChecked = $true
                 }
+            })
+            
+            $duplexCheckbox.Add_Checked({
+                # Uncheck standard when duplex is checked
+                $standardCheckbox.IsChecked = $false
                 if ($Global:SelectedProfile -ne 'DUPLEX') {
                     $Global:SelectedProfile = 'DUPLEX'
                     $Global:HasChanges = $true
@@ -737,13 +679,30 @@ function Show-MainWindow {
             })
         }
         
-        # Wire Close button (via window close button)
+        # Wire Close button - check for unsaved changes
+        if ($closeButton) {
+            $closeButton.Add_Click({
+                if ($Global:HasChanges) {
+                    # Show warning dialog if changes exist
+                    if (Show-WarningDialog -OwnerWindow $Global:MainWindow) {
+                        # User confirmed to close without saving
+                        $Global:MainWindow.Close()
+                    }
+                    # If user clicked No, don't close
+                } else {
+                    # No changes - close immediately
+                    $Global:MainWindow.Close()
+                }
+            })
+        }
+        
+        # Wire window close button (X button in title bar)
         $Global:MainWindow.Add_Closing({
             param($sender, $e)
             
             if ($Global:HasChanges) {
                 $e.Cancel = $true
-                if (Show-CloseDialog -OwnerWindow $Global:MainWindow) {
+                if (Show-WarningDialog -OwnerWindow $Global:MainWindow) {
                     $e.Cancel = $false
                 }
             }
@@ -762,17 +721,6 @@ function Show-MainWindow {
 # MAIN FUNCTION - ORCHESTRATES APPLICATION FLOW
 # ============================================================================
 
-<#
-.SYNOPSIS
-    Main function that orchestrates the application flow
-    
-.DESCRIPTION
-    This function controls the overall program execution:
-    1. Cleans up previous error logs
-    2. Validates startup requirements
-    3. Displays main window
-    4. Handles all application logic through event handlers
-#>
 function Invoke-ScanProfileSwitcher {
     try {
         # Remove old error log if it exists

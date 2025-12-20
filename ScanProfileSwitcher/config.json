@@ -1,6 +1,6 @@
-﻿{
+{
   "applicationName": "ScanProfileSwitcher",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "TWAIN Scanner Profile Management Application",
   "currentProfile": "STANDARD",
   "language": "de-DE",
@@ -8,33 +8,33 @@
     "main-app-win": {
       "title": "Scanner-Profil konfigurieren",
       "width": 660,
-      "height": 460,
+      "height": 520,
       "resizable": false,
       "minimizable": false,
       "maximizable": false
     },
     "popup-close": {
       "title": "Programm schließen?",
-      "width": 540,
-      "height": 280,
+      "width": 480,
+      "height": 240,
       "resizable": false
     },
     "popup-save": {
       "title": "Änderungen gespeichert",
-      "width": 540,
-      "height": 280,
+      "width": 480,
+      "height": 240,
       "resizable": false
     },
     "popup-warn": {
       "title": "Ohne Speichern beenden?",
-      "width": 570,
-      "height": 310,
+      "width": 500,
+      "height": 270,
       "resizable": false
     },
     "popup-error": {
       "title": "Interner Fehler!",
-      "width": 560,
-      "height": 300,
+      "width": 480,
+      "height": 240,
       "resizable": false
     }
   },
@@ -44,7 +44,7 @@
     "textColor": "#134252",
     "backgroundColor": "#F5F5F2",
     "borderColor": "#5E5240",
-    "note": "v1.0.6: UTF-8 with BOM encoding for ALL files - Fixes character display issues. All XAML, PS1, JSON, MD files now properly encoded."
+    "note": "v1.0.7: MAJOR UPDATE - Dynamic window sizing from config.json. Checkbox logic prevents unselecting both. Close/Save dialogs improved. All XAML files with UTF-8 BOM."
   },
   "scanner": {
     "profilePath": "AppData\\Local\\Scanner\\Twain",
@@ -58,7 +58,8 @@
     "dateFormat": "dd.MM.yyyy ; HH:mm:ss"
   },
   "changelog": {
-    "v1.0.6": "UTF-8 with BOM encoding for ALL files (XAML, PowerShell, JSON, Markdown). Fixes character display issues with German umlauts ('a','o','u','ss').",
+    "v1.0.7": "MAJOR: Dynamic window sizing from config.json. Checkbox logic fix prevents unselecting both. Close button checks for unsaved changes. Save dialog returns to main (no exit). Fonts increased (+1-2pt). Button spacing increased (16-24px). Window sizes optimized. All XAML with UTF-8 BOM.",
+    "v1.0.6": "UTF-8 with BOM encoding for ALL files (XAML, PowerShell, JSON, Markdown). Fixes character display issues with German umlauts (ä,ö,ü,ß).",
     "v1.0.5": "CRITICAL FIX: Fixed Setter.View error (should be Value). Optimized window sizes to avoid 'too large' issue.",
     "v1.0.4": "Major UI Overhaul: UTF-8 BOM encoding, larger fonts, gray buttons, correct checkmark symbols, bigger icons, improved spacing.",
     "v1.0.3": "UI Enhancement: Window sizes increased, uniform button colors, improved spacing.",

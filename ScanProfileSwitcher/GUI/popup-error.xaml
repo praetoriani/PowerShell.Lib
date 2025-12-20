@@ -1,9 +1,7 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Interner Fehler!"
-        Width="560"
-        Height="300"
         WindowStyle="SingleBorderWindow"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
@@ -48,7 +46,7 @@
         </Style>
     </Window.Resources>
     
-    <Grid Margin="28">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -56,17 +54,17 @@
         </Grid.RowDefinitions>
         
         <!-- Message Container with Icon -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,10,0,18">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,8,0,12">
             <!-- Icon -->
             <TextBlock Text="!" 
-                       FontSize="40" 
+                       FontSize="48" 
                        FontWeight="Bold" 
                        Foreground="#C00F2F"
-                       Width="56" 
-                       Height="56"
+                       Width="52" 
+                       Height="52"
                        VerticalAlignment="Center"
                        HorizontalAlignment="Center"
-                       Margin="0,0,20,0"/>
+                       Margin="0,0,16,0"/>
             
             <!-- Message Text -->
             <TextBlock x:Name="MessageText"
@@ -82,7 +80,7 @@
         <StackPanel Grid.Row="2" 
                     Orientation="Horizontal" 
                     HorizontalAlignment="Center" 
-                    Margin="0,16,0,0"
+                    Margin="0,14,0,0"
                     Height="Auto">
             <Button Style="{StaticResource DialogButton}" 
                     Content="OK" 
