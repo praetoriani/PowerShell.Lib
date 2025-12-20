@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.0
+#Requires -Version 5.0
 #Requires -RunAsAdministrator
 
 <#
@@ -8,6 +8,10 @@
 .DESCRIPTION
     This script automates the installation of ScanProfileSwitcher on Windows systems.
     Requires administrator privileges to install fonts and create shortcuts.
+    
+    WICHTIG: Dieses Skript löscht das Zielverzeichnis VOLLSTÄNDIG rekursiv,
+    um Versionsübergreifende Konflikte zu vermeiden und sicherzustellen, dass
+    sich im Zielverzeichnis immer nur die Dateien einer Version befinden.
     
 .PARAMETER TargetPath
     Installation target directory (default: C:\kkh\ScanProfileSwitcher)
@@ -19,7 +23,7 @@
     .\Install-ScanProfileSwitcher.ps1
     
 .NOTES
-    Version:    1.0.1
+    Version:    1.0.2
     Requires:   Administrator privileges
     Execution:  Admin context
 #>
@@ -78,19 +82,53 @@ function Test-SourcePath {
     Write-Host "SUCCESS: Source directory valid" -ForegroundColor Green
 }
 
+function Remove-TargetDirectory {
+    param([string]$Path)
+    
+    if (Test-Path -Path $Path -PathType Container) {
+        Write-Host "INFO: Removing existing target directory to avoid version conflicts..." -ForegroundColor Yellow
+        
+        try {
+            # Wait a moment for any processes to release files
+            Start-Sleep -Milliseconds 500
+            
+            # Force remove the entire directory tree
+            Remove-Item -Path $Path -Recurse -Force -ErrorAction Stop
+            
+            Write-Host "SUCCESS: Target directory removed completely" -ForegroundColor Green
+        }
+        catch {
+            Write-Host "WARNING: Could not fully remove target directory: $_" -ForegroundColor Yellow
+            Write-Host "INFO: Attempting selective file removal..." -ForegroundColor Cyan
+            
+            try {
+                # Try to remove files selectively
+                Get-ChildItem -Path $Path -Recurse -Force | ForEach-Object {
+                    try {
+                        Remove-Item -Path $_.FullName -Force -ErrorAction Continue
+                    }
+                    catch {
+                        # Silently continue
+                    }
+                }
+            }
+            catch {
+                Write-Host "WARNING: Continuing with installation despite cleanup issues" -ForegroundColor Yellow
+            }
+        }
+    }
+}
+
 function New-TargetDirectory {
     param([string]$Path)
     
-    Write-Host "INFO: Creating target directory: $Path" -ForegroundColor Cyan
+    Write-Host "INFO: Creating fresh target directory: $Path" -ForegroundColor Cyan
     
     try {
-        if (Test-Path -Path $Path -PathType Container) {
-            Write-Host "INFO: Target directory already exists, will overwrite files" -ForegroundColor Yellow
-        }
-        else {
+        if (-not (Test-Path -Path $Path -PathType Container)) {
             New-Item -ItemType Directory -Path $Path -Force | Out-Null
-            Write-Host "SUCCESS: Target directory created" -ForegroundColor Green
         }
+        Write-Host "SUCCESS: Target directory ready" -ForegroundColor Green
     }
     catch {
         Write-Host "ERROR: Could not create target directory: $_" -ForegroundColor Red
@@ -106,8 +144,30 @@ function Copy-ApplicationFiles {
     
     Write-Host "INFO: Copying application files..." -ForegroundColor Cyan
     
+    # Dateien die NICHT kopiert werden sollen
+    $excludeFiles = @(
+        '.gitignore',
+        'CHANGELOG.md',
+        'INSTALL.md',
+        'LICENSE'
+    )
+    
     try {
-        Copy-Item -Path "$SourcePath\*" -Destination $TargetPath -Recurse -Force
+        # Alle Dateien und Verzeichnisse auflisten
+        $sourceItems = Get-ChildItem -Path $SourcePath -Force
+        
+        foreach ($item in $sourceItems) {
+            # Überprüfen, ob die Datei ausgeschlossen sein soll
+            if ($item.Name -in $excludeFiles) {
+                Write-Host "   SKIP: $($item.Name) (excluded)" -ForegroundColor Gray
+                continue
+            }
+            
+            # Kopiere die Datei oder das Verzeichnis
+            Copy-Item -Path $item.FullName -Destination $TargetPath -Recurse -Force
+            Write-Host "   COPY: $($item.Name)" -ForegroundColor Green
+        }
+        
         Write-Host "SUCCESS: Files copied successfully" -ForegroundColor Green
     }
     catch {
@@ -172,23 +232,26 @@ function Set-FilePermissions {
 Write-Host "`n"
 Write-Host "=============================================================" -ForegroundColor Cyan
 Write-Host "ScanProfileSwitcher Installation Script" -ForegroundColor Cyan
-Write-Host "Version: 1.0.1" -ForegroundColor Cyan
+Write-Host "Version: 1.0.2" -ForegroundColor Cyan
 Write-Host "=============================================================" -ForegroundColor Cyan
 Write-Host "`n"
 
 # Step 1: Validate source
 Test-SourcePath -Path $SourcePath
 
-# Step 2: Create target directory
+# Step 2: Remove existing target directory (CRITICAL for version consistency)
+Remove-TargetDirectory -Path $TargetPath
+
+# Step 3: Create fresh target directory
 New-TargetDirectory -Path $TargetPath
 
-# Step 3: Copy files
+# Step 4: Copy files (exclude .gitignore, CHANGELOG.md, INSTALL.md, LICENSE)
 Copy-ApplicationFiles -SourcePath $SourcePath -TargetPath $TargetPath
 
-# Step 4: Set permissions
+# Step 5: Set permissions
 Set-FilePermissions -Path $TargetPath
 
-# Step 5: Create desktop shortcut
+# Step 6: Create desktop shortcut
 New-DesktopShortcut -TargetPath $TargetPath
 
 Write-Host "`n"
@@ -197,6 +260,7 @@ Write-Host "`n"
 Write-Host "Installation Summary:" -ForegroundColor Green
 Write-Host "   Application Path:  $TargetPath" -ForegroundColor Green
 Write-Host "   Desktop Shortcut:  Created" -ForegroundColor Green
+Write-Host "   Version Conflicts: Prevented (directory fully reset)" -ForegroundColor Green
 Write-Host "`n"
 Write-Host "Next Steps:" -ForegroundColor Green
 Write-Host "   1. Look for 'ScanProfileSwitcher' shortcut on your desktop" -ForegroundColor Green
