@@ -9,7 +9,7 @@
     Supports Standard (single-sided) and Duplex (double-sided) scanning configurations.
     
 .NOTES
-    Version:        1.0.1
+    Version:        1.0.2
     Author:         System Administrator
     Created:        2025-12-20
     Updated:        2025-12-20
@@ -109,7 +109,7 @@ if ($Global:CurrentUser -match '\\(.+)$') {
 [string]$Global:ProfileIniStandardPath = Join-Path -Path $Global:ScannerProfilePath -ChildPath $Global:ProfileIniStandardName
 [string]$Global:ProfileIniDuplexPath = Join-Path -Path $Global:ScannerProfilePath -ChildPath $Global:ProfileIniDuplexName
 
-# Global configuration object
+# Global configuration object - MUST BE HASHTABLE, NOT PSCustomObject
 [hashtable]$Global:Config = @{}
 
 # UI Windows
@@ -125,9 +125,9 @@ if ($Global:CurrentUser -match '\\(.+)$') {
 [hashtable]$Global:ErrorMessages = @{
     'CONFIG_LOAD_ERROR'      = 'Die Konfigurations-Datei konnte nicht geladen werden. Das Programm wird beendet.'
     'USER_DETERMINATION_ERROR' = 'Der angemeldete Benutzer konnte nicht ermittelt werden. Das Programm wird beendet.'
-    'TWAIN_PATH_NOT_FOUND'   = 'Das Verzeichnis für Scanner-Profile konnte nicht gefunden werden. Das Programm wird beendet.'
+    'TWAIN_PATH_NOT_FOUND'   = 'Das Verzeichnis fuer Scanner-Profile konnte nicht gefunden werden. Das Programm wird beendet.'
     'TWAIN_FILES_NOT_FOUND'  = 'Die erforderlichen Scanner-Profil-Dateien wurden nicht gefunden. Das Programm wird beendet.'
-    'PROFILE_SWAP_ERROR'     = 'Die Änderungen am Scanner-Profil konnten nicht gespeichert werden. Das Programm wird beendet.'
+    'PROFILE_SWAP_ERROR'     = 'Die Aenderungen am Scanner-Profil konnten nicht gespeichert werden. Das Programm wird beendet.'
     'CONFIG_SAVE_ERROR'      = 'Die Konfiguration konnte nicht gespeichert werden. Das Programm wird beendet.'
     'UNKNOWN_ERROR'          = 'Ein unerwarteter Fehler ist aufgetreten. Das Programm wird beendet.'
 }
@@ -208,7 +208,7 @@ function Get-XamlContent {
 
 <#
 .SYNOPSIS
-    Creates WPF window from XAML
+    Creates WPF window from XAML with error handling
     
 .PARAMETER Xaml
     XML object containing XAML definition
@@ -226,6 +226,10 @@ function New-WPFWindow {
         $xmlNodeReader = New-Object System.Xml.XmlNodeReader $Xaml
         $window = [System.Windows.Markup.XamlReader]::Load($xmlNodeReader)
         
+        if (-not $window) {
+            throw "XamlReader hat null zurueckgegeben"
+        }
+        
         return $window
     }
     catch {
@@ -237,10 +241,10 @@ function New-WPFWindow {
 
 <#
 .SYNOPSIS
-    Loads configuration from config.json
+    Loads configuration from config.json and converts to hashtable
     
 .RETURNS
-    [hashtable] Configuration object
+    [hashtable] Configuration object (NOT PSCustomObject)
 #>
 function Get-ConfigurationFile {
     try {
@@ -249,9 +253,15 @@ function Get-ConfigurationFile {
         }
         
         $configContent = Get-Content -Path $Global:ConfigFile -Raw -ErrorAction Stop
-        $config = $configContent | ConvertFrom-Json -ErrorAction Stop
+        $configObject = $configContent | ConvertFrom-Json -ErrorAction Stop
         
-        return $config
+        # CRITICAL FIX: Convert PSCustomObject to Hashtable to avoid type conversion errors
+        $configHashtable = @{}
+        $configObject.PSObject.Properties | ForEach-Object {
+            $configHashtable[$_.Name] = $_.Value
+        }
+        
+        return $configHashtable
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Laden der Konfigurationsdatei" -ErrorRecord $_
@@ -264,16 +274,22 @@ function Get-ConfigurationFile {
     Saves configuration to config.json
     
 .PARAMETER Configuration
-    Configuration object to save
+    Configuration hashtable to save
 #>
 function Set-ConfigurationFile {
     param(
         [Parameter(Mandatory=$true)]
-        [PSCustomObject]$Configuration
+        [hashtable]$Configuration
     )
     
     try {
-        $configJson = $Configuration | ConvertTo-Json -Depth 10 -ErrorAction Stop
+        # Convert hashtable to object for JSON serialization
+        $configObject = New-Object PSObject
+        $Configuration.GetEnumerator() | ForEach-Object {
+            $configObject | Add-Member -MemberType NoteProperty -Name $_.Key -Value $_.Value
+        }
+        
+        $configJson = $configObject | ConvertTo-Json -Depth 10 -ErrorAction Stop
         Set-Content -Path $Global:ConfigFile -Value $configJson -Force -ErrorAction Stop
     }
     catch {
@@ -305,7 +321,7 @@ function Test-ScannerProfileFiles {
         return $true
     }
     catch {
-        Write-ErrorLog -Message "Fehler bei der Überprüfung der Scanner-Profile" -ErrorRecord $_
+        Write-ErrorLog -Message "Fehler bei der Ueberpruefung der Scanner-Profile" -ErrorRecord $_
         return $false
     }
 }
@@ -419,7 +435,7 @@ function Show-CloseDialog {
         return $closeWindow.DialogResult -eq $true
     }
     catch {
-        Write-ErrorLog -Message "Fehler bei Anzeige des Schließen-Dialogs" -ErrorRecord $_
+        Write-ErrorLog -Message "Fehler bei Anzeige des Schliessen-Dialogs" -ErrorRecord $_
         return $false
     }
 }
@@ -581,7 +597,7 @@ function Update-ProfileConfiguration {
         $config = Get-ConfigurationFile
         
         # Update profile setting
-        $config.currentProfile = $Profile
+        $config['currentProfile'] = $Profile
         
         # Save updated configuration
         Set-ConfigurationFile -Configuration $config
@@ -612,14 +628,14 @@ function Invoke-StartupValidation {
     try {
         # Validate configuration file can be loaded
         $config = Get-ConfigurationFile
-        if (-not $config) {
+        if (-not $config -or $config.Count -eq 0) {
             Write-ErrorLog -Message "Konfigurationsdatei konnte nicht geladen werden"
             return $false
         }
         
-        # Store config in global variable
+        # Store config in global variable as HASHTABLE
         $Global:Config = $config
-        $Global:CurrentProfile = $config.currentProfile -as [string]
+        $Global:CurrentProfile = $config['currentProfile'] -as [string]
         $Global:SelectedProfile = $Global:CurrentProfile
         
         # Validate scanner profile path exists
