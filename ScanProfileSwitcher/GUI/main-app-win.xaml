@@ -1,8 +1,8 @@
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Scanner-Profil konfigurieren"
-        Width="500"
-        Height="350"
+        Width="600"
+        Height="420"
         WindowStyle="SingleBorderWindow"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
@@ -23,9 +23,11 @@
             <Setter Property="Foreground" Value="#FFFBFD"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="Padding" Value="20,12"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="MinWidth" Value="120"/>
+            <Setter Property="Height" Value="40"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -50,20 +52,19 @@
         </Style>
         
         <Style x:Key="SecondaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#FAFAF8"/>
-            <Setter Property="Foreground" Value="#134252"/>
+            <Setter Property="Background" Value="#218014"/>
+            <Setter Property="Foreground" Value="#FFFBFD"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="Padding" Value="20,10"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#5E5240"/>
+            <Setter Property="Padding" Value="20,12"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="MinWidth" Value="120"/>
+            <Setter Property="Height" Value="40"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="6"
                                 Padding="{TemplateBinding Padding}"
                                 x:Name="border">
@@ -72,10 +73,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#F0F0ED"/>
+                                <Setter TargetName="border" Property="Background" Value="#1D7480"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#E8E8E5"/>
+                                <Setter TargetName="border" Property="Background" Value="#1A6C73"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -85,7 +86,7 @@
         
         <Style x:Key="CustomCheckbox" TargetType="CheckBox">
             <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Margin" Value="0,8"/>
+            <Setter Property="Margin" Value="0,12"/>
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="Foreground" Value="#134252"/>
             <Setter Property="Template">
@@ -140,7 +141,7 @@
         </Style>
     </Window.Resources>
     
-    <Grid Margin="30">
+    <Grid Margin="40">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -152,10 +153,10 @@
         <!-- Title Bar -->
         <TextBlock Grid.Row="0" 
                    Text="Scanner-Profil konfigurieren" 
-                   FontSize="18" 
+                   FontSize="20" 
                    FontWeight="Bold" 
                    Foreground="#134252" 
-                   Margin="0,0,0,10"
+                   Margin="0,0,0,15"
                    x:Name="TitleBar"/>
         
         <!-- Instructions -->
@@ -168,7 +169,7 @@
                    Margin="0,0,0,30"/>
         
         <!-- Profile Selection Container -->
-        <StackPanel Grid.Row="2" VerticalAlignment="Top" Margin="0,0,0,30">
+        <StackPanel Grid.Row="2" VerticalAlignment="Top" Margin="0,0,0,40">
             <!-- Standard Profile Checkbox -->
             <CheckBox Style="{StaticResource CustomCheckbox}"
                       Content="Standard-Profil (Scannt nur die Vorderseite)"
@@ -179,24 +180,24 @@
             <CheckBox Style="{StaticResource CustomCheckbox}"
                       Content="Duplex-Profil (Scannt Vorder- und Rückseite)"
                       x:Name="DuplexCheckbox"
-                      IsChecked="False"
-                      Margin="0,16,0,0"/>
+                      IsChecked="False"/>
         </StackPanel>
         
         <!-- Button Container -->
         <StackPanel Grid.Row="4" 
                     Orientation="Horizontal" 
                     HorizontalAlignment="Center" 
-                    Margin="0,20,0,0"
-                    Height="Auto">
+                    Margin="0,30,0,0"
+                    Height="Auto"
+                    Height="50">
             <Button Style="{StaticResource PrimaryButton}" 
                     Content="Speichern" 
-                    Width="120" 
+                    Width="140" 
                     Margin="0,0,20,0"
                     x:Name="SaveButton"/>
             <Button Style="{StaticResource SecondaryButton}" 
                     Content="Beenden" 
-                    Width="120"
+                    Width="140"
                     x:Name="CloseButton"/>
         </StackPanel>
     </Grid>
