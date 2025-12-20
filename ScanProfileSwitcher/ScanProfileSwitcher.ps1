@@ -1,3 +1,5 @@
+#Requires -Version 5.0
+
 <#
 .SYNOPSIS
     ScanProfileSwitcher - Scanner Profile Management Application
@@ -7,7 +9,7 @@
     Supports Standard (single-sided) and Duplex (double-sided) scanning configurations.
     
 .NOTES
-    Version:        1.0.0
+    Version:        1.0.1
     Author:         System Administrator
     Created:        2025-12-20
     Updated:        2025-12-20
@@ -18,26 +20,64 @@
     C:\kkh\ScanProfileSwitcher\ScanProfileSwitcher.ps1
 #>
 
-#Requires -Version 5.0
+# ============================================================================
+# ASSEMBLY LOADING - MUST BE FIRST!
+# ============================================================================
+
+# Load required assemblies BEFORE any type declarations
+try {
+    Add-Type -AssemblyName PresentationFramework
+    Add-Type -AssemblyName WindowsBase
+    Add-Type -AssemblyName PresentationCore
+}
+catch {
+    Write-Host "FEHLER: Erforderliche .NET Assemblies konnten nicht geladen werden!" -ForegroundColor Red
+    Write-Host "System.Windows.* Assemblies sind erforderlich." -ForegroundColor Red
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    exit 1
+}
+
+# ============================================================================
+# CONSOLE MINIMIZATION VIA P/INVOKE
+# ============================================================================
+
+try {
+    # Define C# code for Windows API P/Invoke
+    # NOTE: Geschweifter Klammern und eckige Klammern sind bereits im Host-Parser definiert
+    $csharpCode = @'
+using System;
+using System.Runtime.InteropServices;
+
+public class WindowHelper {
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    
+    public static void MinimizeConsole() {
+        try {
+            IntPtr hWnd = System.Diagnostics.Process.GetCurrentProcess().MainWindowHandle;
+            ShowWindow(hWnd, 6);
+        }
+        catch {
+            // Silently fail if console cannot be minimized
+        }
+    }
+}
+'@
+    
+    # Compile the C# code
+    Add-Type -TypeDefinition $csharpCode -Language CSharp -ErrorAction Stop
+    
+    # Call the minimization function
+    [WindowHelper]::MinimizeConsole()
+}
+catch {
+    Write-Host "Warnung: Console konnte nicht minimiert werden: $_" -ForegroundColor Yellow
+    # Non-critical - continue execution
+}
 
 # ============================================================================
 # GLOBAL VARIABLES & CONFIGURATION
 # ============================================================================
-
-# Minimize console window immediately
-Add-Type @"
-    using System;
-    using System.Runtime.InteropServices;
-    public class WindowHelper {
-        [DllImport("user32.dll")]
-        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-        public static void MinimizeConsole() {
-            ShowWindow([System.Diagnostics.Process]::GetCurrentProcess().MainWindowHandle, 6);
-        }
-    }
-"@
-
-[WindowHelper]::MinimizeConsole()
 
 # Suppress console output - redirect to error log only
 $ErrorActionPreference = 'Stop'
@@ -45,10 +85,6 @@ $InformationPreference = 'SilentlyContinue'
 $ProgressPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
 $VerbosePreference = 'SilentlyContinue'
-
-# ============================================================================
-# GLOBAL CONFIGURATION VARIABLES
-# ============================================================================
 
 # Get current logged-in user
 [string]$Global:CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
@@ -763,11 +799,6 @@ function Invoke-ScanProfileSwitcher {
 # ============================================================================
 # APPLICATION ENTRY POINT
 # ============================================================================
-
-# Add required assemblies
-Add-Type -AssemblyName PresentationFramework
-Add-Type -AssemblyName WindowsBase
-Add-Type -AssemblyName PresentationCore
 
 # Execute main application
 Invoke-ScanProfileSwitcher
