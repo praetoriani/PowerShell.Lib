@@ -47,3 +47,5 @@ context-menu-switcher-release-v2.yml
 /UserData-LDAP-Export/*
 # EXCLUDE SPECIFIC FILES/FOLDERS FOR "SysDaemon"
 /SysDaemon/v1.01.xx/*
+# EXCLUDE SPECIFIC FILES/FOLDERS FOR "ScanProfileSwitcher"
+/ScanProfileSwitcher/CONTRIBUTING.md
