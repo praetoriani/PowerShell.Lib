@@ -16,11 +16,6 @@
             <Setter Property="Background" Value="#FFFBFD"/>
             <Setter Property="BorderBrush" Value="#5E5240"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadow BlurRadius="4" ShadowDepth="2" Opacity="0.1" Color="#000000"/>
-                </Setter.Value>
-            </Setter>
         </Style>
         
         <Style x:Key="PrimaryButton" TargetType="Button">
@@ -116,7 +111,7 @@
                                         BorderThickness="2"
                                         x:Name="checkBox"
                                         VerticalAlignment="Center">
-                                    <TextBlock Text="ü" 
+                                    <TextBlock Text="u" 
                                              FontSize="14" 
                                              Foreground="#218014" 
                                              FontWeight="Bold"
