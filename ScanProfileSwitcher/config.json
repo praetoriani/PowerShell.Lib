@@ -1,40 +1,40 @@
 {
   "applicationName": "ScanProfileSwitcher",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "TWAIN Scanner Profile Management Application",
   "currentProfile": "STANDARD",
   "language": "de-DE",
   "windows": {
     "main-app-win": {
       "title": "Scanner-Profil konfigurieren",
-      "width": 700,
-      "height": 520,
+      "width": 660,
+      "height": 460,
       "resizable": false,
       "minimizable": false,
       "maximizable": false
     },
     "popup-close": {
       "title": "Programm schließen?",
-      "width": 580,
-      "height": 300,
+      "width": 540,
+      "height": 280,
       "resizable": false
     },
     "popup-save": {
       "title": "Änderungen gespeichert",
-      "width": 580,
-      "height": 300,
+      "width": 540,
+      "height": 280,
       "resizable": false
     },
     "popup-warn": {
       "title": "Ohne Speichern beenden?",
-      "width": 620,
-      "height": 340,
+      "width": 570,
+      "height": 310,
       "resizable": false
     },
     "popup-error": {
       "title": "Interner Fehler!",
-      "width": 600,
-      "height": 320,
+      "width": 560,
+      "height": 300,
       "resizable": false
     }
   },
@@ -44,7 +44,7 @@
     "textColor": "#134252",
     "backgroundColor": "#F5F5F2",
     "borderColor": "#5E5240",
-    "note": "All buttons are now gray (#757575). Window sizes optimized for better visibility. UTF-8 BOM encoding. Larger fonts throughout. Proper checkmark symbols."
+    "note": "v1.0.5: CRITICAL FIX - Fixed Setter.View error (should be Value). Optimized window sizes. All buttons gray (#757575). UTF-8 BOM encoding. Larger fonts throughout."
   },
   "scanner": {
     "profilePath": "AppData\\Local\\Scanner\\Twain",
@@ -58,8 +58,9 @@
     "dateFormat": "dd.MM.yyyy ; HH:mm:ss"
   },
   "changelog": {
-    "v1.0.4": "MAJOR UI Overhaul: UTF-8 BOM encoding, larger fonts (title 24, text 13-14), gray buttons (#757575), proper checkmark symbols (✓), bigger icons, optimized window sizes (700x520 main, 580-620 popups), improved spacing and padding throughout all dialogs.",
-    "v1.0.3": "UI Enhancement: Increase window sizes, uniform button colors, improved spacing.",
+    "v1.0.5": "CRITICAL FIX: Fixed Setter.View error (should be Value). Optimized window sizes to avoid 'too large' issue (660x460 main, 540-570 popups). All buttons consistent gray color (#757575).",
+    "v1.0.4": "Major UI Overhaul: UTF-8 BOM encoding, larger fonts, gray buttons, correct checkmark symbols, bigger icons, improved spacing.",
+    "v1.0.3": "UI Enhancement: Window sizes increased, uniform button colors, improved spacing.",
     "v1.0.2": "Critical Fix: Remove DropShadow Effect from XAML.",
     "v1.0.1": "Bug Fix: Correct invalid hex color values."
   }
