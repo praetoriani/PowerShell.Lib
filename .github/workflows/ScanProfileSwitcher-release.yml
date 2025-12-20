@@ -175,8 +175,21 @@ jobs:
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
+            ## ⚠️ WARNING!!
+            ```
+            [!! THIS TOOL IS STILL IN PRODUCTION (ALPHA-STATE) !!]
+            [!!       RELEASED ONLY FOR TESTING PURPOSE        !!]
+            [!!            IGNORE THIS RELEASE POST            !!]
+            ```
+            <br>
+
             ## 📂 **File Download:**
             
+            <strong>REMINDER: THIS IS NOT A PUBLIC RELEASE!!
+            IT WAS RELEASED FOR TESTING PURPOSE ONLY!!
+            THIS TOOL IS STILL IN PRODUCTION (ALPHA-STATE)!!
+            WE RECOMMEND ONCE AGAIN NOT TO DOWNLOAD AND USE THIS TOOL!!
+            </strong>
             **📦 [`ScanProfileSwitcher.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/ScanProfileSwitcher.zip)**
             <br>
 
