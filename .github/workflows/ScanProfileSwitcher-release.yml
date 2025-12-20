@@ -218,7 +218,7 @@ jobs:
             - Administrator privileges recommended for Installation
             <br>
             
-            ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes:\n{0}', github.event.inputs.release_notes) || '' }}
+            ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes:\n ', github.event.inputs.release_notes) || '' }}
             
             ---
             *This release was automatically created by GitHub Actions.*
