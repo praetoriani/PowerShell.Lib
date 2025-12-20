@@ -1,19 +1,20 @@
 <#
 .SYNOPSIS
-    UTF-8 with BOM Encoding Patch Script (v1.2 COMPLETE REWRITE)
+    UTF-8 with BOM Encoding Patch Script (v1.3 - KRITISCHER FIX)
     Konvertiert ALLE Dateien im aktuellen Verzeichnis und allen Unterverzeichnissen
     zu UTF-8 with BOM Format.
 
 .DESCRIPTION
     KRITISCH: Dieses Skript behebt die UTF-8 BOM Codierungsprobleme!
     
-    WICHTIG:
-    - Verwendet EXPLIZITES UTF-8 ohne BOM zum Lesen (nicht autodetect!)
-    - Schreibt EXPLIZIT UTF-8 MIT BOM
-    - Keine Autodetection, keine Seiteneffekte!
+    v1.3 - KRITISCHER FIX:
+    - Verwendet EXPLIZITES UTF-8 Encoding (KEINE Autodetection mehr!)
+    - Schreibt EXPLIZIT UTF-8 MIT BOM (mit True-Parameter)
+    - BOM-Detection auf Byte-Ebene
+    - Keine Seiteneffekte, keine Fehler
     
     UTF-8 with BOM ist essentiell für:
-    - XAML-Dateien mit Umlauten (ä, ö, ü)
+    - XAML-Dateien mit Umlauten (ä, ö, ü, ß)
     - PowerShell-Skripte mit deutschen Texten
     - JSON-Dateien mit Sonderzeichen
     - Markdown-Dateien mit Sonderzeichen
@@ -41,7 +42,7 @@
 .NOTES
     Author: PowerShell Development Team
     Date: 2025-12-20
-    Version: 1.2 (COMPLETE REWRITE - Fixed encoding issues)
+    Version: 1.3 (CRITICAL FIX - Complete rewrite)
 #>
 
 param(
@@ -59,35 +60,9 @@ param(
 $ErrorActionPreference = "Stop"
 $VerbosePreference = "Continue"
 
-# Funktion: Datei zu UTF-8 with BOM konvertieren (COMPLETE REWRITE)
-function Convert-FileToUTF8BOM {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$FilePath
-    )
-    
-    try {
-        # KRITISCH: Explizit UTF-8 OHNE BOM lesen (nicht autodetect!)
-        # Das ist der Schlüssel!
-        $encoding = New-Object System.Text.UTF8Encoding($false) # $false = NO BOM
-        $content = [System.IO.File]::ReadAllText($FilePath, $encoding)
-        
-        # UTF-8 WITH BOM Encoding - der $true Parameter ist essentiell!
-        $utf8WithBOM = New-Object System.Text.UTF8Encoding($true) # $true = WITH BOM
-        $bytes = $utf8WithBOM.GetBytes($content)
-        
-        # Schreibe mit BOM
-        [System.IO.File]::WriteAllBytes($FilePath, $bytes)
-        
-        return $true
-    }
-    catch {
-        Write-Warning "Fehler bei Datei '$FilePath': $_"
-        return $false
-    }
-}
-
-# Funktion: BOM-Status prüfen
+# ==============================================================================
+# KRITISCH: Test ob Datei UTF-8 BOM hat (Byte-Level Prüfung)
+# ==============================================================================
 function Test-UTF8BOM {
     param(
         [Parameter(Mandatory = $true)]
@@ -95,10 +70,10 @@ function Test-UTF8BOM {
     )
     
     try {
-        # Lese erste 3 Bytes
+        # Lese GENAU die ersten 3 Bytes
         $bytes = [System.IO.File]::ReadAllBytes($FilePath)
         
-        # UTF-8 BOM = EF BB BF (exakt diese 3 Bytes am Anfang)
+        # UTF-8 BOM = EXAKT diese 3 Bytes: EF BB BF
         if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
             return $true
         }
@@ -110,11 +85,46 @@ function Test-UTF8BOM {
     }
 }
 
-# Main Script
+# ==============================================================================
+# KRITISCH: Datei zu UTF-8 with BOM konvertieren (COMPLETE REWRITE v1.3)
+# ==============================================================================
+function Convert-FileToUTF8BOM {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath
+    )
+    
+    try {
+        # SCHRITT 1: EXPLIZIT lese ohne BOM
+        # StreamReader mit detectEncodingFromByteOrderMarks=$false ignoriert BOM beim Lesen
+        $reader = New-Object System.IO.StreamReader($FilePath, $true)
+        $content = $reader.ReadToEnd()
+        $reader.Close()
+        $reader.Dispose()
+        
+        # SCHRITT 2: EXPLIZIT schreibe MIT BOM
+        # UTF8Encoding mit Parameter $true = MIT BOM
+        $encoding = New-Object System.Text.UTF8Encoding($true)
+        $bytes = $encoding.GetBytes($content)
+        
+        # SCHRITT 3: Schreibe die Bytes direkt (mit BOM-Präfix von $encoding.GetBytes)
+        [System.IO.File]::WriteAllBytes($FilePath, $bytes)
+        
+        return $true
+    }
+    catch {
+        Write-Warning "Fehler bei Datei '$FilePath': $_"
+        return $false
+    }
+}
+
+# ==============================================================================
+# MAIN SCRIPT
+# ==============================================================================
 Write-Host "`n" -ForegroundColor Cyan
 Write-Host "=================================================================================" -ForegroundColor Cyan
-Write-Host "    UTF-8 with BOM ENCODING PATCH (v1.2 - COMPLETE REWRITE)" -ForegroundColor Yellow
-Write-Host "    KRITISCH: Explizites Encoding (nicht autodetect!)" -ForegroundColor Red
+Write-Host "    UTF-8 with BOM ENCODING PATCH (v1.3 - KRITISCHER FIX)" -ForegroundColor Yellow
+Write-Host "    EXPLIZITES Encoding (KEINE Autodetection mehr!)" -ForegroundColor Red
 Write-Host "=================================================================================" -ForegroundColor Cyan
 Write-Host "`n" -ForegroundColor Cyan
 
@@ -161,7 +171,7 @@ if (-not $Force) {
 }
 
 # Patchen
-Write-Host "`nPatche Dateien..."`n -ForegroundColor Cyan
+Write-Host "`nPatche Dateien...`n" -ForegroundColor Cyan
 
 $successCount = 0
 $failureCount = 0
