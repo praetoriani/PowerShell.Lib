@@ -99,13 +99,13 @@ if ($Global:CurrentUser -match '\\(.+)$') {
 [string]$Global:SelectedProfile = 'STANDARD'
 
 [hashtable]$Global:ErrorMessages = @{
-    'CONFIG_LOAD_ERROR'      = 'Die Konfigurations-Datei konnte nicht geladen werden. Das Programm wird beendet.'
-    'USER_DETERMINATION_ERROR' = 'Der angemeldete Benutzer konnte nicht ermittelt werden. Das Programm wird beendet.'
-    'TWAIN_PATH_NOT_FOUND'   = 'Das Verzeichnis fuer Scanner-Profile konnte nicht gefunden werden. Das Programm wird beendet.'
-    'TWAIN_FILES_NOT_FOUND'  = 'Die erforderlichen Scanner-Profil-Dateien wurden nicht gefunden. Das Programm wird beendet.'
-    'PROFILE_SWAP_ERROR'     = 'Die Aenderungen am Scanner-Profil konnten nicht gespeichert werden. Das Programm wird beendet.'
-    'CONFIG_SAVE_ERROR'      = 'Die Konfiguration konnte nicht gespeichert werden. Das Programm wird beendet.'
-    'UNKNOWN_ERROR'          = 'Ein unerwarteter Fehler ist aufgetreten. Das Programm wird beendet.'
+    'CONFIG_LOAD_ERROR'         = 'Die Konfigurations-Datei config.json konnte&#x0a;nicht erfolgreich geladen/verarbeitet werden!&#x0a;Das Programm wird jetzt beendet.'
+    'USER_DETERMINATION_ERROR'  = 'Der angemeldete Windows-Benutzer konnte&#x0a;nicht eindeutig/zuverlässig ermittelt werden!&#x0a;Das Programm wird jetzt beendet.'
+    'TWAIN_PATH_NOT_FOUND'      = 'Es existiert kein Verzeichnis für Scanner-Profile!&#x0a;Ein gültiger TWAIN-Treiber MUSS installiert sein!&#x0a;Das Programm wird jetzt beendet.'
+    'TWAIN_FILES_NOT_FOUND'     = 'Die erforderlichen Profil-Dateien (ini-Dateien)&#x0a;existieren nicht im Ordner für Scanner-Profile!&#x0a;Das Programm wird jetzt beendet.'
+    'PROFILE_SWAP_ERROR'        = 'Während dem Speichern des Scanner-Profils&#x0a;ist ein schwerer Laufzeit-Fehler aufgetreten!&#x0a;Das Programm wird jetzt beendet.'
+    'CONFIG_SAVE_ERROR'         = 'Während dem Speichern der config.json-Datei&#x0a;ist ein schwerer Laufzeit-Fehler aufgetreten!&#x0a;Das Programm wird jetzt beendet.'
+    'UNKNOWN_ERROR'             = 'Ein unbekannter Laufzeit-Fehler ist aufgetreten!&#x0a;Das Programm wird jetzt beendet.'
 }
 
 # ============================================================================
