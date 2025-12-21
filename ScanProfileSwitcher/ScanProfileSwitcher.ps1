@@ -1,4 +1,4 @@
-#Requires -Version 5.0
+﻿#Requires -Version 5.0
 
 <#
 .SYNOPSIS
@@ -10,9 +10,10 @@
     
 .NOTES
     Version:        1.1.3
-    Author:         System Administrator
+    Author:         Praetoriani (a.k.a. Marc Sczepanski)
+    Website:        https://github.com/praetoriani
     Created:        2025-12-20
-    Updated:        2025-12-21
+    Updated:        2025-12-18
     Required:       PowerShell 5.0+, Windows 10/11
     Execution:      User context (No Admin privileges required)
     
