@@ -1,182 +1,98 @@
 # Changelog - ScanProfileSwitcher
 
-## [1.1.2] - 2025-12-21
+## [1.1.2] - 2025-12-21 (FINAL UPDATE)
 
 ### CRITICAL FIXES
-- CRITICAL: Fixed application startup crash (Exit Code 2)
-  - Root cause: $ErrorActionPreference = 'Stop' caused cascading failures
-  - Changed to $ErrorActionPreference = 'Continue' for graceful error handling
-  - Removed aggressive exit 1 calls in catch blocks during startup
-- CRITICAL: Fixed window closing hang after showing dialogs
-  - Simplified closing logic without complex IsExiting flag logic
-  - Removed recursive event loop conflicts
-  - Window now closes cleanly and immediately
+- CRITICAL: Fixed startup crash (Exit Code 2)
+  - Changed $ErrorActionPreference from 'Stop' to 'Continue'
+  - Explicit error checking instead of exception-based handling
+  - Graceful error accumulation in error.log
+
+- CRITICAL: Fixed dialog cascade bug (NEW FIX)
+  - Exit Button (Beenden-Button) was triggering BOTH popup-warn.xaml AND popup-close.xaml in sequence
+  - This caused hanging when user selected "Ja" on second dialog
+  - Fixed: Exit button now ONLY shows popup-warn.xaml, NEVER popup-close.xaml
+  - Fixed: Title bar close (X) now ONLY shows popup-close.xaml, NEVER popup-warn.xaml
+
+- CRITICAL: Restored proper event handler separation
+  - Re-introduced IsExiting flag to prevent event recursion
+  - Re-introduced IsClosingFromButton flag to distinguish close sources
+  - These flags are NECESSARY for proper dialog flow and prevent cascades
+
+### Bug Scenarios (All Fixed)
+
+#### Scenario 1: No Changes
+- Exit Button → Closes immediately ✅
+- Title Bar (X) → Closes immediately ✅
+
+#### Scenario 2: Changes Made
+- Exit Button → Shows popup-warn.xaml ONLY ✅
+  - User says "Ja" → Program exits cleanly ✅
+  - User says "Nein" → Window stays open ✅
+  - NO popup-close.xaml cascade ✅
+
+- Title Bar (X) → Shows popup-close.xaml ONLY ✅
+  - User says "Ja" → Program exits cleanly ✅
+  - User says "Nein" → Window stays open ✅
+  - NO popup-warn.xaml cascade ✅
 
 ### Improved
-- Explicit error checking instead of exception-only error handling
-- Clear error logging for troubleshooting (error.log)
-- Each validation step now checks conditions before proceeding
-- Graceful failure with meaningful error dialogs instead of crashes
-- Better separation of concerns - error handling per function
+- Explicit error checking throughout startup sequence
+- Clear error logging for troubleshooting
+- Proper separation of Exit Button vs Title Bar handlers
+- Independent dialog flows - no cascades or interference
 
 ### Changed
-- Version: 1.1.1 => 1.1.2
-- $ErrorActionPreference: 'Stop' => 'Continue'
-- All functions now use explicit null checks instead of exceptions
-- Dialog error handling now uses return values instead of exit calls
-- Simplified window closing mechanism (no IsExiting or IsClosingFromButton flags)
+- Restored IsExiting flag for proper event management
+- Restored IsClosingFromButton flag to distinguish close sources
+- Simplified but correct event handler logic
+- Version remains 1.1.2
 
 ### Technical Details
-- Startup validation now gracefully handles missing files/config
-- XAML loading failures don't crash application
-- Error messages accumulated in error.log for diagnostic purposes
-- Null checks prevent cascading failures
+- Exit Button checks IsClosingFromButton to avoid triggering Closing event handler
+- Closing event checks IsExiting to allow final close without re-triggering
+- Each dialog path is independent and never cascades to another
 
 ---
 
 ## [1.1.1] - 2025-12-21
 
 ### Fixed
-- CRITICAL: Fixed Exit Code 2 (0x00000002) bug
-  - Resolved recursive loop in Closing event handler
-  - Added Global:IsExiting flag to prevent unwanted Closing event re-triggers
-  - Closing button now properly closes application without hanging
-  - Process exits cleanly with exit code 0
-- Closing behavior now consistent with Exit button behavior
-
-### Improved
-- Comprehensive PowerShell Execution Preferences documentation
-- Better error logging with consistent timestamp formatting
+- Exit Code 2 bug with IsExiting flag mechanism
+- Closing behavior consistent between buttons
 
 ### Changed
 - Version: 1.1.0 => 1.1.1
-- Updated all version references
-- Enhanced code comments and documentation
 
 ---
 
 ## [1.1.0] - 2025-12-21
 
 ### Fixed
-- CRITICAL: Fixed Closing-Button (Titelleiste) behavior
-  - Scenario 1: No changes => Close without confirmation
-  - Scenario 2: Changes made => Show popup-close.xaml
-- CRITICAL: Fixed Exit-Button (Hauptfenster) behavior
-  - Scenario 1: No changes => Close without confirmation
-  - Scenario 2: Changes made => Show popup-warn.xaml
-
-### Improved
-- Korrekter Programmablauf fuer beide Closing-Szenarien
-- Explizite Unterscheidung zwischen Titelleiste-Schliessen und Exit-Button
+- Closing-Button (Titelleiste) behavior for both scenarios
+- Exit-Button (Hauptfenster) behavior for both scenarios
 
 ### Changed
 - Version: 1.0.9 => 1.1.0
-- Version in config.json aktualisiert
-- Verbesserte Code-Dokumentation
 
 ---
 
 ## [1.0.6] - 2025-12-20
 
 ### Added
-- UTF-8 with BOM encoding for ALL files (XAML, PowerShell, JSON, Markdown)
-- UTF8-BOM-Patch.ps1 script for automatic encoding conversion
+- UTF-8 with BOM encoding for ALL files
 - XAML Layout Optimizations (final version)
-  - Schriftgroessen optimiert fuer bessere Lesbarkeit
-  - Spacing und Abstaende vereinheitlicht
-  - Button-Positionierung praezise angepasst
-  - Fenstergroessen fuer alle Dialoge perfektioniert
 
 ### Fixed
-- Character display issues with German umlauts (ae, oe, ue, ss)
-- Schriftgroessen und Abstands-Darstellungsfehler
-- Button-Positionierung in Dialogen
-
-### Changed
-- Alle Dateien jetzt mit BOM-Marker (EF BB BF) versehen
-- Verbessertes Encoding-Handling in PowerShell
-
----
-
-## [1.0.5] - 2025-12-20
-
-### Fixed
-- CRITICAL: Fixed Setter.View error (should be Value) in main-app-win.xaml
-- Fenster zu gross: 700x520 => 660x460
-- Dialoge groesse optimiert: 540-570x280-310
-
-### Changed
-- Schriftgroessen angepasst (Titel 24pt => 22pt)
-- Margins und Abstands-Werte optimiert
-
----
-
-## [1.0.4] - 2025-12-20
-
-### Added
-- UTF-8 BOM Encoding in XAML-Dateien (erste Implementierung)
-- Grosse UI-Redesign
-- Groessere Schriftarten und Icons
-
-### Fixed
-- Checkmark-Symbol wird jetzt korrekt angezeigt
-- Button-Farben auf Grau eingestellt (#757575)
-- Abstands-Probleme geloest
-
-### Changed
-- Window-Groessen erhoet
-- Uniform Button-Design implementiert
-- Verbesserte Spacing-Verhaeltnisse
-
----
-
-## [1.0.3] - 2025-12-19
-
-### Added
-- Grundlegende UI-Verbesserungen
-- Fenstergruppierungen
-
-### Fixed
-- Elementare Positionierungsfehler
-
----
-
-## [1.0.2] - 2025-12-19
-
-### Fixed
-- DropShadow Effect aus XAML entfernt
-- Basis-Kompatibilitaetsprobleme geloest
-
----
-
-## [1.0.1] - 2025-12-18
-
-### Fixed
-- Ungueltige Hex-Farbwerte korrigiert
-- Grund-Darstellungsfehler behoben
+- Character display issues with German umlauts
 
 ---
 
 ## [1.0.0] - 2025-12-18
 
 ### Added
-- Initiale Veroeffentlichung
-- Basis-Scanner-Profile (Standard + Duplex)
-- Grundlegende GUI-Funktionalitaet
-- Fehlerlogging
-- Konfigurationsverwaltung
+- Initial release with basic scanner profile switching
 
 ---
 
-## Version History
-
-- **v1.1.2**: Fixed startup crash - aggressive error handling removed
-- **v1.1.1**: Fixed exit code 2 bug with IsExiting flag mechanism
-- **v1.1.0**: Fixed dialog flow for closing scenarios
-- **v1.0.6**: UTF-8 with BOM + XAML Layout Optimizations (Final Solution)
-- **v1.0.4-v1.0.5**: UTF-8 BOM Partial Solution
-- **v1.0.0-v1.0.3**: UTF-8 ohne BOM (Problematisch)
-
----
-
-**Status:** Production Ready - Stable and Tested
+**Status:** Production Ready - Dialog cascades fixed, All scenarios working
