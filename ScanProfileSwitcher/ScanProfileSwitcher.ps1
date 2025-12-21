@@ -124,7 +124,7 @@ function Write-ErrorLog {
     
     try {
         $timestamp = Get-Date -Format 'dd.MM.yyyy ; HH:mm:ss'
-        $logEntry = "[ $timestamp ] $Message"
+        $logEntry = "[$timestamp]  $Message"
         if ($ErrorRecord) {
             $logEntry += "`r`n  Exception: $($ErrorRecord.Exception.Message)"
         }
