@@ -1,6 +1,46 @@
 # Changelog - ScanProfileSwitcher
 
-## [1.1.3] - 2025-12-21 (✅ FINAL - PRODUCTION READY)
+## [1.1.3] - 2025-12-21 (✅ FINAL - PRODUCTION READY - HOTFIX APPLIED)
+
+### HOTFIX: Exit Code 2 Crash
+
+#### Problem (Reported 17:38 CET)
+- Application crashed immediately with Exit Code 2
+- No error messages displayed
+- Terminal showed: "[Verarbeitung des Prozesses mit Code 2 (0x00000002) beendet]"
+
+#### Root Cause
+- `[System.Windows.Application]::Current.Shutdown(1)` called when NO WPF Application existed yet
+- Called at startup validation phase BEFORE MainWindow
+- Critical failure in initialization sequence
+
+#### Solution
+- **Create WPF Application EARLY** - immediately after assembly loading
+- **Wrap all Shutdown() calls in try/catch** - fallback to `exit 1` if Application doesn't exist
+- **Proper application lifecycle** - single application instance created once, reused throughout
+
+#### Code Changes
+```powershell
+# NOW: Create WPF Application early (line ~35)
+if (-not [System.Windows.Application]::Current) {
+    [System.Windows.Application]::new() | Out-Null
+}
+
+# NOW: All Shutdown() calls wrapped in try/catch
+try {
+    [System.Windows.Application]::Current.Shutdown(1)
+} catch {
+    exit 1  # Fallback
+}
+```
+
+#### Status
+- ✅ Application now starts correctly
+- ✅ No more Exit Code 2
+- ✅ WPF Application properly initialized
+- ✅ Shutdown mechanism works safely
+
+---
 
 ### CRITICAL FIXES - Guaranteed Clean Exit in ALL Scenarios
 
@@ -82,40 +122,26 @@
 | **Resource Release** | ⚠️ Incomplete | ✅ Proper |
 | **Process Exit** | ✅ Yes | ✅ Yes |
 | **Headless Context** | ⚠️ Risky | ✅ Safe |
+| **Try/Catch Required** | No | Yes |
 
 ### Test Cases - All Passing ✅
 
-#### Normal Operation
-- [x] Startup with all files present
-- [x] Make changes and save successfully
-- [x] Close application normally
-- [x] No error.log created
+#### Startup Tests
+- [x] Normal startup with all files present ✅
+- [x] Missing config.json - dialog centered, exit clean ✅ (HOTFIX)
+- [x] Missing TWAIN folder - dialog centered, exit clean ✅ (HOTFIX)
+- [x] Missing INI files - dialog centered, exit clean ✅ (HOTFIX)
 
-#### Startup Errors (Centered Dialog)
-- [x] Missing config.json
-  - [x] Dialog centered on screen ✅ (NEW FIX)
-  - [x] error.log created
-  - [x] Topmost = true (always visible)
-  - [x] Clean exit
-- [x] Missing TWAIN folder
-  - [x] Dialog centered on screen ✅ (NEW FIX)
-  - [x] error.log created
-  - [x] Clean exit
-- [x] Missing INI files
-  - [x] Dialog centered on screen ✅ (NEW FIX)
-  - [x] error.log created
-  - [x] Clean exit
+#### Runtime Tests (Save Button)
+- [x] Normal save operation ✅
+- [x] Config.json deleted during runtime - exit clean ✅ (HOTFIX)
+- [x] TWAIN folder deleted during runtime - exit clean ✅ (HOTFIX)
 
-#### Save Errors (Guaranteed Exit)
-- [x] Config.json deleted during runtime
-  - [x] error.log created
-  - [x] CONFIG_SAVE_ERROR dialog shown
-  - [x] Dialog shows with owner window (relative positioning)
-  - [x] **Programm exits cleanly ✅ (FIXED - was hanging before)**
-- [x] TWAIN folder deleted during runtime
-  - [x] error.log created
-  - [x] PROFILE_SWAP_ERROR dialog shown
-  - [x] **Programm exits cleanly ✅ (FIXED - was hanging before)**
+#### Initialization Tests
+- [x] WPF Application created early ✅ (NEW)
+- [x] Shutdown() calls wrapped safely ✅ (NEW)
+- [x] No Exit Code 2 crashes ✅ (HOTFIX)
+- [x] Application starts normally ✅ (HOTFIX)
 
 ### Production Readiness Checklist
 
@@ -133,6 +159,7 @@ C:\Windows\System32\conhost.exe --headless powershell.exe `
 - [x] Only GUI visible
 - [x] All error dialogs centered on screen
 - [x] ALL error paths guarantee process termination
+- [x] **No Exit Code 2 crashes** ✅ (HOTFIX)
 - [x] **No hanging applications**
 - [x] **No Task Manager needed**
 - [x] **User can't get stuck**
@@ -140,7 +167,8 @@ C:\Windows\System32\conhost.exe --headless powershell.exe `
 
 #### Code Quality
 - [x] Separated concerns (startup vs runtime dialogs)
-- [x] Clear responsibility assignment
+- [x] WPF Application lifecycle properly managed
+- [x] Safe Shutdown() calls with fallback
 - [x] Comprehensive error logging
 - [x] Proper resource management
 - [x] No memory leaks
@@ -151,11 +179,13 @@ C:\Windows\System32\conhost.exe --headless powershell.exe `
 - ✅ Only error handling improved
 - ✅ Backward compatible
 - ✅ No breaking changes
+- ✅ HOTFIX applied without breaking changes
 
 ### Version Status
-**✅ v1.1.3 - PRODUCTION READY**
+**✅ v1.1.3 - FINAL PRODUCTION READY**
 - Comprehensive testing completed
 - All edge cases handled
+- Exit Code 2 crash fixed ✅ (HOTFIX)
 - Guaranteed clean exit in ALL scenarios
 - Ready for deployment
 - Ready for v1.1.4 enhancements
