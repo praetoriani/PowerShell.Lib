@@ -180,6 +180,8 @@ function Handle-Error {
         Optional detailed error message for logging
     .PARAMETER ErrorRecord
         Optional PowerShell ErrorRecord for detailed logging
+    .PARAMETER OwnerWindow
+        Optional owner window for dialog positioning
     #>
     param(
         [Parameter(Mandatory=$true)]
@@ -189,7 +191,10 @@ function Handle-Error {
         [string]$ErrorMessage = $null,
         
         [Parameter(Mandatory=$false)]
-        [System.Management.Automation.ErrorRecord]$ErrorRecord = $null
+        [System.Management.Automation.ErrorRecord]$ErrorRecord = $null,
+        
+        [Parameter(Mandatory=$false)]
+        [System.Windows.Window]$OwnerWindow = $null
     )
     
     # Always log the error
@@ -197,7 +202,8 @@ function Handle-Error {
     Write-ErrorLog -Message $logMsg -ErrorRecord $ErrorRecord
     
     # Show error dialog and exit
-    Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey $ErrorKey)
+    Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey $ErrorKey) -OwnerWindow $OwnerWindow
+    # NOTE: Show-ErrorDialog calls exit 1 after dialog closes
 }
 
 function Format-ErrorMessage {
@@ -517,7 +523,8 @@ function Update-ProfileConfiguration {
     try {
         $config = Get-ConfigurationFile
         if (-not $config) {
-            Write-ErrorLog -Message "Konfiguration konnte nicht geladen werden"
+            # This is a SAVE error, not a load error - be specific in logging
+            Write-ErrorLog -Message "Fehler: Konfigurationsdatei konnte nicht für Speichern gelesen werden"
             return $false
         }
         
@@ -526,10 +533,13 @@ function Update-ProfileConfiguration {
             $Global:CurrentProfile = $Profile
             return $true
         }
+        
+        # Set-ConfigurationFile failed
+        Write-ErrorLog -Message "Fehler: Konfigurationsdatei konnte nicht geschrieben werden"
         return $false
     }
     catch {
-        Write-ErrorLog -Message "Fehler beim Aktualisieren der Konfiguration" -ErrorRecord $_
+        Write-ErrorLog -Message "Fehler beim Speichern der Konfiguration" -ErrorRecord $_
         return $false
     }
 }
@@ -632,14 +642,18 @@ function Show-MainWindow {
                     # Try to swap profiles first
                     if (-not (Invoke-ProfileSwap -TargetProfile $Global:SelectedProfile)) {
                         # Profile swap failed - show error and exit
-                        Handle-Error -ErrorKey 'PROFILE_SWAP_ERROR' -ErrorMessage "Fehler beim Speichern des Scanner-Profils"
+                        Handle-Error -ErrorKey 'PROFILE_SWAP_ERROR' `
+                                    -ErrorMessage "Fehler beim Speichern: Scanner-Profil konnte nicht getauscht werden" `
+                                    -OwnerWindow $Global:MainWindow
                         return
                     }
                     
                     # Try to update configuration
                     if (-not (Update-ProfileConfiguration -Profile $Global:SelectedProfile)) {
                         # Config save failed - show error and exit
-                        Handle-Error -ErrorKey 'CONFIG_SAVE_ERROR' -ErrorMessage "Fehler beim Speichern der Konfiguration"
+                        Handle-Error -ErrorKey 'CONFIG_SAVE_ERROR' `
+                                    -ErrorMessage "Fehler beim Speichern: Konfiguration konnte nicht geschrieben werden" `
+                                    -OwnerWindow $Global:MainWindow
                         return
                     }
                     
