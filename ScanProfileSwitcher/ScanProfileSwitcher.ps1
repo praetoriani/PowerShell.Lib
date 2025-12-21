@@ -97,17 +97,46 @@ if ($Global:CurrentUser -match '\\(.+)$') {
 [bool]$Global:HasChanges = $false
 [bool]$Global:IsClosingFromButton = $false
 [bool]$Global:IsExiting = $false
-[string]$Global:CurrentProfile = 'STANDARD'
-[string]$Global:SelectedProfile = 'STANDARD'
+[string]$Global:OriginalProfile = 'STANDARD'   # NEW: Tracks original profile at startup
+[string]$Global:CurrentProfile = 'STANDARD'     # Tracks last saved/loaded profile
+[string]$Global:SelectedProfile = 'STANDARD'    # Tracks current checkbox selection
 
+# Error messages with proper newlines (no HTML entities)
 [hashtable]$Global:ErrorMessages = @{
-    'CONFIG_LOAD_ERROR'         = 'Die Konfigurations-Datei config.json konnte&#x0a;nicht erfolgreich geladen/verarbeitet werden!&#x0a;Das Programm wird jetzt beendet.'
-    'USER_DETERMINATION_ERROR'  = 'Der angemeldete Windows-Benutzer konnte&#x0a;nicht eindeutig/zuverlässig ermittelt werden!&#x0a;Das Programm wird jetzt beendet.'
-    'TWAIN_PATH_NOT_FOUND'      = 'Es existiert kein Verzeichnis für Scanner-Profile!&#x0a;Ein gültiger TWAIN-Treiber MUSS installiert sein!&#x0a;Das Programm wird jetzt beendet.'
-    'TWAIN_FILES_NOT_FOUND'     = 'Die erforderlichen Profil-Dateien (ini-Dateien)&#x0a;existieren nicht im Ordner für Scanner-Profile!&#x0a;Das Programm wird jetzt beendet.'
-    'PROFILE_SWAP_ERROR'        = 'Während dem Speichern des Scanner-Profils&#x0a;ist ein schwerer Laufzeit-Fehler aufgetreten!&#x0a;Das Programm wird jetzt beendet.'
-    'CONFIG_SAVE_ERROR'         = 'Während dem Speichern der config.json-Datei&#x0a;ist ein schwerer Laufzeit-Fehler aufgetreten!&#x0a;Das Programm wird jetzt beendet.'
-    'UNKNOWN_ERROR'             = 'Ein unbekannter Laufzeit-Fehler ist aufgetreten!&#x0a;Das Programm wird jetzt beendet.'
+    'CONFIG_LOAD_ERROR'         = @(
+        'Die Konfigurations-Datei config.json konnte',
+        'nicht erfolgreich geladen/verarbeitet werden!',
+        'Das Programm wird jetzt beendet.'
+    )
+    'USER_DETERMINATION_ERROR'  = @(
+        'Der angemeldete Windows-Benutzer konnte',
+        'nicht eindeutig/zuverlässig ermittelt werden!',
+        'Das Programm wird jetzt beendet.'
+    )
+    'TWAIN_PATH_NOT_FOUND'      = @(
+        'Es existiert kein Verzeichnis für Scanner-Profile!',
+        'Ein gültiger TWAIN-Treiber MUSS installiert sein!',
+        'Das Programm wird jetzt beendet.'
+    )
+    'TWAIN_FILES_NOT_FOUND'     = @(
+        'Die erforderlichen Profil-Dateien (ini-Dateien)',
+        'existieren nicht im Ordner für Scanner-Profile!',
+        'Das Programm wird jetzt beendet.'
+    )
+    'PROFILE_SWAP_ERROR'        = @(
+        'Während dem Speichern des Scanner-Profils',
+        'ist ein schwerer Laufzeit-Fehler aufgetreten!',
+        'Das Programm wird jetzt beendet.'
+    )
+    'CONFIG_SAVE_ERROR'         = @(
+        'Während dem Speichern der config.json-Datei',
+        'ist ein schwerer Laufzeit-Fehler aufgetreten!',
+        'Das Programm wird jetzt beendet.'
+    )
+    'UNKNOWN_ERROR'             = @(
+        'Ein unbekannter Laufzeit-Fehler ist aufgetreten!',
+        'Das Programm wird jetzt beendet.'
+    )
 }
 
 # ============================================================================
@@ -134,6 +163,36 @@ function Write-ErrorLog {
     catch {
         # Failsafe
     }
+}
+
+function Format-ErrorMessage {
+    param([Parameter(Mandatory=$true)][string]$ErrorKey)
+    
+    try {
+        if ($Global:ErrorMessages.ContainsKey($ErrorKey)) {
+            $lines = $Global:ErrorMessages[$ErrorKey]
+            if ($lines -is [array]) {
+                return $lines -join "`n"
+            }
+            return $lines
+        }
+        return $Global:ErrorMessages['UNKNOWN_ERROR'] -join "`n"
+    }
+    catch {
+        return 'Ein Fehler ist aufgetreten.'
+    }
+}
+
+function Set-HasChanges {
+    <#
+    .SYNOPSIS
+        Smart change detection: HasChanges = true ONLY if SelectedProfile != OriginalProfile
+    .DESCRIPTION
+        Intelligently determines if changes have been made by comparing the currently
+        selected profile with the original profile loaded at startup.
+        User can revert to original without triggering warning.
+    #>
+    $Global:HasChanges = ($Global:SelectedProfile -ne $Global:OriginalProfile)
 }
 
 function Get-XamlContent {
@@ -289,16 +348,25 @@ function Show-ErrorDialog {
         Set-WindowSize -Window $errorWindow -WindowKey 'popup-error'
         
         $messageBlock = $errorWindow.FindName('MessageText')
-        if ($messageBlock) { $messageBlock.Text = $Message }
+        if ($messageBlock) {
+            # Set message with proper text (not exit on button)
+            $messageBlock.Text = $Message
+        }
         
         $okButton = $errorWindow.FindName('OkButton')
         if ($okButton) {
-            $okButton.Add_Click({ exit 1 })
+            # OK button closes dialog properly via Close(), not exit()
+            $okButton.Add_Click({ $errorWindow.Close() })
         }
         
         $errorWindow.Topmost = $true
         if ($OwnerWindow) { $errorWindow.Owner = $OwnerWindow }
+        
+        # ShowDialog() waits for dialog to close before continuing
         [void]$errorWindow.ShowDialog()
+        
+        # After dialog closes, exit cleanly
+        exit 1
     }
     catch {
         Write-ErrorLog -Message "Fehler bei Anzeige des Fehler-Dialogs" -ErrorRecord $_
@@ -450,8 +518,9 @@ function Invoke-StartupValidation {
         }
         
         $Global:Config = $config
-        $Global:CurrentProfile = $config['currentProfile'] -as [string]
-        $Global:SelectedProfile = $Global:CurrentProfile
+        $Global:OriginalProfile = $config['currentProfile'] -as [string]  # NEW: Set original at startup
+        $Global:CurrentProfile = $Global:OriginalProfile
+        $Global:SelectedProfile = $Global:OriginalProfile
         
         if (-not (Test-Path -Path $Global:ScannerProfilePath -PathType Container)) {
             Write-ErrorLog -Message "Scanner-Profilpfad nicht gefunden: $Global:ScannerProfilePath"
@@ -479,13 +548,13 @@ function Show-MainWindow {
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'main-app-win.xaml'
         if (-not $xaml) {
-            Show-ErrorDialog -Message $Global:ErrorMessages['UNKNOWN_ERROR']
+            Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
             return
         }
         
         $Global:MainWindow = New-WPFWindow -Xaml $xaml
         if (-not $Global:MainWindow) {
-            Show-ErrorDialog -Message $Global:ErrorMessages['UNKNOWN_ERROR']
+            Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
             return
         }
         
@@ -497,7 +566,7 @@ function Show-MainWindow {
         $exitButton = $Global:MainWindow.FindName('CloseButton')
         
         if ($standardCheckbox -and $duplexCheckbox) {
-            if ($Global:CurrentProfile -eq 'STANDARD') {
+            if ($Global:OriginalProfile -eq 'STANDARD') {
                 $standardCheckbox.IsChecked = $true
                 $duplexCheckbox.IsChecked = $false
             } else {
@@ -512,10 +581,8 @@ function Show-MainWindow {
             })
             $standardCheckbox.Add_Checked({
                 $duplexCheckbox.IsChecked = $false
-                if ($Global:SelectedProfile -ne 'STANDARD') {
-                    $Global:SelectedProfile = 'STANDARD'
-                    $Global:HasChanges = $true
-                }
+                $Global:SelectedProfile = 'STANDARD'
+                Set-HasChanges  # NEW: Use smart change detection
             })
         }
         
@@ -525,10 +592,8 @@ function Show-MainWindow {
             })
             $duplexCheckbox.Add_Checked({
                 $standardCheckbox.IsChecked = $false
-                if ($Global:SelectedProfile -ne 'DUPLEX') {
-                    $Global:SelectedProfile = 'DUPLEX'
-                    $Global:HasChanges = $true
-                }
+                $Global:SelectedProfile = 'DUPLEX'
+                Set-HasChanges  # NEW: Use smart change detection
             })
         }
         
@@ -537,18 +602,18 @@ function Show-MainWindow {
                 if ($Global:HasChanges) {
                     if (Invoke-ProfileSwap -TargetProfile $Global:SelectedProfile) {
                         if (Update-ProfileConfiguration -Profile $Global:SelectedProfile) {
+                            $Global:OriginalProfile = $Global:SelectedProfile  # NEW: Update original after save
                             $Global:HasChanges = $false
                             Show-SaveDialog -OwnerWindow $Global:MainWindow
                         }
                     } else {
-                        Show-ErrorDialog -Message $Global:ErrorMessages['PROFILE_SWAP_ERROR'] -OwnerWindow $Global:MainWindow
+                        Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'PROFILE_SWAP_ERROR') -OwnerWindow $Global:MainWindow
                     }
                 }
             })
         }
         
         # EXIT BUTTON HANDLER - SZENARIO 1 & 2
-        # Nur zeigt popup-warn.xaml, NIEMALS popup-close.xaml
         if ($exitButton) {
             $exitButton.Add_Click({
                 $Global:IsClosingFromButton = $true
@@ -572,7 +637,6 @@ function Show-MainWindow {
         }
         
         # TITLE BAR CLOSE BUTTON HANDLER - SZENARIO 1 & 2
-        # Nur zeigt popup-close.xaml, NIEMALS popup-warn.xaml
         $Global:MainWindow.Add_Closing({
             param($sender, $e)
             
@@ -605,7 +669,7 @@ function Show-MainWindow {
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Anzeigen des Hauptfensters" -ErrorRecord $_
-        Show-ErrorDialog -Message $Global:ErrorMessages['UNKNOWN_ERROR']
+        Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
         exit 1
     }
 }
@@ -622,13 +686,13 @@ function Invoke-ScanProfileSwitcher {
         
         if (-not (Invoke-StartupValidation)) {
             if (-not (Test-Path -Path $Global:ConfigFile -PathType Leaf)) {
-                Show-ErrorDialog -Message $Global:ErrorMessages['CONFIG_LOAD_ERROR']
+                Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'CONFIG_LOAD_ERROR')
             } elseif (-not (Test-Path -Path $Global:ScannerProfilePath -PathType Container)) {
-                Show-ErrorDialog -Message $Global:ErrorMessages['TWAIN_PATH_NOT_FOUND']
+                Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'TWAIN_PATH_NOT_FOUND')
             } elseif (-not (Test-ScannerProfileFiles)) {
-                Show-ErrorDialog -Message $Global:ErrorMessages['TWAIN_FILES_NOT_FOUND']
+                Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'TWAIN_FILES_NOT_FOUND')
             } else {
-                Show-ErrorDialog -Message $Global:ErrorMessages['UNKNOWN_ERROR']
+                Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
             }
             exit 1
         }
@@ -637,7 +701,7 @@ function Invoke-ScanProfileSwitcher {
     }
     catch {
         Write-ErrorLog -Message "Kritischer Fehler in Hauptanwendung" -ErrorRecord $_
-        Show-ErrorDialog -Message $Global:ErrorMessages['UNKNOWN_ERROR']
+        Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
         exit 1
     }
 }
