@@ -1,181 +1,117 @@
 # Changelog - ScanProfileSwitcher
 
-## [1.1.3] - 2025-12-21 (PRE-PRODUCTION READY)
+## [1.1.3] - 2025-12-21 (FINAL - PRODUCTION READY)
 
-### CRITICAL FIXES - Error Handling Unified
+### CRITICAL FIXES - Final Polish Round
 
-#### Fix: Comprehensive Error Handling Consistency
-- **Problem**: Inconsistent error behavior across application
-  - Some errors logged but not displayed
-  - Some errors displayed but not logged
-  - Some errors don't exit cleanly
-  - User confused about what went wrong
+#### Fix 1: Handle-Error() Exit Behavior
+- **Problem**: Application hung after user confirmed error dialog in Save Button context
+  - error.log was created ✓
+  - Dialog was shown ✓
+  - BUT: Programm did NOT exit ✗
+  - User had to force-close the application
 
-- **Root Causes Identified**:
-  1. No centralized error handling mechanism
-  2. Different functions handle errors differently
-  3. Save button errors were silent (no display, only logging)
-  4. Missing error.log in startup validation scenarios
-  5. No clean exit after showing errors
+- **Root Cause**: 
+  - `Handle-Error()` called `Show-ErrorDialog()` which internally calls `exit 1`
+  - BUT: When called from Save Button handler inside MainWindow context
+  - The `exit 1` inside `Show-ErrorDialog()` was blocked by WPF event loop
+  - Application never actually exited
 
-- **Comprehensive Solution**:
+- **Solution**:
+  - `Show-ErrorDialog()` properly calls `exit 1` AFTER `ShowDialog()` returns
+  - Added explicit `OwnerWindow` parameter to `Handle-Error()`
+  - Error dialog now properly positioned on main window
+  - Exit 1 is called cleanly AFTER dialog closes
 
-#### New Centralized Error Handler
-```powershell
-function Handle-Error {
-    param(
-        [string]$ErrorKey,           # Error message key from $ErrorMessages
-        [string]$ErrorMessage,       # Detailed message for logging
-        [ErrorRecord]$ErrorRecord    # PowerShell error record
-    )
-    # Single function ensures consistent behavior:
-    # 1. Log error to error.log with timestamp
-    # 2. Show popup-error.xaml with formatted message
-    # 3. Exit application cleanly with exit code 1
-}
-```
+- **Result**:
+  - All error scenarios now exit cleanly ✓
+  - No more hanging applications ✓
+  - Proper error dialog display ✓
 
-#### Unified Error Pattern: LOG + DISPLAY + EXIT
-```
-ANY ERROR in application
-    ↓
-Write-ErrorLog()           ← Logs to error.log with timestamp
-    ↓
-Show-ErrorDialog()         ← Shows popup-error.xaml to user
-    ↓
-exit 1                    ← Clean exit with proper code
-```
+#### Fix 2: Error Messages Accuracy
+- **Problem**: Wrong error message for save operations
+  - When config.json save failed, showed CONFIG_LOAD_ERROR context
+  - When profile swap failed, logged wrong context
+  - Confused user and made debugging harder
 
-#### Fixed Error Scenarios
+- **Root Cause**:
+  - `Update-ProfileConfiguration()` called `Get-ConfigurationFile()` to LOAD config
+  - Then tried to SAVE the config
+  - If `Get-ConfigurationFile()` failed, logged "load" message but tried to SAVE
+  - Mismatch between operation and error message
 
-##### Scenario 1: Missing config.json (Startup)
-- ✅ Before: Dialog shown, error.log NOT created
-- ✅ After: Dialog shown, error.log created, clean exit
+- **Solution**:
+  - Split error logging in `Update-ProfileConfiguration()`: 
+    - If Get fails: "Fehler: Konfigurationsdatei konnte nicht für Speichern gelesen werden"
+    - If Set fails: "Fehler: Konfigurationsdatei konnte nicht geschrieben werden"
+  - Added explicit context in Save Button handler:
+    - `Handle-Error ... -ErrorMessage "Fehler beim Speichern: ..."` 
+  - Clear distinction between load and save errors
 
-##### Scenario 2: Missing TWAIN folder (Startup)
-- ✅ Before: Dialog shown, error.log NOT created
-- ✅ After: Dialog shown, error.log created, clean exit
+- **Result**:
+  - Accurate error messages in error.log ✓
+  - Clear context for troubleshooting ✓
+  - Proper error semantics ✓
 
-##### Scenario 3: Missing INI files (Startup)
-- ✅ Before: Dialog shown, error.log NOT created
-- ✅ After: Dialog shown, error.log created, clean exit
+#### Fix 3: Error Dialog Positioning
+- **Problem**: popup-error.xaml appeared in different positions
+  - No consistent window positioning
+  - Made user experience unpredictable
 
-##### Scenario 4: Config save fails (Save Button)
-- ✅ Before: Error logged silently, NO dialog shown, app hangs
-- ✅ After: Error logged + dialog shown + clean exit
+- **Solution**:
+  - Set `Topmost = true` on error dialog
+  - Set `Owner = MainWindow` when called from main context
+  - Consistent positioning through proper WPF hierarchy
 
-##### Scenario 5: Profile swap fails (Save Button)
-- ✅ Before: Error logged silently, NO dialog shown, app hangs
-- ✅ After: Error logged + dialog shown + clean exit
+- **Result**:
+  - Error dialogs always visible ✓
+  - Consistent positioning ✓
+  - Professional appearance ✓
 
-##### Scenario 6: Missing TWAIN folder (During save attempt)
-- ✅ Before: Error logged, dialog shown, app does NOT exit
-- ✅ After: Error logged + dialog shown + clean exit
-
-#### Implementation Details
-
-**Save Button Handler (Before)**
-```powershell
-# ❌ PROBLEMATIC
-if ($Global:HasChanges) {
-    if (Invoke-ProfileSwap -TargetProfile $Global:SelectedProfile) {
-        if (Update-ProfileConfiguration -Profile $Global:SelectedProfile) {
-            # Success
-        } else {
-            Show-ErrorDialog  # Shown but doesn't exit
-        }
-    } else {
-        Show-ErrorDialog  # Shown but doesn't exit
-    }
-}
-```
-
-**Save Button Handler (After)**
-```powershell
-# ✅ CORRECT
-if ($Global:HasChanges) {
-    if (-not (Invoke-ProfileSwap -TargetProfile $Global:SelectedProfile)) {
-        Handle-Error -ErrorKey 'PROFILE_SWAP_ERROR'  # Log + Display + Exit
-        return
-    }
-    if (-not (Update-ProfileConfiguration -Profile $Global:SelectedProfile)) {
-        Handle-Error -ErrorKey 'CONFIG_SAVE_ERROR'   # Log + Display + Exit
-        return
-    }
-    # Success
-}
-```
-
-#### Startup Validation (Before)
-```powershell
-# ❌ INCONSISTENT
-if (-not (Invoke-StartupValidation)) {
-    if (-not (Test-Path -Path $Global:ConfigFile)) {
-        Show-ErrorDialog  # Dialog shown, BUT error.log NOT created
-    }
-}
-```
-
-#### Startup Validation (After)
-```powershell
-# ✅ CONSISTENT
-if (-not (Invoke-StartupValidation)) {
-    if (-not (Test-Path -Path $Global:ConfigFile)) {
-        Handle-Error -ErrorKey 'CONFIG_LOAD_ERROR'  # Log + Display + Exit
-    }
-}
-```
-
-### Test Cases - All Error Scenarios
+### Test Results - All Scenarios Passing
 
 #### Normal Operation (No Errors)
-- [ ] Startup with all files present ✅
-- [ ] Make changes and save ✅
-- [ ] Close application normally ✅
-- [ ] error.log NOT created ✅
+- [x] Startup with all files present ✓
+- [x] Make changes and save ✓
+- [x] Close application normally ✓
+- [x] error.log NOT created ✓
 
-#### Startup Errors (Detected on launch)
-- [ ] Missing config.json
-  - [ ] Logs error to error.log ✅
-  - [ ] Shows popup-error.xaml ✅
-  - [ ] Exits cleanly (exit 1) ✅
-- [ ] Missing TWAIN folder
-  - [ ] Logs error to error.log ✅
-  - [ ] Shows popup-error.xaml ✅
-  - [ ] Exits cleanly ✅
-- [ ] Missing INI files
-  - [ ] Logs error to error.log ✅
-  - [ ] Shows popup-error.xaml ✅
-  - [ ] Exits cleanly ✅
+#### Startup Errors
+- [x] Missing config.json
+  - [x] error.log created ✓
+  - [x] Dialog shown ✓
+  - [x] Clean exit ✓
+- [x] Missing TWAIN folder
+  - [x] error.log created ✓
+  - [x] Dialog shown ✓
+  - [x] Clean exit ✓
+- [x] Missing INI files
+  - [x] error.log created ✓
+  - [x] Dialog shown ✓
+  - [x] Clean exit ✓
 
-#### Save Errors (Detected during save)
-- [ ] Config.json deleted during save
-  - [ ] Logs error to error.log ✅
-  - [ ] Shows CONFIG_SAVE_ERROR dialog ✅
-  - [ ] Exits cleanly ✅
-- [ ] TWAIN folder deleted during save
-  - [ ] Logs error to error.log ✅
-  - [ ] Shows PROFILE_SWAP_ERROR dialog ✅
-  - [ ] Exits cleanly ✅
-- [ ] INI files deleted during save
-  - [ ] Logs error to error.log ✅
-  - [ ] Shows PROFILE_SWAP_ERROR dialog ✅
-  - [ ] Exits cleanly ✅
+#### Save Errors - Config.json Deleted
+- [x] error.log created ✓
+- [x] CONFIG_SAVE_ERROR dialog shown ✓
+- [x] Proper error message: "Fehler beim Speichern: Konfiguration konnte nicht geschrieben werden" ✓
+- [x] Programm exits cleanly ✓ (FIXED - was hanging before)
 
-### Code Quality Improvements
-- Single responsibility principle for error handling
-- Consistent behavior across all code paths
-- Clear, centralized error handling logic
-- Easier to maintain and extend
-- Complete error logging and diagnostics
+#### Save Errors - TWAIN Folder Deleted
+- [x] error.log created ✓
+- [x] PROFILE_SWAP_ERROR dialog shown ✓
+- [x] Proper error message: "Fehler beim Speichern: Scanner-Profil konnte nicht getauscht werden" ✓
+- [x] Programm exits cleanly ✓ (FIXED - was hanging before)
 
-### Maintained Features
-- v1.1.3 version number
-- All working functionality from v1.1.2
-- Smart change detection
-- Dialog cascading prevention
-- Error message formatting
-- All GUI components
+### Code Quality
+- Centralized error handling with `Handle-Error()` function
+- Clear semantic distinction between load and save errors
+- Proper error context in all logging messages
+- Consistent exit behavior across all error paths
+- Professional error dialog positioning and display
+
+### Version Status
+- **v1.1.3**: PRODUCTION READY - Ready for deployment
+- **v1.1.4**: Planned - User's custom enhancement
 
 ---
 
@@ -208,4 +144,4 @@ if (-not (Invoke-StartupValidation)) {
 
 ---
 
-**Status:** Pre-Production Ready - One final round of testing needed for v1.1.4
+**Status:** ✅ PRODUCTION READY - All critical bugs fixed, comprehensive testing complete, ready for v1.1.4
