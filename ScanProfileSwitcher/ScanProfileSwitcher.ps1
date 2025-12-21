@@ -36,6 +36,21 @@ catch {
 }
 
 # ============================================================================
+# CREATE WPF APPLICATION - MUST BE EARLY!
+# ============================================================================
+
+try {
+    # Create WPF Application once - required for Shutdown() later
+    if (-not [System.Windows.Application]::Current) {
+        [System.Windows.Application]::new() | Out-Null
+    }
+}
+catch {
+    Write-Host "FEHLER: WPF Application konnte nicht initialisiert werden!" -ForegroundColor Red
+    exit 1
+}
+
+# ============================================================================
 # CONSOLE MINIMIZATION VIA P/INVOKE
 # ============================================================================
 
@@ -361,10 +376,22 @@ function Show-ErrorDialog-Runtime {
     
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'popup-error.xaml'
-        if (-not $xaml) { [System.Windows.Application]::Current.Shutdown(1); exit 1 }
+        if (-not $xaml) { 
+            try {
+                [System.Windows.Application]::Current.Shutdown(1)
+            } catch {
+                exit 1
+            }
+        }
         
         $errorWindow = New-WPFWindow -Xaml $xaml
-        if (-not $errorWindow) { [System.Windows.Application]::Current.Shutdown(1); exit 1 }
+        if (-not $errorWindow) { 
+            try {
+                [System.Windows.Application]::Current.Shutdown(1)
+            } catch {
+                exit 1
+            }
+        }
         
         Set-WindowSize -Window $errorWindow -WindowKey 'popup-error'
         
@@ -383,11 +410,21 @@ function Show-ErrorDialog-Runtime {
         }
         
         [void]$errorWindow.ShowDialog()
-        [System.Windows.Application]::Current.Shutdown(1)
+        
+        # CRITICAL: Shutdown WPF Application cleanly
+        try {
+            [System.Windows.Application]::Current.Shutdown(1)
+        } catch {
+            exit 1
+        }
     }
     catch {
         Write-ErrorLog -Message "Fehler bei Anzeige des Fehler-Dialogs (Runtime)" -ErrorRecord $_
-        [System.Windows.Application]::Current.Shutdown(1)
+        try {
+            [System.Windows.Application]::Current.Shutdown(1)
+        } catch {
+            exit 1
+        }
     }
 }
 
