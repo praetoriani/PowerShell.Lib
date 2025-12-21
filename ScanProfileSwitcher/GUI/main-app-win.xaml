@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Scanner-Profil konfigurieren"
         Width="660"
-        Height="520"
+        Height="440"
         WindowStyle="SingleBorderWindow"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
@@ -77,27 +77,27 @@
         </Style>
     </Window.Resources>
     
-    <Grid Margin="35">
+    <Grid Margin="20,10,20,10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="30"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
-        <TextBlock Grid.Row="0" Text="Scanner-Profil konfigurieren" FontSize="24" FontWeight="Bold" Foreground="#134252" Margin="0,0,0,20" x:Name="TitleBar"/>
+        <TextBlock Grid.Row="0" Text="Scanner-Profil konfigurieren" FontSize="24" FontWeight="Bold" Foreground="#134252" Margin="0,0,0,20" VerticalAlignment="Top" HorizontalAlignment="Center" x:Name="TitleBar"/>
         
-        <TextBlock Grid.Row="1" Text="Bitte wählen Sie eine der unten stehenden Scanner-Profile aus und bestätigen Sie ihre Auswahl anschließend mit einem Klick auf den Speichern-Button" TextWrapping="Wrap" FontSize="15" Foreground="#5E5240" LineHeight="23" Margin="0,0,0,32"/>
+        <TextBlock Grid.Row="1" TextWrapping="Wrap" FontSize="16" Foreground="#5E5240" LineHeight="23" Margin="0,0,0,20" Text="Bitte wählen Sie eine der unten stehenden Scanner-Profile aus und bestätigen Sie ihre Auswahl anschließend mit einem Klick auf den Speichern-Button."/>
         
-        <StackPanel Grid.Row="2" VerticalAlignment="Top" Margin="0,0,0,48">
+        <StackPanel Grid.Row="2" VerticalAlignment="Top" Margin="0,0,0,0">
             <CheckBox Style="{StaticResource CustomCheckbox}" Content="Standard-Profil (Scannt nur die Vorderseite)" x:Name="StandardCheckbox" IsChecked="False"/>
             <CheckBox Style="{StaticResource CustomCheckbox}" Content="Duplex-Profil (Scannt Vorder- und Rückseite)" x:Name="DuplexCheckbox" IsChecked="False"/>
         </StackPanel>
         
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0" Height="44">
-            <Button Style="{StaticResource PrimaryButton}" Content="Speichern" Width="150" Margin="0,0,28,0" x:Name="SaveButton"/>
-            <Button Style="{StaticResource PrimaryButton}" Content="Beenden" Width="150" x:Name="CloseButton"/>
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,0" Height="Auto">
+            <Button Style="{StaticResource PrimaryButton}" Content="Speichern" Width="150" Height="48" Margin="0,0,50,0" x:Name="SaveButton"/>
+            <Button Style="{StaticResource PrimaryButton}" Content="Beenden" Width="150" Height="48" Margin="50,0,0,0" x:Name="CloseButton"/>
         </StackPanel>
     </Grid>
 </Window>

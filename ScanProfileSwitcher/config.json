@@ -4,47 +4,12 @@
   "description": "TWAIN Scanner Profile Management Application",
   "currentProfile": "STANDARD",
   "language": "de-DE",
-  "windows": {
-    "main-app-win": {
-      "title": "Scanner-Profil konfigurieren",
-      "width": 660,
-      "height": 520,
-      "resizable": false,
-      "minimizable": false,
-      "maximizable": false
-    },
-    "popup-close": {
-      "title": "Programm schließen?",
-      "width": 480,
-      "height": 240,
-      "resizable": false
-    },
-    "popup-save": {
-      "title": "Änderungen gespeichert",
-      "width": 480,
-      "height": 240,
-      "resizable": false
-    },
-    "popup-warn": {
-      "title": "Ohne Speichern beenden?",
-      "width": 500,
-      "height": 270,
-      "resizable": false
-    },
-    "popup-error": {
-      "title": "Interner Fehler!",
-      "width": 480,
-      "height": 240,
-      "resizable": false
-    }
-  },
   "ui": {
     "theme": "light",
     "primaryColor": "#757575",
     "textColor": "#134252",
     "backgroundColor": "#F5F5F2",
-    "borderColor": "#5E5240",
-    "note": "v1.0.9: COMPLETE FIX - Explicit Window Width/Height in XAML. Increased FontSize (15-24pt). UTF8-BOM-Patch.ps1 v1.3 with explicit encoding. All windows properly sized and styled."
+    "borderColor": "#5E5240"
   },
   "scanner": {
     "profilePath": "AppData\\Local\\Scanner\\Twain",
@@ -56,16 +21,5 @@
     "enabled": true,
     "errorLogFile": "error.log",
     "dateFormat": "dd.MM.yyyy ; HH:mm:ss"
-  },
-  "changelog": {
-    "v1.0.9": "COMPLETE FIX: (1) Added explicit Width/Height attributes to ALL XAML Window tags. (2) Increased FontSize throughout (Button=15, TextBlock=14-24). (3) UTF8-BOM-Patch.ps1 v1.3 - CRITICAL FIX: Explicit UTF-8 encoding (NO autodetection). Uses StreamReader with correct BOM handling and explicit UTF8Encoding($true) for writing. (4) Improved spacing and margins in all XAML files.",
-    "v1.0.8": "Window sizing infrastructure - Added Set-WindowSize() function with rigorous [double] casting. Improved config hashtable conversion for nested objects.",
-    "v1.0.7": "Dynamic window sizing from config.json. Checkbox logic fix prevents unselecting both. Close button checks for unsaved changes. Save dialog returns to main (no exit). Fonts increased (+1-2pt). Button spacing increased (16-24px).",
-    "v1.0.6": "UTF-8 with BOM encoding for ALL files (XAML, PowerShell, JSON, Markdown). Fixes character display issues with German umlauts (ä,ö,ü,ß).",
-    "v1.0.5": "CRITICAL FIX: Fixed Setter.View error (should be Value). Optimized window sizes to avoid 'too large' issue.",
-    "v1.0.4": "Major UI Overhaul: UTF-8 BOM encoding, larger fonts, gray buttons, correct checkmark symbols, bigger icons, improved spacing.",
-    "v1.0.3": "UI Enhancement: Window sizes increased, uniform button colors, improved spacing.",
-    "v1.0.2": "Critical Fix: Remove DropShadow Effect from XAML.",
-    "v1.0.1": "Bug Fix: Correct invalid hex color values."
   }
 }
