@@ -1,17 +1,44 @@
-﻿# Changelog - ScanProfileSwitcher
+# Changelog - ScanProfileSwitcher
+
+## [1.1.0] - 2025-12-21
+
+### Fixed
+- CRITICAL: Fixed Closing-Button (Titelleiste) behavior
+  - Scenario 1: No changes => Close without confirmation
+  - Scenario 2: Changes made => Show popup-close.xaml
+- CRITICAL: Fixed Exit-Button (Hauptfenster) behavior
+  - Scenario 1: No changes => Close without confirmation
+  - Scenario 2: Changes made => Show popup-warn.xaml
+
+### Improved
+- Korrekter Programmablauf fuer beide Closing-Szenarien
+- Explizite Unterscheidung zwischen Titelleiste-Schliessen und Exit-Button
+- Global:IsClosingFromButton Flag fuer korrekte Handling-Logik
+
+### Changed
+- Versionsnummer erhoet: 1.0.9 => 1.1.0
+- Version in config.json aktualisiert
+- Verbesserte Code-Dokumentation
+
+---
 
 ## [1.0.6] - 2025-12-20
 
 ### Added
-- ✅ UTF-8 with BOM encoding for ALL files (XAML, PowerShell, JSON, Markdown)
-- ✅ UTF8-BOM-Patch.ps1 script for automatic encoding conversion
-- ✅ Comprehensive encoding documentation
+- UTF-8 with BOM encoding for ALL files (XAML, PowerShell, JSON, Markdown)
+- UTF8-BOM-Patch.ps1 script for automatic encoding conversion
+- Comprehensive encoding documentation
+- XAML Layout Optimizations (final version)
+  - Schriftgroessen optimiert fuer bessere Lesbarkeit
+  - Spacing und Abstaende vereinheitlicht
+  - Button-Positionierung praezise angepasst
+  - Fenstergroessen fuer alle Dialoge perfektioniert
 
 ### Fixed
-- ❌ Character display issues with German umlauts (ä, ö, ü, ß)
-- ❌ Komisches Zeichen in Checkboxen
-- ❌ Schriftgrößen und Abstands-Darstellungsfehler
-- ❌ Button-Positionierung in Dialogen
+- Character display issues with German umlauts (ae, oe, ue, ss)
+- Komisches Zeichen in Checkboxen
+- Schriftgroessen und Abstands-Darstellungsfehler
+- Button-Positionierung in Dialogen
 
 ### Changed
 - Alle Dateien jetzt mit BOM-Marker (EF BB BF) versehen
@@ -22,12 +49,12 @@
 ## [1.0.5] - 2025-12-20
 
 ### Fixed
-- ❌ CRITICAL: Fixed Setter.View error (should be Value) in main-app-win.xaml
-- ❌ Fenster zu groß: 700x520 → 660x460
-- ❌ Dialoge große optimiert: 540-570x280-310
+- CRITICAL: Fixed Setter.View error (should be Value) in main-app-win.xaml
+- Fenster zu gross: 700x520 => 660x460
+- Dialoge groesse optimiert: 540-570x280-310
 
 ### Changed
-- Schriftgrößen angepasst (Titel 24pt → 22pt)
+- Schriftgroessen angepasst (Titel 24pt => 22pt)
 - Margins und Abstands-Werte optimiert
 
 ---
@@ -36,19 +63,19 @@
 
 ### Added
 - UTF-8 BOM Encoding in XAML-Dateien (erste Implementierung)
-- Große UI-Redesign
-- Größere Schriftarten
-- Größere Icons
+- Grosse UI-Redesign
+- Groessere Schriftarten
+- Groessere Icons
 
 ### Fixed
-- Checkmark-Symbol (✓) wird jetzt korrekt angezeigt
+- Checkmark-Symbol wird jetzt korrekt angezeigt
 - Button-Farben auf Grau eingestellt (#757575)
-- Abstands-Probleme gelöst
+- Abstands-Probleme geloest
 
 ### Changed
-- Window-Größen erhöht
+- Window-Groessen erhoet
 - Uniform Button-Design implementiert
-- Verbesserte Spacing-Verhältnisse
+- Verbesserte Spacing-Verhaeltnisse
 
 ---
 
@@ -66,15 +93,15 @@
 ## [1.0.2] - 2025-12-19
 
 ### Fixed
-- ❌ DropShadow Effect aus XAML entfernt
-- Basis-Kompatibilitätsprobleme gelöst
+- DropShadow Effect aus XAML entfernt
+- Basis-Kompatibilitaetsprobleme geloest
 
 ---
 
 ## [1.0.1] - 2025-12-18
 
 ### Fixed
-- ❌ Ungültige Hex-Farbwerte korrigiert
+- Ungueltige Hex-Farbwerte korrigiert
 - Grund-Darstellungsfehler behoben
 
 ---
@@ -82,9 +109,9 @@
 ## [1.0.0] - 2025-12-18
 
 ### Added
-- Initiale Veröffentlichung
+- Initiale Veroeffentlichung
 - Basis-Scanner-Profile (Standard + Duplex)
-- Grundlegende GUI-Funktionalität
+- Grundlegende GUI-Funktionalitaet
 - Fehlerlogging
 - Konfigurationsverwaltung
 
@@ -92,10 +119,11 @@
 
 ## Encoding History
 
-- **v1.0.6**: UTF-8 with BOM für ALLE Dateien (Final Solution)
+- **v1.1.0**: Fixed dialog flow for closing scenarios
+- **v1.0.6**: UTF-8 with BOM fuer ALLE Dateien + XAML Layout Optimizations (Final Solution)
 - **v1.0.4-v1.0.5**: UTF-8 BOM nur in XAML-Dateien (Partial Solution)
 - **v1.0.0-v1.0.3**: UTF-8 ohne BOM (Problematisch - Darstellungsfehler)
 
 ---
 
-**Status:** Production Ready ✔️
+**Status:** Production Ready
