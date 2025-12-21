@@ -1,133 +1,203 @@
 # Changelog - ScanProfileSwitcher
 
-## [1.1.2] - 2025-12-21 (PRODUCTION READY)
+## [1.1.3] - 2025-12-21 (PRE-PRODUCTION READY)
 
-### CRITICAL FIXES - Final Round
+### CRITICAL FIXES - Error Handling Unified
 
-#### Fix 1: Smart Change Detection Logic
-- **Problem**: User could not revert changes without warning
-  - Standard → Duplex → Standard = Still showed warning ❌
-  - Logically, reverting to original should not trigger warning ✓
-- **Solution**: Track original profile separately
-  - `$Global:OriginalProfile`: Profile loaded at startup (never changes)
-  - `$Global:SelectedProfile`: Current checkbox selection (changes with user)
-  - `$Global:HasChanges = ($SelectedProfile -ne $OriginalProfile)` (smart formula)
-- **Result**: 
-  - Standard → Duplex → Standard = NO WARNING ✅
-  - Standard → Duplex (without reverting) = WARNING ✅
-  - User can intelligently manage changes ✅
+#### Fix: Comprehensive Error Handling Consistency
+- **Problem**: Inconsistent error behavior across application
+  - Some errors logged but not displayed
+  - Some errors displayed but not logged
+  - Some errors don't exit cleanly
+  - User confused about what went wrong
 
-#### Fix 2: Error Dialog Hanging (Critical)
-- **Problem**: Clicking OK button on error dialog made app hang
-  - Closing with X button worked, but OK button did not ❌
-  - Error messages showed `&#x0a;` instead of line breaks ❌
-- **Root Causes**:
-  1. OK button called `exit 1` inside button handler (blocked by WPF dialog)
-  2. Error messages stored as HTML entities `&#x0a;` instead of newlines `\n`
-- **Solutions**:
-  1. Changed error message storage format
-     - Before: `'CONFIG_LOAD_ERROR' = 'Line1&#x0a;Line2&#x0a;Line3'` ❌
-     - After: `'CONFIG_LOAD_ERROR' = @('Line1', 'Line2', 'Line3')` ✅
-  2. Added `Format-ErrorMessage()` function to join lines with `\n`
-  3. Changed OK button handler: `$errorWindow.Close()` instead of `exit 1`
-  4. Move `exit 1` to AFTER `ShowDialog()` returns (after dialog closes)
-- **Result**:
-  - OK button closes dialog cleanly ✅
-  - X button closes dialog identically ✅
-  - Error messages display with proper formatting ✅
-  - No hanging or freezing ✅
+- **Root Causes Identified**:
+  1. No centralized error handling mechanism
+  2. Different functions handle errors differently
+  3. Save button errors were silent (no display, only logging)
+  4. Missing error.log in startup validation scenarios
+  5. No clean exit after showing errors
 
-### Architecture Changes
+- **Comprehensive Solution**:
 
-#### New Global Variables
+#### New Centralized Error Handler
 ```powershell
-[string]$Global:OriginalProfile = 'STANDARD'  # NEW: Set at startup, never changes
-[string]$Global:CurrentProfile = 'STANDARD'   # Last saved/loaded profile
-[string]$Global:SelectedProfile = 'STANDARD'  # Current checkbox selection
-```
-
-#### New Functions
-```powershell
-# Format error messages with proper newlines
-function Format-ErrorMessage {
-    param([Parameter(Mandatory=$true)][string]$ErrorKey)
-    # Joins array of message lines with \n
-}
-
-# Smart change detection
-function Set-HasChanges {
-    # Sets HasChanges = (SelectedProfile != OriginalProfile)
-    # Allows reverting without warning
+function Handle-Error {
+    param(
+        [string]$ErrorKey,           # Error message key from $ErrorMessages
+        [string]$ErrorMessage,       # Detailed message for logging
+        [ErrorRecord]$ErrorRecord    # PowerShell error record
+    )
+    # Single function ensures consistent behavior:
+    # 1. Log error to error.log with timestamp
+    # 2. Show popup-error.xaml with formatted message
+    # 3. Exit application cleanly with exit code 1
 }
 ```
 
-#### Updated Error Message Storage
-```powershell
-# Before: HTML entities (problematic)
-'CONFIG_LOAD_ERROR' = 'Line1&#x0a;Line2&#x0a;Line3'
-
-# After: Array format (clean)
-'CONFIG_LOAD_ERROR' = @(
-    'Die Konfigurations-Datei config.json konnte',
-    'nicht erfolgreich geladen/verarbeitet werden!',
-    'Das Programm wird jetzt beendet.'
-)
+#### Unified Error Pattern: LOG + DISPLAY + EXIT
+```
+ANY ERROR in application
+    ↓
+Write-ErrorLog()           ← Logs to error.log with timestamp
+    ↓
+Show-ErrorDialog()         ← Shows popup-error.xaml to user
+    ↓
+exit 1                    ← Clean exit with proper code
 ```
 
-### Test Cases - All Passing
+#### Fixed Error Scenarios
 
-#### Scenario 1: No Changes
-- [ ] Exit Button → Closes immediately, no warning ✅
-- [ ] Title Bar (X) → Closes immediately, no warning ✅
+##### Scenario 1: Missing config.json (Startup)
+- ✅ Before: Dialog shown, error.log NOT created
+- ✅ After: Dialog shown, error.log created, clean exit
 
-#### Scenario 2: Changes Made (NOT reverted)
-- [ ] Exit Button → Shows popup-warn.xaml ✅
-  - "Ja" → Exits cleanly, no warning on restart ✅
-  - "Nein" → Window stays open ✅
-- [ ] Title Bar (X) → Shows popup-close.xaml ✅
-  - "Ja" → Exits cleanly ✅
-  - "Nein" → Window stays open ✅
+##### Scenario 2: Missing TWAIN folder (Startup)
+- ✅ Before: Dialog shown, error.log NOT created
+- ✅ After: Dialog shown, error.log created, clean exit
 
-#### Scenario 3: Changes Made & Reverted to Original
-- [ ] Standard → Duplex → Standard → Exit = NO WARNING ✅
-  - Logically correct behavior ✅
-  - User can revert without penalty ✅
+##### Scenario 3: Missing INI files (Startup)
+- ✅ Before: Dialog shown, error.log NOT created
+- ✅ After: Dialog shown, error.log created, clean exit
 
-#### Scenario 4: Error Dialog Display
-- [ ] Missing config.json → Shows error with clean formatting ✅
-- [ ] OK button → Closes dialog and exits cleanly ✅
-- [ ] X button → Closes dialog and exits cleanly ✅
-- [ ] No hanging or freezing ✅
+##### Scenario 4: Config save fails (Save Button)
+- ✅ Before: Error logged silently, NO dialog shown, app hangs
+- ✅ After: Error logged + dialog shown + clean exit
+
+##### Scenario 5: Profile swap fails (Save Button)
+- ✅ Before: Error logged silently, NO dialog shown, app hangs
+- ✅ After: Error logged + dialog shown + clean exit
+
+##### Scenario 6: Missing TWAIN folder (During save attempt)
+- ✅ Before: Error logged, dialog shown, app does NOT exit
+- ✅ After: Error logged + dialog shown + clean exit
+
+#### Implementation Details
+
+**Save Button Handler (Before)**
+```powershell
+# ❌ PROBLEMATIC
+if ($Global:HasChanges) {
+    if (Invoke-ProfileSwap -TargetProfile $Global:SelectedProfile) {
+        if (Update-ProfileConfiguration -Profile $Global:SelectedProfile) {
+            # Success
+        } else {
+            Show-ErrorDialog  # Shown but doesn't exit
+        }
+    } else {
+        Show-ErrorDialog  # Shown but doesn't exit
+    }
+}
+```
+
+**Save Button Handler (After)**
+```powershell
+# ✅ CORRECT
+if ($Global:HasChanges) {
+    if (-not (Invoke-ProfileSwap -TargetProfile $Global:SelectedProfile)) {
+        Handle-Error -ErrorKey 'PROFILE_SWAP_ERROR'  # Log + Display + Exit
+        return
+    }
+    if (-not (Update-ProfileConfiguration -Profile $Global:SelectedProfile)) {
+        Handle-Error -ErrorKey 'CONFIG_SAVE_ERROR'   # Log + Display + Exit
+        return
+    }
+    # Success
+}
+```
+
+#### Startup Validation (Before)
+```powershell
+# ❌ INCONSISTENT
+if (-not (Invoke-StartupValidation)) {
+    if (-not (Test-Path -Path $Global:ConfigFile)) {
+        Show-ErrorDialog  # Dialog shown, BUT error.log NOT created
+    }
+}
+```
+
+#### Startup Validation (After)
+```powershell
+# ✅ CONSISTENT
+if (-not (Invoke-StartupValidation)) {
+    if (-not (Test-Path -Path $Global:ConfigFile)) {
+        Handle-Error -ErrorKey 'CONFIG_LOAD_ERROR'  # Log + Display + Exit
+    }
+}
+```
+
+### Test Cases - All Error Scenarios
+
+#### Normal Operation (No Errors)
+- [ ] Startup with all files present ✅
+- [ ] Make changes and save ✅
+- [ ] Close application normally ✅
+- [ ] error.log NOT created ✅
+
+#### Startup Errors (Detected on launch)
+- [ ] Missing config.json
+  - [ ] Logs error to error.log ✅
+  - [ ] Shows popup-error.xaml ✅
+  - [ ] Exits cleanly (exit 1) ✅
+- [ ] Missing TWAIN folder
+  - [ ] Logs error to error.log ✅
+  - [ ] Shows popup-error.xaml ✅
+  - [ ] Exits cleanly ✅
+- [ ] Missing INI files
+  - [ ] Logs error to error.log ✅
+  - [ ] Shows popup-error.xaml ✅
+  - [ ] Exits cleanly ✅
+
+#### Save Errors (Detected during save)
+- [ ] Config.json deleted during save
+  - [ ] Logs error to error.log ✅
+  - [ ] Shows CONFIG_SAVE_ERROR dialog ✅
+  - [ ] Exits cleanly ✅
+- [ ] TWAIN folder deleted during save
+  - [ ] Logs error to error.log ✅
+  - [ ] Shows PROFILE_SWAP_ERROR dialog ✅
+  - [ ] Exits cleanly ✅
+- [ ] INI files deleted during save
+  - [ ] Logs error to error.log ✅
+  - [ ] Shows PROFILE_SWAP_ERROR dialog ✅
+  - [ ] Exits cleanly ✅
 
 ### Code Quality Improvements
-- Centralized change detection logic in `Set-HasChanges()` function
-- Centralized error message formatting in `Format-ErrorMessage()` function
-- Clear separation between original, current, and selected profiles
-- Consistent error handling throughout
-- Better code documentation and comments
+- Single responsibility principle for error handling
+- Consistent behavior across all code paths
+- Clear, centralized error handling logic
+- Easier to maintain and extend
+- Complete error logging and diagnostics
 
 ### Maintained Features
-- v1.1.2 version number (stable release)
-- All GUI functionality intact
-- All dialog flows working correctly
-- Save button functionality preserved
-- Profile swap mechanism unchanged
-- Configuration file handling working
+- v1.1.3 version number
+- All working functionality from v1.1.2
+- Smart change detection
+- Dialog cascading prevention
+- Error message formatting
+- All GUI components
+
+---
+
+## [1.1.2] - 2025-12-21
+
+### Fixed
+- Smart change detection for reverting to original profile
+- Error dialog hanging and newline display issues
 
 ---
 
 ## [1.1.1] - 2025-12-21
 
 ### Fixed
-- Exit Code 2 bug with proper event flag management
-- Dialog cascade prevention
+- Exit Code 2 bug and dialog cascade prevention
 
 ---
 
 ## [1.1.0] - 2025-12-21
 
 ### Fixed
-- Closing button scenarios (both title bar and exit)
+- Closing button scenarios
 
 ---
 
@@ -138,4 +208,4 @@ function Set-HasChanges {
 
 ---
 
-**Status:** ✅ Production Ready - All major issues resolved, comprehensive testing complete
+**Status:** Pre-Production Ready - One final round of testing needed for v1.1.4
