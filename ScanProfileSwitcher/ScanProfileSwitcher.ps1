@@ -70,35 +70,6 @@ catch {
 # GLOBAL VARIABLES & CONFIGURATION
 # ============================================================================
 
-<#
-    PowerShell Execution Preferences - COMPREHENSIVE EXPLANATION:
-    
-    $ErrorActionPreference = 'Continue'
-        - IMPACT: Continues execution even when errors occur (but they are still logged)
-        - USE CASE: Allows graceful error handling without crashing the entire script
-        - BEHAVIOR: Errors are caught by explicit try-catch blocks
-        - IMPORTANCE: CRITICAL for this application - prevents cascade failures
-    
-    $InformationPreference = 'SilentlyContinue'
-        - IMPACT: Suppresses Write-Information output messages
-        - USE CASE: Keeps console/logs clean from non-critical informational messages
-        - BEHAVIOR: Write-Information calls produce no output
-    
-    $ProgressPreference = 'SilentlyContinue'
-        - IMPACT: Suppresses progress bar output from long-running cmdlets
-        - USE CASE: Copy-Item, Download operations show progress by default
-        - BEHAVIOR: Prevents progress UI rendering, improves performance
-    
-    $WarningPreference = 'SilentlyContinue'
-        - IMPACT: Suppresses Write-Warning output messages
-        - USE CASE: Keeps console clean from warnings that don't require user action
-    
-    $VerbosePreference = 'SilentlyContinue'
-        - IMPACT: Suppresses Write-Verbose output messages
-        - USE CASE: Hide detailed debugging/tracing information from normal users
-        - USER CONTROL: User can override with -Verbose parameter on function calls
-#>
-
 $ErrorActionPreference = 'Continue'
 $InformationPreference = 'SilentlyContinue'
 $ProgressPreference = 'SilentlyContinue'
@@ -124,6 +95,8 @@ if ($Global:CurrentUser -match '\\(.+)$') {
 [System.Windows.Window]$Global:MainWindow = $null
 
 [bool]$Global:HasChanges = $false
+[bool]$Global:IsClosingFromButton = $false
+[bool]$Global:IsExiting = $false
 [string]$Global:CurrentProfile = 'STANDARD'
 [string]$Global:SelectedProfile = 'STANDARD'
 
@@ -159,7 +132,7 @@ function Write-ErrorLog {
         Add-Content -Path $Global:ErrorLogFile -Value $logEntry -Force -ErrorAction SilentlyContinue
     }
     catch {
-        # Failsafe - don't crash on logging errors
+        # Failsafe
     }
 }
 
@@ -470,7 +443,6 @@ function Update-ProfileConfiguration {
 
 function Invoke-StartupValidation {
     try {
-        # Step 1: Load and validate configuration
         $config = Get-ConfigurationFile
         if (-not $config -or $config.Count -eq 0) {
             Write-ErrorLog -Message "Konfigurationsdatei konnte nicht geladen werden"
@@ -481,13 +453,11 @@ function Invoke-StartupValidation {
         $Global:CurrentProfile = $config['currentProfile'] -as [string]
         $Global:SelectedProfile = $Global:CurrentProfile
         
-        # Step 2: Validate scanner path exists
         if (-not (Test-Path -Path $Global:ScannerProfilePath -PathType Container)) {
             Write-ErrorLog -Message "Scanner-Profilpfad nicht gefunden: $Global:ScannerProfilePath"
             return $false
         }
         
-        # Step 3: Validate scanner profile files exist
         if (-not (Test-ScannerProfileFiles)) {
             Write-ErrorLog -Message "Erforderliche Scanner-Profildateien nicht gefunden"
             return $false
@@ -577,37 +547,66 @@ function Show-MainWindow {
             })
         }
         
-        # Exit Button Handler
+        # EXIT BUTTON HANDLER - SZENARIO 1 & 2
+        # Nur zeigt popup-warn.xaml, NIEMALS popup-close.xaml
         if ($exitButton) {
             $exitButton.Add_Click({
+                $Global:IsClosingFromButton = $true
+                
                 if ($Global:HasChanges) {
+                    # Szenario 2: Changes made -> show popup-warn.xaml
                     if (Show-WarningDialog -OwnerWindow $Global:MainWindow) {
+                        # User clicked Yes -> exit without saving
+                        $Global:IsExiting = $true
                         $Global:MainWindow.Close()
                     }
+                    # If No -> window stays open
                 } else {
+                    # Szenario 1: No changes -> close immediately
+                    $Global:IsExiting = $true
                     $Global:MainWindow.Close()
                 }
+                
+                $Global:IsClosingFromButton = $false
             })
         }
         
-        # Title Bar Close Button Handler (Simple and Clean)
+        # TITLE BAR CLOSE BUTTON HANDLER - SZENARIO 1 & 2
+        # Nur zeigt popup-close.xaml, NIEMALS popup-warn.xaml
         $Global:MainWindow.Add_Closing({
             param($sender, $e)
             
-            if ($Global:HasChanges) {
-                $e.Cancel = $true
-                if (Show-CloseDialog -OwnerWindow $Global:MainWindow) {
-                    # User clicked Yes - allow window to close
-                    $sender.Close()
+            # Only process if NOT already exiting AND NOT from exit button
+            if (-not $Global:IsExiting -and -not $Global:IsClosingFromButton) {
+                if ($Global:HasChanges) {
+                    # Szenario 2: Changes made -> show popup-close.xaml
+                    $e.Cancel = $true
+                    if (Show-CloseDialog -OwnerWindow $Global:MainWindow) {
+                        # User clicked Yes -> allow close
+                        $Global:IsExiting = $true
+                        $e.Cancel = $false
+                    }
+                    # If No -> e.Cancel = $true remains, window stays open
+                } else {
+                    # Szenario 1: No changes -> allow close immediately
+                    $e.Cancel = $false
+                    $Global:IsExiting = $true
                 }
+            }
+            
+            # If IsExiting is set, ensure we can close
+            if ($Global:IsExiting) {
+                $e.Cancel = $false
             }
         })
         
         [void]$Global:MainWindow.ShowDialog()
+        exit 0
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Anzeigen des Hauptfensters" -ErrorRecord $_
         Show-ErrorDialog -Message $Global:ErrorMessages['UNKNOWN_ERROR']
+        exit 1
     }
 }
 
@@ -635,7 +634,6 @@ function Invoke-ScanProfileSwitcher {
         }
         
         Show-MainWindow
-        exit 0
     }
     catch {
         Write-ErrorLog -Message "Kritischer Fehler in Hauptanwendung" -ErrorRecord $_
