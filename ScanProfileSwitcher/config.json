@@ -1,6 +1,6 @@
 ﻿{
   "applicationName": "ScanProfileSwitcher",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "TWAIN Scanner Profile Management Application",
   "currentProfile": "STANDARD",
   "language": "de-DE",
