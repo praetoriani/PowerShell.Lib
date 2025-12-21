@@ -1,0 +1,1 @@
+C:\Windows\System32\conhost.exe --headless powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "C:\kkh\ScanProfileSwitcher\ScanProfileSwitcher.ps1"
