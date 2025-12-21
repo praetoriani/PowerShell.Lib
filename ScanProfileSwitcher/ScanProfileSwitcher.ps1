@@ -9,7 +9,7 @@
     Supports Standard (single-sided) and Duplex (double-sided) scanning configurations.
     
 .NOTES
-    Version:        1.1.2
+    Version:        1.1.3
     Author:         System Administrator
     Created:        2025-12-20
     Updated:        2025-12-21
@@ -97,11 +97,11 @@ if ($Global:CurrentUser -match '\\(.+)$') {
 [bool]$Global:HasChanges = $false
 [bool]$Global:IsClosingFromButton = $false
 [bool]$Global:IsExiting = $false
-[string]$Global:OriginalProfile = 'STANDARD'   # NEW: Tracks original profile at startup
-[string]$Global:CurrentProfile = 'STANDARD'     # Tracks last saved/loaded profile
-[string]$Global:SelectedProfile = 'STANDARD'    # Tracks current checkbox selection
+[string]$Global:OriginalProfile = 'STANDARD'
+[string]$Global:CurrentProfile = 'STANDARD'
+[string]$Global:SelectedProfile = 'STANDARD'
 
-# Error messages with proper newlines (no HTML entities)
+# Error messages with proper newlines
 [hashtable]$Global:ErrorMessages = @{
     'CONFIG_LOAD_ERROR'         = @(
         'Die Konfigurations-Datei config.json konnte',
@@ -165,6 +165,41 @@ function Write-ErrorLog {
     }
 }
 
+function Handle-Error {
+    <#
+    .SYNOPSIS
+        Centralized error handling: Log + Display + Exit
+    .DESCRIPTION
+        Ensures consistent error behavior throughout application:
+        1. Logs error to error.log with timestamp
+        2. Shows popup-error.xaml with error message
+        3. Exits application cleanly with exit code 1
+    .PARAMETER ErrorKey
+        Key from $Global:ErrorMessages hashtable
+    .PARAMETER ErrorMessage
+        Optional detailed error message for logging
+    .PARAMETER ErrorRecord
+        Optional PowerShell ErrorRecord for detailed logging
+    #>
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$ErrorKey,
+        
+        [Parameter(Mandatory=$false)]
+        [string]$ErrorMessage = $null,
+        
+        [Parameter(Mandatory=$false)]
+        [System.Management.Automation.ErrorRecord]$ErrorRecord = $null
+    )
+    
+    # Always log the error
+    $logMsg = $ErrorMessage -or $ErrorKey
+    Write-ErrorLog -Message $logMsg -ErrorRecord $ErrorRecord
+    
+    # Show error dialog and exit
+    Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey $ErrorKey)
+}
+
 function Format-ErrorMessage {
     param([Parameter(Mandatory=$true)][string]$ErrorKey)
     
@@ -184,14 +219,6 @@ function Format-ErrorMessage {
 }
 
 function Set-HasChanges {
-    <#
-    .SYNOPSIS
-        Smart change detection: HasChanges = true ONLY if SelectedProfile != OriginalProfile
-    .DESCRIPTION
-        Intelligently determines if changes have been made by comparing the currently
-        selected profile with the original profile loaded at startup.
-        User can revert to original without triggering warning.
-    #>
     $Global:HasChanges = ($Global:SelectedProfile -ne $Global:OriginalProfile)
 }
 
@@ -349,23 +376,18 @@ function Show-ErrorDialog {
         
         $messageBlock = $errorWindow.FindName('MessageText')
         if ($messageBlock) {
-            # Set message with proper text (not exit on button)
             $messageBlock.Text = $Message
         }
         
         $okButton = $errorWindow.FindName('OkButton')
         if ($okButton) {
-            # OK button closes dialog properly via Close(), not exit()
             $okButton.Add_Click({ $errorWindow.Close() })
         }
         
         $errorWindow.Topmost = $true
         if ($OwnerWindow) { $errorWindow.Owner = $OwnerWindow }
         
-        # ShowDialog() waits for dialog to close before continuing
         [void]$errorWindow.ShowDialog()
-        
-        # After dialog closes, exit cleanly
         exit 1
     }
     catch {
@@ -462,6 +484,13 @@ function Invoke-ProfileSwap {
     
     try {
         $sourceFile = if ($TargetProfile -eq 'STANDARD') { $Global:ProfileIniStandardPath } else { $Global:ProfileIniDuplexPath }
+        
+        # Check if source file exists
+        if (-not (Test-Path -Path $sourceFile -PathType Leaf)) {
+            Write-ErrorLog -Message "Quelldatei nicht vorhanden: $sourceFile"
+            return $false
+        }
+        
         $sourceContent = Get-Content -Path $sourceFile -Raw -ErrorAction SilentlyContinue
         
         if (-not $sourceContent) {
@@ -518,7 +547,7 @@ function Invoke-StartupValidation {
         }
         
         $Global:Config = $config
-        $Global:OriginalProfile = $config['currentProfile'] -as [string]  # NEW: Set original at startup
+        $Global:OriginalProfile = $config['currentProfile'] -as [string]
         $Global:CurrentProfile = $Global:OriginalProfile
         $Global:SelectedProfile = $Global:OriginalProfile
         
@@ -548,13 +577,13 @@ function Show-MainWindow {
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'main-app-win.xaml'
         if (-not $xaml) {
-            Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
+            Handle-Error -ErrorKey 'UNKNOWN_ERROR' -ErrorMessage "XAML-Datei konnte nicht geladen werden"
             return
         }
         
         $Global:MainWindow = New-WPFWindow -Xaml $xaml
         if (-not $Global:MainWindow) {
-            Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
+            Handle-Error -ErrorKey 'UNKNOWN_ERROR' -ErrorMessage "Hauptfenster konnte nicht erstellt werden"
             return
         }
         
@@ -582,7 +611,7 @@ function Show-MainWindow {
             $standardCheckbox.Add_Checked({
                 $duplexCheckbox.IsChecked = $false
                 $Global:SelectedProfile = 'STANDARD'
-                Set-HasChanges  # NEW: Use smart change detection
+                Set-HasChanges
             })
         }
         
@@ -593,41 +622,46 @@ function Show-MainWindow {
             $duplexCheckbox.Add_Checked({
                 $standardCheckbox.IsChecked = $false
                 $Global:SelectedProfile = 'DUPLEX'
-                Set-HasChanges  # NEW: Use smart change detection
+                Set-HasChanges
             })
         }
         
         if ($saveButton) {
             $saveButton.Add_Click({
                 if ($Global:HasChanges) {
-                    if (Invoke-ProfileSwap -TargetProfile $Global:SelectedProfile) {
-                        if (Update-ProfileConfiguration -Profile $Global:SelectedProfile) {
-                            $Global:OriginalProfile = $Global:SelectedProfile  # NEW: Update original after save
-                            $Global:HasChanges = $false
-                            Show-SaveDialog -OwnerWindow $Global:MainWindow
-                        }
-                    } else {
-                        Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'PROFILE_SWAP_ERROR') -OwnerWindow $Global:MainWindow
+                    # Try to swap profiles first
+                    if (-not (Invoke-ProfileSwap -TargetProfile $Global:SelectedProfile)) {
+                        # Profile swap failed - show error and exit
+                        Handle-Error -ErrorKey 'PROFILE_SWAP_ERROR' -ErrorMessage "Fehler beim Speichern des Scanner-Profils"
+                        return
                     }
+                    
+                    # Try to update configuration
+                    if (-not (Update-ProfileConfiguration -Profile $Global:SelectedProfile)) {
+                        # Config save failed - show error and exit
+                        Handle-Error -ErrorKey 'CONFIG_SAVE_ERROR' -ErrorMessage "Fehler beim Speichern der Konfiguration"
+                        return
+                    }
+                    
+                    # Success: update original profile and show success dialog
+                    $Global:OriginalProfile = $Global:SelectedProfile
+                    $Global:HasChanges = $false
+                    Show-SaveDialog -OwnerWindow $Global:MainWindow
                 }
             })
         }
         
-        # EXIT BUTTON HANDLER - SZENARIO 1 & 2
+        # EXIT BUTTON HANDLER
         if ($exitButton) {
             $exitButton.Add_Click({
                 $Global:IsClosingFromButton = $true
                 
                 if ($Global:HasChanges) {
-                    # Szenario 2: Changes made -> show popup-warn.xaml
                     if (Show-WarningDialog -OwnerWindow $Global:MainWindow) {
-                        # User clicked Yes -> exit without saving
                         $Global:IsExiting = $true
                         $Global:MainWindow.Close()
                     }
-                    # If No -> window stays open
                 } else {
-                    # Szenario 1: No changes -> close immediately
                     $Global:IsExiting = $true
                     $Global:MainWindow.Close()
                 }
@@ -636,29 +670,23 @@ function Show-MainWindow {
             })
         }
         
-        # TITLE BAR CLOSE BUTTON HANDLER - SZENARIO 1 & 2
+        # TITLE BAR CLOSE BUTTON HANDLER
         $Global:MainWindow.Add_Closing({
             param($sender, $e)
             
-            # Only process if NOT already exiting AND NOT from exit button
             if (-not $Global:IsExiting -and -not $Global:IsClosingFromButton) {
                 if ($Global:HasChanges) {
-                    # Szenario 2: Changes made -> show popup-close.xaml
                     $e.Cancel = $true
                     if (Show-CloseDialog -OwnerWindow $Global:MainWindow) {
-                        # User clicked Yes -> allow close
                         $Global:IsExiting = $true
                         $e.Cancel = $false
                     }
-                    # If No -> e.Cancel = $true remains, window stays open
                 } else {
-                    # Szenario 1: No changes -> allow close immediately
                     $e.Cancel = $false
                     $Global:IsExiting = $true
                 }
             }
             
-            # If IsExiting is set, ensure we can close
             if ($Global:IsExiting) {
                 $e.Cancel = $false
             }
@@ -669,7 +697,7 @@ function Show-MainWindow {
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Anzeigen des Hauptfensters" -ErrorRecord $_
-        Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
+        Handle-Error -ErrorKey 'UNKNOWN_ERROR' -ErrorMessage "Fehler beim Anzeigen des Hauptfensters"
         exit 1
     }
 }
@@ -686,13 +714,13 @@ function Invoke-ScanProfileSwitcher {
         
         if (-not (Invoke-StartupValidation)) {
             if (-not (Test-Path -Path $Global:ConfigFile -PathType Leaf)) {
-                Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'CONFIG_LOAD_ERROR')
+                Handle-Error -ErrorKey 'CONFIG_LOAD_ERROR' -ErrorMessage "Konfigurationsdatei nicht gefunden"
             } elseif (-not (Test-Path -Path $Global:ScannerProfilePath -PathType Container)) {
-                Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'TWAIN_PATH_NOT_FOUND')
+                Handle-Error -ErrorKey 'TWAIN_PATH_NOT_FOUND' -ErrorMessage "Scanner-Profilpfad nicht gefunden"
             } elseif (-not (Test-ScannerProfileFiles)) {
-                Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'TWAIN_FILES_NOT_FOUND')
+                Handle-Error -ErrorKey 'TWAIN_FILES_NOT_FOUND' -ErrorMessage "Scanner-Profildateien nicht gefunden"
             } else {
-                Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
+                Handle-Error -ErrorKey 'UNKNOWN_ERROR' -ErrorMessage "Unbekannter Fehler bei der Validierung"
             }
             exit 1
         }
@@ -701,7 +729,7 @@ function Invoke-ScanProfileSwitcher {
     }
     catch {
         Write-ErrorLog -Message "Kritischer Fehler in Hauptanwendung" -ErrorRecord $_
-        Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
+        Handle-Error -ErrorKey 'UNKNOWN_ERROR' -ErrorMessage "Kritischer Fehler in der Hauptanwendung"
         exit 1
     }
 }
