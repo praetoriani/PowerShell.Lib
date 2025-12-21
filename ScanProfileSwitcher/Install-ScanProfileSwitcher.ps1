@@ -149,6 +149,9 @@ function Copy-ApplicationFiles {
         '.gitignore',
         'CHANGELOG.md',
         'INSTALL.md',
+        'Install-ScanProfileSwitcher.ps1',
+        'UTF8-BOM-Patch.ps1',
+        'v1.0.9-COMPLETE-FIX-ANALYSIS.md',
         'LICENSE'
     )
     
