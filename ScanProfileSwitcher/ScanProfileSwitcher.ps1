@@ -9,7 +9,7 @@
     Supports Standard (single-sided) and Duplex (double-sided) scanning configurations.
     
 .NOTES
-    Version:        1.1.1
+    Version:        1.1.2
     Author:         System Administrator
     Created:        2025-12-20
     Updated:        2025-12-21
@@ -59,7 +59,7 @@ public class WindowHelper {
 }
 '@
     
-    Add-Type -TypeDefinition $csharpCode -Language CSharp -ErrorAction Stop
+    Add-Type -TypeDefinition $csharpCode -Language CSharp -ErrorAction SilentlyContinue
     [WindowHelper]::MinimizeConsole()
 }
 catch {
@@ -73,39 +73,33 @@ catch {
 <#
     PowerShell Execution Preferences - COMPREHENSIVE EXPLANATION:
     
-    $ErrorActionPreference = 'Stop'
-        - IMPACT: Immediately terminates script execution when ANY error occurs
-        - USE CASE: Ensures critical failures don't go unnoticed
-        - BEHAVIOR: Throws terminating errors that are caught by try-catch blocks
-        - ALTERNATIVE: 'Continue' would ignore errors, 'SilentlyContinue' suppresses output
+    $ErrorActionPreference = 'Continue'
+        - IMPACT: Continues execution even when errors occur (but they are still logged)
+        - USE CASE: Allows graceful error handling without crashing the entire script
+        - BEHAVIOR: Errors are caught by explicit try-catch blocks
+        - IMPORTANCE: CRITICAL for this application - prevents cascade failures
     
     $InformationPreference = 'SilentlyContinue'
         - IMPACT: Suppresses Write-Information output messages
         - USE CASE: Keeps console/logs clean from non-critical informational messages
         - BEHAVIOR: Write-Information calls produce no output
-        - NOTE: Only affects Write-Information, not Write-Host
     
     $ProgressPreference = 'SilentlyContinue'
         - IMPACT: Suppresses progress bar output from long-running cmdlets
-        - USE CASE: Copy-Item, Download operations, file transfers show progress by default
+        - USE CASE: Copy-Item, Download operations show progress by default
         - BEHAVIOR: Prevents progress UI rendering, improves performance
-        - NOTE: Also suppresses Write-Progress calls
     
     $WarningPreference = 'SilentlyContinue'
         - IMPACT: Suppresses Write-Warning output messages
         - USE CASE: Keeps console clean from warnings that don't require user action
-        - BEHAVIOR: Write-Warning calls produce no output
-        - ALTERNATIVE: 'Continue' would display warnings, 'Inquire' would prompt
     
     $VerbosePreference = 'SilentlyContinue'
         - IMPACT: Suppresses Write-Verbose output messages
         - USE CASE: Hide detailed debugging/tracing information from normal users
-        - BEHAVIOR: Write-Verbose calls produce no output
         - USER CONTROL: User can override with -Verbose parameter on function calls
-        - DEVELOPMENT: Set to 'Continue' temporarily for debugging
 #>
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Continue'
 $InformationPreference = 'SilentlyContinue'
 $ProgressPreference = 'SilentlyContinue'
 $WarningPreference = 'SilentlyContinue'
@@ -130,8 +124,6 @@ if ($Global:CurrentUser -match '\\(.+)$') {
 [System.Windows.Window]$Global:MainWindow = $null
 
 [bool]$Global:HasChanges = $false
-[bool]$Global:IsClosingFromButton = $false
-[bool]$Global:IsExiting = $false
 [string]$Global:CurrentProfile = 'STANDARD'
 [string]$Global:SelectedProfile = 'STANDARD'
 
@@ -164,10 +156,10 @@ function Write-ErrorLog {
         if ($ErrorRecord) {
             $logEntry += "`r`n  Exception: $($ErrorRecord.Exception.Message)"
         }
-        Add-Content -Path $Global:ErrorLogFile -Value $logEntry -Force -ErrorAction Stop
+        Add-Content -Path $Global:ErrorLogFile -Value $logEntry -Force -ErrorAction SilentlyContinue
     }
     catch {
-        # Failsafe
+        # Failsafe - don't crash on logging errors
     }
 }
 
@@ -177,14 +169,15 @@ function Get-XamlContent {
     try {
         $xamlPath = Join-Path -Path $Global:GUIPath -ChildPath $XamlFileName
         if (-not (Test-Path -Path $xamlPath -PathType Leaf)) {
-            throw "XAML-Datei nicht gefunden: $xamlPath"
+            Write-ErrorLog -Message "XAML-Datei nicht gefunden: $xamlPath"
+            return $null
         }
-        [xml]$xaml = Get-Content -Path $xamlPath -Raw -ErrorAction Stop
+        [xml]$xaml = Get-Content -Path $xamlPath -Raw -ErrorAction SilentlyContinue
         return $xaml
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Laden der XAML-Datei '$XamlFileName'" -ErrorRecord $_
-        exit 1
+        return $null
     }
 }
 
@@ -198,22 +191,31 @@ function New-WPFWindow {
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Erstellen des WPF-Fensters" -ErrorRecord $_
-        exit 1
+        return $null
     }
 }
 
 function Get-ConfigurationFile {
     try {
         if (-not (Test-Path -Path $Global:ConfigFile -PathType Leaf)) {
-            throw "Konfigurationsdatei nicht gefunden: $Global:ConfigFile"
+            Write-ErrorLog -Message "Konfigurationsdatei nicht gefunden: $Global:ConfigFile"
+            return $null
         }
         
-        $configContent = Get-Content -Path $Global:ConfigFile -Raw -ErrorAction Stop
-        $configObject = $configContent | ConvertFrom-Json -ErrorAction Stop
+        $configContent = Get-Content -Path $Global:ConfigFile -Raw -ErrorAction SilentlyContinue
+        if (-not $configContent) {
+            Write-ErrorLog -Message "Konfigurationsdatei ist leer: $Global:ConfigFile"
+            return $null
+        }
+        
+        $configObject = $configContent | ConvertFrom-Json -ErrorAction SilentlyContinue
+        if (-not $configObject) {
+            Write-ErrorLog -Message "Konfigurationsdatei konnte nicht als JSON geparst werden"
+            return $null
+        }
         
         $configHashtable = @{}
         $configObject.PSObject.Properties | ForEach-Object {
-            # Konvertiere auch verschachtelte Objekte zu Hashtables
             if ($_.Value -is [System.Management.Automation.PSCustomObject]) {
                 $innerHashtable = @{}
                 $_.Value.PSObject.Properties | ForEach-Object {
@@ -229,7 +231,7 @@ function Get-ConfigurationFile {
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Laden der Konfigurationsdatei" -ErrorRecord $_
-        throw $_
+        return $null
     }
 }
 
@@ -241,25 +243,27 @@ function Set-ConfigurationFile {
         $Configuration.GetEnumerator() | ForEach-Object {
             $configObject | Add-Member -MemberType NoteProperty -Name $_.Key -Value $_.Value
         }
-        $configJson = $configObject | ConvertTo-Json -Depth 10 -ErrorAction Stop
-        Set-Content -Path $Global:ConfigFile -Value $configJson -Force -ErrorAction Stop
+        $configJson = $configObject | ConvertTo-Json -Depth 10 -ErrorAction SilentlyContinue
+        Set-Content -Path $Global:ConfigFile -Value $configJson -Force -ErrorAction SilentlyContinue
+        return $true
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Speichern der Konfigurationsdatei" -ErrorRecord $_
-        throw $_
+        return $false
     }
 }
 
 function Test-ScannerProfileFiles {
     try {
-        if (-not (Test-Path -Path $Global:ProfileIniStandardPath -PathType Leaf) -or
-            -not (Test-Path -Path $Global:ProfileIniDuplexPath -PathType Leaf)) {
-            return $false
+        if ((Test-Path -Path $Global:ProfileIniStandardPath -PathType Leaf) -and
+            (Test-Path -Path $Global:ProfileIniDuplexPath -PathType Leaf)) {
+            return $true
         }
-        return $true
+        Write-ErrorLog -Message "Scanner-Profildateien nicht vorhanden"
+        return $false
     }
     catch {
-        Write-ErrorLog -Message "Fehler bei der Ueberpruefung der Scanner-Profile" -ErrorRecord $_
+        Write-ErrorLog -Message "Fehler bei der Überprüfung der Scanner-Profile" -ErrorRecord $_
         return $false
     }
 }
@@ -274,13 +278,9 @@ function Set-WindowSize {
     )
     
     try {
-        # Hole die Konfiguration - KRITISCH: Nutze Hashtable direkt!
         $windows = $Global:Config['windows']
-        
         if ($windows -and $windows[$WindowKey]) {
             $winCfg = $windows[$WindowKey]
-            
-            # RIGOROUS: Setze Width und Height EXPLIZIT
             if ($null -ne $winCfg['width']) {
                 $Window.Width = [double]$winCfg['width']
             }
@@ -295,7 +295,7 @@ function Set-WindowSize {
 }
 
 # ============================================================================
-# DIALOG FUNCTIONS (VEREINFACHT)
+# DIALOG FUNCTIONS
 # ============================================================================
 
 function Show-ErrorDialog {
@@ -308,7 +308,11 @@ function Show-ErrorDialog {
     
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'popup-error.xaml'
+        if (-not $xaml) { exit 1 }
+        
         $errorWindow = New-WPFWindow -Xaml $xaml
+        if (-not $errorWindow) { exit 1 }
+        
         Set-WindowSize -Window $errorWindow -WindowKey 'popup-error'
         
         $messageBlock = $errorWindow.FindName('MessageText')
@@ -316,7 +320,7 @@ function Show-ErrorDialog {
         
         $okButton = $errorWindow.FindName('OkButton')
         if ($okButton) {
-            $okButton.Add_Click({ $errorWindow.Close(); exit 1 })
+            $okButton.Add_Click({ exit 1 })
         }
         
         $errorWindow.Topmost = $true
@@ -334,7 +338,11 @@ function Show-CloseDialog {
     
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'popup-close.xaml'
+        if (-not $xaml) { return $false }
+        
         $closeWindow = New-WPFWindow -Xaml $xaml
+        if (-not $closeWindow) { return $false }
+        
         Set-WindowSize -Window $closeWindow -WindowKey 'popup-close'
         
         $yesButton = $closeWindow.FindName('YesButton')
@@ -358,7 +366,11 @@ function Show-WarningDialog {
     
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'popup-warn.xaml'
+        if (-not $xaml) { return $false }
+        
         $warnWindow = New-WPFWindow -Xaml $xaml
+        if (-not $warnWindow) { return $false }
+        
         Set-WindowSize -Window $warnWindow -WindowKey 'popup-warn'
         
         $yesButton = $warnWindow.FindName('YesButton')
@@ -382,7 +394,11 @@ function Show-SaveDialog {
     
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'popup-save.xaml'
+        if (-not $xaml) { return }
+        
         $saveWindow = New-WPFWindow -Xaml $xaml
+        if (-not $saveWindow) { return }
+        
         Set-WindowSize -Window $saveWindow -WindowKey 'popup-save'
         
         $okButton = $saveWindow.FindName('OkButton')
@@ -405,13 +421,18 @@ function Invoke-ProfileSwap {
     
     try {
         $sourceFile = if ($TargetProfile -eq 'STANDARD') { $Global:ProfileIniStandardPath } else { $Global:ProfileIniDuplexPath }
-        $sourceContent = Get-Content -Path $sourceFile -Raw -ErrorAction Stop
+        $sourceContent = Get-Content -Path $sourceFile -Raw -ErrorAction SilentlyContinue
         
-        if (Test-Path -Path $Global:ProfileIniPath -PathType Leaf) {
-            Remove-Item -Path $Global:ProfileIniPath -Force -ErrorAction Stop
+        if (-not $sourceContent) {
+            Write-ErrorLog -Message "Quelldatei leer oder nicht lesbar: $sourceFile"
+            return $false
         }
         
-        Set-Content -Path $Global:ProfileIniPath -Value $sourceContent -Force -ErrorAction Stop
+        if (Test-Path -Path $Global:ProfileIniPath -PathType Leaf) {
+            Remove-Item -Path $Global:ProfileIniPath -Force -ErrorAction SilentlyContinue
+        }
+        
+        Set-Content -Path $Global:ProfileIniPath -Value $sourceContent -Force -ErrorAction SilentlyContinue
         return $true
     }
     catch {
@@ -425,10 +446,17 @@ function Update-ProfileConfiguration {
     
     try {
         $config = Get-ConfigurationFile
+        if (-not $config) {
+            Write-ErrorLog -Message "Konfiguration konnte nicht geladen werden"
+            return $false
+        }
+        
         $config['currentProfile'] = $Profile
-        Set-ConfigurationFile -Configuration $config
-        $Global:CurrentProfile = $Profile
-        return $true
+        if (Set-ConfigurationFile -Configuration $config) {
+            $Global:CurrentProfile = $Profile
+            return $true
+        }
+        return $false
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Aktualisieren der Konfiguration" -ErrorRecord $_
@@ -442,6 +470,7 @@ function Update-ProfileConfiguration {
 
 function Invoke-StartupValidation {
     try {
+        # Step 1: Load and validate configuration
         $config = Get-ConfigurationFile
         if (-not $config -or $config.Count -eq 0) {
             Write-ErrorLog -Message "Konfigurationsdatei konnte nicht geladen werden"
@@ -452,11 +481,13 @@ function Invoke-StartupValidation {
         $Global:CurrentProfile = $config['currentProfile'] -as [string]
         $Global:SelectedProfile = $Global:CurrentProfile
         
+        # Step 2: Validate scanner path exists
         if (-not (Test-Path -Path $Global:ScannerProfilePath -PathType Container)) {
             Write-ErrorLog -Message "Scanner-Profilpfad nicht gefunden: $Global:ScannerProfilePath"
             return $false
         }
         
+        # Step 3: Validate scanner profile files exist
         if (-not (Test-ScannerProfileFiles)) {
             Write-ErrorLog -Message "Erforderliche Scanner-Profildateien nicht gefunden"
             return $false
@@ -477,9 +508,17 @@ function Invoke-StartupValidation {
 function Show-MainWindow {
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'main-app-win.xaml'
-        $Global:MainWindow = New-WPFWindow -Xaml $xaml
+        if (-not $xaml) {
+            Show-ErrorDialog -Message $Global:ErrorMessages['UNKNOWN_ERROR']
+            return
+        }
         
-        # RIGOROUS: Setze Fenstergrößen EXPLIZIT von config.json
+        $Global:MainWindow = New-WPFWindow -Xaml $xaml
+        if (-not $Global:MainWindow) {
+            Show-ErrorDialog -Message $Global:ErrorMessages['UNKNOWN_ERROR']
+            return
+        }
+        
         Set-WindowSize -Window $Global:MainWindow -WindowKey 'main-app-win'
         
         $standardCheckbox = $Global:MainWindow.FindName('StandardCheckbox')
@@ -538,69 +577,37 @@ function Show-MainWindow {
             })
         }
         
-        # SCENARIO 1 & 2: Exit Button Handler (Beenden-Button im Hauptfenster)
+        # Exit Button Handler
         if ($exitButton) {
             $exitButton.Add_Click({
-                $Global:IsClosingFromButton = $true
-                
                 if ($Global:HasChanges) {
-                    # Szenario 2: Änderungen gemacht → popup-warn.xaml anzeigen
                     if (Show-WarningDialog -OwnerWindow $Global:MainWindow) {
-                        # Benutzer hat "Ja" geklickt → Programm schließen
-                        $Global:IsExiting = $true
                         $Global:MainWindow.Close()
                     }
-                    # Falls "Nein" → Fenster bleibt offen
                 } else {
-                    # Szenario 1: Keine Änderungen → Programm sofort schließen
-                    $Global:IsExiting = $true
                     $Global:MainWindow.Close()
                 }
-                
-                $Global:IsClosingFromButton = $false
             })
         }
         
-        # SCENARIO 1 & 2: Title Bar Close Button Handler (Schließen-Button in der Titelleiste)
+        # Title Bar Close Button Handler (Simple and Clean)
         $Global:MainWindow.Add_Closing({
             param($sender, $e)
             
-            # Nur wenn das Programm nicht ohnehin beendet wird
-            if (-not $Global:IsExiting) {
-                # Wenn nicht vom Exit-Button aufgerufen
-                if (-not $Global:IsClosingFromButton) {
-                    if ($Global:HasChanges) {
-                        # Szenario 2: Änderungen gemacht → popup-close.xaml anzeigen
-                        $e.Cancel = $true
-                        if (Show-CloseDialog -OwnerWindow $Global:MainWindow) {
-                            # Benutzer hat "Ja" geklickt → Fenster schließen lassen
-                            $Global:IsExiting = $true
-                            $e.Cancel = $false
-                        }
-                        # Falls "Nein" → e.Cancel = $true bleibt, Fenster bleibt offen
-                    } else {
-                        # Szenario 1: Keine Änderungen → Programm ohne Rückfrage schließen
-                        $e.Cancel = $false
-                        $Global:IsExiting = $true
-                    }
+            if ($Global:HasChanges) {
+                $e.Cancel = $true
+                if (Show-CloseDialog -OwnerWindow $Global:MainWindow) {
+                    # User clicked Yes - allow window to close
+                    $sender.Close()
                 }
-            }
-            
-            # Wenn IsExiting gesetzt ist und Close aufgerufen wurde, einfach durchlassen
-            if ($Global:IsExiting) {
-                $e.Cancel = $false
             }
         })
         
-        $Global:MainWindow.ShowDialog() | Out-Null
-        
-        # Sauberer Exit nach ShowDialog
-        exit 0
+        [void]$Global:MainWindow.ShowDialog()
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Anzeigen des Hauptfensters" -ErrorRecord $_
         Show-ErrorDialog -Message $Global:ErrorMessages['UNKNOWN_ERROR']
-        exit 1
     }
 }
 
@@ -628,6 +635,7 @@ function Invoke-ScanProfileSwitcher {
         }
         
         Show-MainWindow
+        exit 0
     }
     catch {
         Write-ErrorLog -Message "Kritischer Fehler in Hauptanwendung" -ErrorRecord $_
