@@ -1,5 +1,36 @@
 # Changelog - ScanProfileSwitcher
 
+## [1.1.1] - 2025-12-21
+
+### Fixed
+- CRITICAL: Fixed Exit Code 2 (0x00000002) bug
+  - Resolved recursive loop in Closing event handler
+  - Added Global:IsExiting flag to prevent unwanted Closing event re-triggers
+  - Closing button now properly closes application without hanging
+  - Process exits cleanly with exit code 0
+- Closing behavior now consistent with Exit button behavior
+
+### Improved
+- Comprehensive PowerShell Execution Preferences documentation
+  - Detailed explanation of ErrorActionPreference, InformationPreference, etc.
+  - User control and development guidance added
+  - Impact and use cases documented for each preference
+- Better error logging with consistent timestamp formatting
+  - Log entries now use [timestamp] format for clarity
+
+### Changed
+- Version: 1.1.0 => 1.1.1
+- Updated all version references in config.json and ScanProfileSwitcher.ps1
+- Enhanced code comments and documentation
+
+### Technical Details
+- Added Global:IsExiting boolean flag to manage window closing state
+- Modified Add_Closing event handler to check IsExiting flag
+- Explicit exit 0 after ShowDialog() for clean process termination
+- Prevents multiple Closing event invocations and process hanging
+
+---
+
 ## [1.1.0] - 2025-12-21
 
 ### Fixed
@@ -119,6 +150,7 @@
 
 ## Encoding History
 
+- **v1.1.1**: Fixed exit code 2 bug with IsExiting flag mechanism
 - **v1.1.0**: Fixed dialog flow for closing scenarios
 - **v1.0.6**: UTF-8 with BOM fuer ALLE Dateien + XAML Layout Optimizations (Final Solution)
 - **v1.0.4-v1.0.5**: UTF-8 BOM nur in XAML-Dateien (Partial Solution)
