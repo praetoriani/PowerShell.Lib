@@ -9,7 +9,7 @@
     Supports Standard (single-sided) and Duplex (double-sided) scanning configurations.
     
 .NOTES
-    Version:        1.1.0
+    Version:        1.1.1
     Author:         System Administrator
     Created:        2025-12-20
     Updated:        2025-12-21
@@ -70,6 +70,41 @@ catch {
 # GLOBAL VARIABLES & CONFIGURATION
 # ============================================================================
 
+<#
+    PowerShell Execution Preferences - COMPREHENSIVE EXPLANATION:
+    
+    $ErrorActionPreference = 'Stop'
+        - IMPACT: Immediately terminates script execution when ANY error occurs
+        - USE CASE: Ensures critical failures don't go unnoticed
+        - BEHAVIOR: Throws terminating errors that are caught by try-catch blocks
+        - ALTERNATIVE: 'Continue' would ignore errors, 'SilentlyContinue' suppresses output
+    
+    $InformationPreference = 'SilentlyContinue'
+        - IMPACT: Suppresses Write-Information output messages
+        - USE CASE: Keeps console/logs clean from non-critical informational messages
+        - BEHAVIOR: Write-Information calls produce no output
+        - NOTE: Only affects Write-Information, not Write-Host
+    
+    $ProgressPreference = 'SilentlyContinue'
+        - IMPACT: Suppresses progress bar output from long-running cmdlets
+        - USE CASE: Copy-Item, Download operations, file transfers show progress by default
+        - BEHAVIOR: Prevents progress UI rendering, improves performance
+        - NOTE: Also suppresses Write-Progress calls
+    
+    $WarningPreference = 'SilentlyContinue'
+        - IMPACT: Suppresses Write-Warning output messages
+        - USE CASE: Keeps console clean from warnings that don't require user action
+        - BEHAVIOR: Write-Warning calls produce no output
+        - ALTERNATIVE: 'Continue' would display warnings, 'Inquire' would prompt
+    
+    $VerbosePreference = 'SilentlyContinue'
+        - IMPACT: Suppresses Write-Verbose output messages
+        - USE CASE: Hide detailed debugging/tracing information from normal users
+        - BEHAVIOR: Write-Verbose calls produce no output
+        - USER CONTROL: User can override with -Verbose parameter on function calls
+        - DEVELOPMENT: Set to 'Continue' temporarily for debugging
+#>
+
 $ErrorActionPreference = 'Stop'
 $InformationPreference = 'SilentlyContinue'
 $ProgressPreference = 'SilentlyContinue'
@@ -96,6 +131,7 @@ if ($Global:CurrentUser -match '\\(.+)$') {
 
 [bool]$Global:HasChanges = $false
 [bool]$Global:IsClosingFromButton = $false
+[bool]$Global:IsExiting = $false
 [string]$Global:CurrentProfile = 'STANDARD'
 [string]$Global:SelectedProfile = 'STANDARD'
 
@@ -511,11 +547,13 @@ function Show-MainWindow {
                     # Szenario 2: Änderungen gemacht → popup-warn.xaml anzeigen
                     if (Show-WarningDialog -OwnerWindow $Global:MainWindow) {
                         # Benutzer hat "Ja" geklickt → Programm schließen
+                        $Global:IsExiting = $true
                         $Global:MainWindow.Close()
                     }
                     # Falls "Nein" → Fenster bleibt offen
                 } else {
                     # Szenario 1: Keine Änderungen → Programm sofort schließen
+                    $Global:IsExiting = $true
                     $Global:MainWindow.Close()
                 }
                 
@@ -527,29 +565,42 @@ function Show-MainWindow {
         $Global:MainWindow.Add_Closing({
             param($sender, $e)
             
-            # Wenn nicht vom Exit-Button aufgerufen
-            if (-not $Global:IsClosingFromButton) {
-                if ($Global:HasChanges) {
-                    # Szenario 2: Änderungen gemacht → popup-close.xaml anzeigen
-                    $e.Cancel = $true
-                    if (Show-CloseDialog -OwnerWindow $Global:MainWindow) {
-                        # Benutzer hat "Ja" geklickt → Fenster schließen lassen
+            # Nur wenn das Programm nicht ohnehin beendet wird
+            if (-not $Global:IsExiting) {
+                # Wenn nicht vom Exit-Button aufgerufen
+                if (-not $Global:IsClosingFromButton) {
+                    if ($Global:HasChanges) {
+                        # Szenario 2: Änderungen gemacht → popup-close.xaml anzeigen
+                        $e.Cancel = $true
+                        if (Show-CloseDialog -OwnerWindow $Global:MainWindow) {
+                            # Benutzer hat "Ja" geklickt → Fenster schließen lassen
+                            $Global:IsExiting = $true
+                            $e.Cancel = $false
+                        }
+                        # Falls "Nein" → e.Cancel = $true bleibt, Fenster bleibt offen
+                    } else {
+                        # Szenario 1: Keine Änderungen → Programm ohne Rückfrage schließen
                         $e.Cancel = $false
-                        $Global:MainWindow.Close()
+                        $Global:IsExiting = $true
                     }
-                    # Falls "Nein" → e.Cancel = $true bleibt, Fenster bleibt offen
-                } else {
-                    # Szenario 1: Keine Änderungen → Programm ohne Rückfrage schließen
-                    $e.Cancel = $false
                 }
+            }
+            
+            # Wenn IsExiting gesetzt ist und Close aufgerufen wurde, einfach durchlassen
+            if ($Global:IsExiting) {
+                $e.Cancel = $false
             }
         })
         
         $Global:MainWindow.ShowDialog() | Out-Null
+        
+        # Sauberer Exit nach ShowDialog
+        exit 0
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Anzeigen des Hauptfensters" -ErrorRecord $_
         Show-ErrorDialog -Message $Global:ErrorMessages['UNKNOWN_ERROR']
+        exit 1
     }
 }
 
