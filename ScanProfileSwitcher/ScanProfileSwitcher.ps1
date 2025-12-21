@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.0
+#Requires -Version 5.0
 
 <#
 .SYNOPSIS
@@ -18,6 +18,7 @@
     
 .EXAMPLE
     C:\kkh\ScanProfileSwitcher\ScanProfileSwitcher.ps1
+    C:\Windows\System32\conhost.exe --headless powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "C:\kkh\ScanProfileSwitcher\ScanProfileSwitcher.ps1"
 #>
 
 # ============================================================================
@@ -163,47 +164,6 @@ function Write-ErrorLog {
     catch {
         # Failsafe
     }
-}
-
-function Handle-Error {
-    <#
-    .SYNOPSIS
-        Centralized error handling: Log + Display + Exit
-    .DESCRIPTION
-        Ensures consistent error behavior throughout application:
-        1. Logs error to error.log with timestamp
-        2. Shows popup-error.xaml with error message
-        3. Exits application cleanly with exit code 1
-    .PARAMETER ErrorKey
-        Key from $Global:ErrorMessages hashtable
-    .PARAMETER ErrorMessage
-        Optional detailed error message for logging
-    .PARAMETER ErrorRecord
-        Optional PowerShell ErrorRecord for detailed logging
-    .PARAMETER OwnerWindow
-        Optional owner window for dialog positioning
-    #>
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$ErrorKey,
-        
-        [Parameter(Mandatory=$false)]
-        [string]$ErrorMessage = $null,
-        
-        [Parameter(Mandatory=$false)]
-        [System.Management.Automation.ErrorRecord]$ErrorRecord = $null,
-        
-        [Parameter(Mandatory=$false)]
-        [System.Windows.Window]$OwnerWindow = $null
-    )
-    
-    # Always log the error
-    $logMsg = $ErrorMessage -or $ErrorKey
-    Write-ErrorLog -Message $logMsg -ErrorRecord $ErrorRecord
-    
-    # Show error dialog and exit
-    Show-ErrorDialog -Message (Format-ErrorMessage -ErrorKey $ErrorKey) -OwnerWindow $OwnerWindow
-    # NOTE: Show-ErrorDialog calls exit 1 after dialog closes
 }
 
 function Format-ErrorMessage {
@@ -360,16 +320,11 @@ function Set-WindowSize {
 }
 
 # ============================================================================
-# DIALOG FUNCTIONS
+# DIALOG FUNCTIONS - TWO STRATEGIES FOR GUARANTEED CLEAN EXIT
 # ============================================================================
 
-function Show-ErrorDialog {
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$Message,
-        [Parameter(Mandatory=$false)]
-        [System.Windows.Window]$OwnerWindow = $null
-    )
+function Show-ErrorDialog-Startup {
+    param([Parameter(Mandatory=$true)][string]$Message)
     
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'popup-error.xaml'
@@ -381,24 +336,58 @@ function Show-ErrorDialog {
         Set-WindowSize -Window $errorWindow -WindowKey 'popup-error'
         
         $messageBlock = $errorWindow.FindName('MessageText')
-        if ($messageBlock) {
-            $messageBlock.Text = $Message
-        }
+        if ($messageBlock) { $messageBlock.Text = $Message }
         
         $okButton = $errorWindow.FindName('OkButton')
-        if ($okButton) {
-            $okButton.Add_Click({ $errorWindow.Close() })
-        }
+        if ($okButton) { $okButton.Add_Click({ $errorWindow.Close() }) }
         
+        $errorWindow.WindowStartupLocation = [System.Windows.WindowStartupLocation]::CenterScreen
         $errorWindow.Topmost = $true
-        if ($OwnerWindow) { $errorWindow.Owner = $OwnerWindow }
         
         [void]$errorWindow.ShowDialog()
         exit 1
     }
     catch {
-        Write-ErrorLog -Message "Fehler bei Anzeige des Fehler-Dialogs" -ErrorRecord $_
+        Write-ErrorLog -Message "Fehler bei Anzeige des Fehler-Dialogs (Startup)" -ErrorRecord $_
         exit 1
+    }
+}
+
+function Show-ErrorDialog-Runtime {
+    param(
+        [Parameter(Mandatory=$true)][string]$Message,
+        [Parameter(Mandatory=$false)][System.Windows.Window]$OwnerWindow = $null
+    )
+    
+    try {
+        [xml]$xaml = Get-XamlContent -XamlFileName 'popup-error.xaml'
+        if (-not $xaml) { [System.Windows.Application]::Current.Shutdown(1); exit 1 }
+        
+        $errorWindow = New-WPFWindow -Xaml $xaml
+        if (-not $errorWindow) { [System.Windows.Application]::Current.Shutdown(1); exit 1 }
+        
+        Set-WindowSize -Window $errorWindow -WindowKey 'popup-error'
+        
+        $messageBlock = $errorWindow.FindName('MessageText')
+        if ($messageBlock) { $messageBlock.Text = $Message }
+        
+        $okButton = $errorWindow.FindName('OkButton')
+        if ($okButton) { $okButton.Add_Click({ $errorWindow.Close() }) }
+        
+        $errorWindow.Topmost = $true
+        if ($OwnerWindow) {
+            $errorWindow.Owner = $OwnerWindow
+            $errorWindow.WindowStartupLocation = [System.Windows.WindowStartupLocation]::CenterOwner
+        } else {
+            $errorWindow.WindowStartupLocation = [System.Windows.WindowStartupLocation]::CenterScreen
+        }
+        
+        [void]$errorWindow.ShowDialog()
+        [System.Windows.Application]::Current.Shutdown(1)
+    }
+    catch {
+        Write-ErrorLog -Message "Fehler bei Anzeige des Fehler-Dialogs (Runtime)" -ErrorRecord $_
+        [System.Windows.Application]::Current.Shutdown(1)
     }
 }
 
@@ -491,7 +480,6 @@ function Invoke-ProfileSwap {
     try {
         $sourceFile = if ($TargetProfile -eq 'STANDARD') { $Global:ProfileIniStandardPath } else { $Global:ProfileIniDuplexPath }
         
-        # Check if source file exists
         if (-not (Test-Path -Path $sourceFile -PathType Leaf)) {
             Write-ErrorLog -Message "Quelldatei nicht vorhanden: $sourceFile"
             return $false
@@ -523,7 +511,6 @@ function Update-ProfileConfiguration {
     try {
         $config = Get-ConfigurationFile
         if (-not $config) {
-            # This is a SAVE error, not a load error - be specific in logging
             Write-ErrorLog -Message "Fehler: Konfigurationsdatei konnte nicht für Speichern gelesen werden"
             return $false
         }
@@ -534,7 +521,6 @@ function Update-ProfileConfiguration {
             return $true
         }
         
-        # Set-ConfigurationFile failed
         Write-ErrorLog -Message "Fehler: Konfigurationsdatei konnte nicht geschrieben werden"
         return $false
     }
@@ -587,13 +573,13 @@ function Show-MainWindow {
     try {
         [xml]$xaml = Get-XamlContent -XamlFileName 'main-app-win.xaml'
         if (-not $xaml) {
-            Handle-Error -ErrorKey 'UNKNOWN_ERROR' -ErrorMessage "XAML-Datei konnte nicht geladen werden"
+            Show-ErrorDialog-Startup -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
             return
         }
         
         $Global:MainWindow = New-WPFWindow -Xaml $xaml
         if (-not $Global:MainWindow) {
-            Handle-Error -ErrorKey 'UNKNOWN_ERROR' -ErrorMessage "Hauptfenster konnte nicht erstellt werden"
+            Show-ErrorDialog-Startup -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
             return
         }
         
@@ -639,25 +625,18 @@ function Show-MainWindow {
         if ($saveButton) {
             $saveButton.Add_Click({
                 if ($Global:HasChanges) {
-                    # Try to swap profiles first
                     if (-not (Invoke-ProfileSwap -TargetProfile $Global:SelectedProfile)) {
-                        # Profile swap failed - show error and exit
-                        Handle-Error -ErrorKey 'PROFILE_SWAP_ERROR' `
-                                    -ErrorMessage "Fehler beim Speichern: Scanner-Profil konnte nicht getauscht werden" `
-                                    -OwnerWindow $Global:MainWindow
+                        Write-ErrorLog -Message "Fehler beim Speichern: Scanner-Profil konnte nicht getauscht werden"
+                        Show-ErrorDialog-Runtime -Message (Format-ErrorMessage -ErrorKey 'PROFILE_SWAP_ERROR') -OwnerWindow $Global:MainWindow
                         return
                     }
                     
-                    # Try to update configuration
                     if (-not (Update-ProfileConfiguration -Profile $Global:SelectedProfile)) {
-                        # Config save failed - show error and exit
-                        Handle-Error -ErrorKey 'CONFIG_SAVE_ERROR' `
-                                    -ErrorMessage "Fehler beim Speichern: Konfiguration konnte nicht geschrieben werden" `
-                                    -OwnerWindow $Global:MainWindow
+                        Write-ErrorLog -Message "Fehler beim Speichern: Konfiguration konnte nicht geschrieben werden"
+                        Show-ErrorDialog-Runtime -Message (Format-ErrorMessage -ErrorKey 'CONFIG_SAVE_ERROR') -OwnerWindow $Global:MainWindow
                         return
                     }
                     
-                    # Success: update original profile and show success dialog
                     $Global:OriginalProfile = $Global:SelectedProfile
                     $Global:HasChanges = $false
                     Show-SaveDialog -OwnerWindow $Global:MainWindow
@@ -665,7 +644,6 @@ function Show-MainWindow {
             })
         }
         
-        # EXIT BUTTON HANDLER
         if ($exitButton) {
             $exitButton.Add_Click({
                 $Global:IsClosingFromButton = $true
@@ -684,7 +662,6 @@ function Show-MainWindow {
             })
         }
         
-        # TITLE BAR CLOSE BUTTON HANDLER
         $Global:MainWindow.Add_Closing({
             param($sender, $e)
             
@@ -711,7 +688,7 @@ function Show-MainWindow {
     }
     catch {
         Write-ErrorLog -Message "Fehler beim Anzeigen des Hauptfensters" -ErrorRecord $_
-        Handle-Error -ErrorKey 'UNKNOWN_ERROR' -ErrorMessage "Fehler beim Anzeigen des Hauptfensters"
+        Show-ErrorDialog-Startup -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
         exit 1
     }
 }
@@ -728,23 +705,22 @@ function Invoke-ScanProfileSwitcher {
         
         if (-not (Invoke-StartupValidation)) {
             if (-not (Test-Path -Path $Global:ConfigFile -PathType Leaf)) {
-                Handle-Error -ErrorKey 'CONFIG_LOAD_ERROR' -ErrorMessage "Konfigurationsdatei nicht gefunden"
+                Show-ErrorDialog-Startup -Message (Format-ErrorMessage -ErrorKey 'CONFIG_LOAD_ERROR')
             } elseif (-not (Test-Path -Path $Global:ScannerProfilePath -PathType Container)) {
-                Handle-Error -ErrorKey 'TWAIN_PATH_NOT_FOUND' -ErrorMessage "Scanner-Profilpfad nicht gefunden"
+                Show-ErrorDialog-Startup -Message (Format-ErrorMessage -ErrorKey 'TWAIN_PATH_NOT_FOUND')
             } elseif (-not (Test-ScannerProfileFiles)) {
-                Handle-Error -ErrorKey 'TWAIN_FILES_NOT_FOUND' -ErrorMessage "Scanner-Profildateien nicht gefunden"
+                Show-ErrorDialog-Startup -Message (Format-ErrorMessage -ErrorKey 'TWAIN_FILES_NOT_FOUND')
             } else {
-                Handle-Error -ErrorKey 'UNKNOWN_ERROR' -ErrorMessage "Unbekannter Fehler bei der Validierung"
+                Show-ErrorDialog-Startup -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
             }
-            exit 1
+            return
         }
         
         Show-MainWindow
     }
     catch {
         Write-ErrorLog -Message "Kritischer Fehler in Hauptanwendung" -ErrorRecord $_
-        Handle-Error -ErrorKey 'UNKNOWN_ERROR' -ErrorMessage "Kritischer Fehler in der Hauptanwendung"
-        exit 1
+        Show-ErrorDialog-Startup -Message (Format-ErrorMessage -ErrorKey 'UNKNOWN_ERROR')
     }
 }
 
