@@ -9,10 +9,10 @@
     Supports Standard (single-sided) and Duplex (double-sided) scanning configurations.
     
 .NOTES
-    Version:        1.0.9
+    Version:        1.1.0
     Author:         System Administrator
     Created:        2025-12-20
-    Updated:        2025-12-20
+    Updated:        2025-12-21
     Required:       PowerShell 5.0+, Windows 10/11
     Execution:      User context (No Admin privileges required)
     
@@ -95,6 +95,7 @@ if ($Global:CurrentUser -match '\\(.+)$') {
 [System.Windows.Window]$Global:MainWindow = $null
 
 [bool]$Global:HasChanges = $false
+[bool]$Global:IsClosingFromButton = $false
 [string]$Global:CurrentProfile = 'STANDARD'
 [string]$Global:SelectedProfile = 'STANDARD'
 
@@ -448,7 +449,7 @@ function Show-MainWindow {
         $standardCheckbox = $Global:MainWindow.FindName('StandardCheckbox')
         $duplexCheckbox = $Global:MainWindow.FindName('DuplexCheckbox')
         $saveButton = $Global:MainWindow.FindName('SaveButton')
-        $closeButton = $Global:MainWindow.FindName('CloseButton')
+        $exitButton = $Global:MainWindow.FindName('CloseButton')
         
         if ($standardCheckbox -and $duplexCheckbox) {
             if ($Global:CurrentProfile -eq 'STANDARD') {
@@ -501,23 +502,44 @@ function Show-MainWindow {
             })
         }
         
-        if ($closeButton) {
-            $closeButton.Add_Click({
+        # SCENARIO 1 & 2: Exit Button Handler (Beenden-Button im Hauptfenster)
+        if ($exitButton) {
+            $exitButton.Add_Click({
+                $Global:IsClosingFromButton = $true
+                
                 if ($Global:HasChanges) {
+                    # Szenario 2: Änderungen gemacht → popup-warn.xaml anzeigen
                     if (Show-WarningDialog -OwnerWindow $Global:MainWindow) {
+                        # Benutzer hat "Ja" geklickt → Programm schließen
                         $Global:MainWindow.Close()
                     }
+                    # Falls "Nein" → Fenster bleibt offen
                 } else {
+                    # Szenario 1: Keine Änderungen → Programm sofort schließen
                     $Global:MainWindow.Close()
                 }
+                
+                $Global:IsClosingFromButton = $false
             })
         }
         
+        # SCENARIO 1 & 2: Title Bar Close Button Handler (Schließen-Button in der Titelleiste)
         $Global:MainWindow.Add_Closing({
             param($sender, $e)
-            if ($Global:HasChanges) {
-                $e.Cancel = $true
-                if (Show-WarningDialog -OwnerWindow $Global:MainWindow) {
+            
+            # Wenn nicht vom Exit-Button aufgerufen
+            if (-not $Global:IsClosingFromButton) {
+                if ($Global:HasChanges) {
+                    # Szenario 2: Änderungen gemacht → popup-close.xaml anzeigen
+                    $e.Cancel = $true
+                    if (Show-CloseDialog -OwnerWindow $Global:MainWindow) {
+                        # Benutzer hat "Ja" geklickt → Fenster schließen lassen
+                        $e.Cancel = $false
+                        $Global:MainWindow.Close()
+                    }
+                    # Falls "Nein" → e.Cancel = $true bleibt, Fenster bleibt offen
+                } else {
+                    # Szenario 1: Keine Änderungen → Programm ohne Rückfrage schließen
                     $e.Cancel = $false
                 }
             }
