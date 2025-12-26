@@ -16,7 +16,6 @@
         <Style x:Key="CloseButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -55,8 +54,7 @@
             <Border x:Name="TitleBar"
                     DockPanel.Dock="Top" 
                     Height="36" 
-                    Background="#00000000"
-                    Cursor="Hand">
+                    Background="#00000000">
                 <Grid>
                     <!-- Icon -->
                     <Image x:Name="AppIcon" 
@@ -88,7 +86,6 @@
                             Margin="0,0,0,0" 
                             Background="Transparent" 
                             BorderThickness="0" 
-                            Cursor="Hand"
                             Padding="6">
                         <Image x:Name="CloseButtonImage" 
                                Width="24" 
