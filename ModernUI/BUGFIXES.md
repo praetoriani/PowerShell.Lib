@@ -18,6 +18,8 @@ This document details all known issues, fixes implemented, and best practices fo
 | Hover Effect Not Working | ✅ FIXED | CRITICAL | v1.00.00 |
 | Event Handler Parameter Binding | ✅ FIXED | HIGH | v1.00.00 |
 | Image Path Resolution | ✅ FIXED | HIGH | v1.00.00 |
+| White Titlebar Blocks Background | ✅ FIXED | CRITICAL | v1.00.00 |
+| XAML Triggers Unreliable | ✅ FIXED | CRITICAL | v1.00.00 |
 
 ---
 
@@ -146,8 +148,8 @@ function Initialize-WPF {
     # Store references in script scope
     $script:WindowReference = $window
     $script:CloseButtonImageControl = $window.FindName("CloseButtonImage")
-    $script:CloseButtonNormal = (get image)
-    $script:CloseButtonHover = (get image)
+    $script:CloseButtonNormal = (LoadBitmapImage ...)
+    $script:CloseButtonHover = (LoadBitmapImage ...)
     
     $closeButton = $window.FindName("CloseButton")
     
@@ -181,14 +183,26 @@ Never call `.FindName()` or access local variables inside event handlers. Store 
 **Root Cause:**
 In rahmenlosen (`AllowsTransparency="True"`) WPF-Fenstern wird `Grid.Background` ignoriert. WPF rendert in diesem Modus mit Direct3D, und nur `Window.Background` wird korrekt verarbeitet.
 
+**Technical Explanation:**
+When `AllowsTransparency="True"` is set on a Window:
+- WPF switches rendering from GDI to Direct3D
+- Direct3D ignores `Grid.Background` and only renders `Window.Background`
+- This is by design for transparency effects
+
 **Solution:**
 ```powershell
 # CRITICAL FIX: Set background on Window, NOT Grid!
 if ($script:BackgroundBrush) {
-    # Hier ist der Fix: Brush auf Window, nicht auf Grid!
+    # Set the brush on Window, not Grid!
     $window.Background = $script:BackgroundBrush
     Write-Host "[OK] Hintergrundbild auf Window gesetzt" -ForegroundColor Green
 }
+```
+
+**Never do this:**
+```powershell
+# ❌ WRONG - Won't display with AllowsTransparency=True
+$rootGrid.Background = $script:BackgroundBrush  # IGNORED!
 ```
 
 **Key Learning:**
@@ -196,29 +210,35 @@ Bei rahmenlosen Fenstern: **IMMER** `Window.Background` verwenden, `Grid.Backgro
 
 ---
 
-### 5. Transparent Titlebar Not Working
+### 5. White Titlebar Blocks Background Image
 
 **Symptoms:**
-- Titlebar shows as white/colored bar
+- White/colored bar at top of window
 - Background image not visible under titlebar
-- Cannot see through titlebar to background
+- Titlebar appears as separate colored rectangle
 
 **Root Cause:**
-Titlebar had `Background="#FFFFFF"` (solid white), das das Hintergrundbild komplett verdeckt hat.
-
-**Solution:**
-Changed titlebar to `Background="Transparent"`:
+Titlebar had `Background="#FFFFFF"` (solid white), which completely blocked the background image from showing through:
 
 ```xaml
-<!-- ❌ WRONG - Blocks background image -->
-<Border x:Name="TitleBar" Grid.Row="0" Background="#FFFFFF" ...>
+<!-- ❌ WRONG - Solid background blocks image -->
+<Border x:Name="TitleBar" Grid.Row="0" Background="#FFFFFF" Height="40" ...>
+    <!-- Title bar content -->
+</Border>
+```
 
-<!-- ✅ CORRECT - Background image shows through -->
-<Border x:Name="TitleBar" Grid.Row="0" Background="Transparent" ...>
+**Solution:**
+Changed titlebar background to `Transparent`:
+
+```xaml
+<!-- ✅ CORRECT - Transparent background lets image show through -->
+<Border x:Name="TitleBar" Grid.Row="0" Background="Transparent" Height="40" ...>
+    <!-- Title bar content -->
+</Border>
 ```
 
 **Key Learning:**
-In frameless windows mit Background Image: Alle Control-Container sollten `Background="Transparent"` sein, damit das Background-Image durchscheint.
+In frameless windows mit Background Image: All overlay containers sollten `Background="Transparent"` sein, damit das Background-Image durchscheint.
 
 ---
 
@@ -226,11 +246,28 @@ In frameless windows mit Background Image: Alle Control-Container sollten `Backg
 
 **Symptoms:**
 - Close button doesn't change image on hover
-- Image swap doesn't happen
-- Or image swaps are unreliable
+- Image swap doesn't happen reliably
+- Or hover effect only works sometimes
+- No visual feedback on hover
 
 **Root Cause:**
-ANXAML Triggers funktionieren nicht zuverlässig für `Image.Source` bei dynamisch geladenen Bildern aus PowerShell.
+XAML Triggers funktionieren nicht zuverlässig für `Image.Source` bei dynamisch geladenen Bildern aus PowerShell:
+
+```xaml
+<!-- ❌ WRONG - XAML Triggers unreliable for dynamic images -->
+<Image x:Name="CloseButtonImage" Source="{Binding ...}">
+    <Image.Triggers>
+        <Trigger Property="IsMouseOver" Value="True">
+            <Setter Property="Source" Value="{Binding HoverImage}" />
+        </Trigger>
+    </Image.Triggers>
+</Image>
+```
+
+Problems with this approach:
+- Binding doesn't work with dynamically loaded images
+- Trigger evaluation is unreliable
+- No feedback if trigger fails
 
 **Solution:**
 Nutze PowerShell Event Handler statt XAML Triggers:
@@ -238,10 +275,12 @@ Nutze PowerShell Event Handler statt XAML Triggers:
 ```powershell
 # Store images in script scope
 $script:CloseButtonImageControl = $window.FindName("CloseButtonImage")
-$script:CloseButtonImageSource_Normal = (LoadedBitmapImage)
-$script:CloseButtonImageSource_Hover = (LoadedBitmapImage)
+$script:CloseButtonImageSource_Normal = (LoadedBitmapImage)  # Pre-loaded
+$script:CloseButtonImageSource_Hover = (LoadedBitmapImage)   # Pre-loaded
 
-# Use MouseEnter/MouseLeave events
+$closeButton = $window.FindName("CloseButton")
+
+# Use MouseEnter event for reliable hover in
 $closeButton.Add_MouseEnter({
     param($sender, $e)
     if ($script:CloseButtonImageSource_Hover -ne $null) {
@@ -249,6 +288,7 @@ $closeButton.Add_MouseEnter({
     }
 })
 
+# Use MouseLeave event for reliable hover out
 $closeButton.Add_MouseLeave({
     param($sender, $e)
     if ($script:CloseButtonImageSource_Normal -ne $null) {
@@ -258,12 +298,21 @@ $closeButton.Add_MouseLeave({
 ```
 
 **Why This Works Better:**
-- XAML Triggers funktionieren nur bei statischen XAML-Ressourcen
-- PowerShell Events sind zuverlässig für dynamisch geladene Bilder
-- Event Handler geben volle Kontrolle über den Swap-Prozess
+- ✅ Pre-load images during initialization (not during hover)
+- ✅ XAML Triggers only work with static XAML resources
+- ✅ PowerShell Events are reliable for dynamic images
+- ✅ Event Handlers give full control over swap process
+- ✅ Easy to debug if something goes wrong
+- ✅ Guaranteed execution with error handling
+
+**Why XAML Triggers Don't Work:**
+- ❌ Triggers only bind to `StaticResource` or `DynamicResource`
+- ❌ PowerShell doesn't register resources in XAML namespace
+- ❌ No way for Trigger to know about PowerShell-loaded images
+- ❌ Fallback to default binding doesn't happen
 
 **Key Learning:**
-Für komplexe Hover-Effekte: PowerShell Events verwenden, nicht XAML Triggers.
+Für komplexe Hover-Effekte: PowerShell Events verwenden, nie XAML Triggers!
 
 ---
 
@@ -281,6 +330,7 @@ Event handlers were registered without proper parameter declaration:
 $titleBar.Add_MouseLeftButtonDown({
     # $sender is undefined
     # $e is undefined
+    $_ is the error object (not what we want)
 })
 ```
 
@@ -292,6 +342,7 @@ $titleBar.Add_MouseLeftButtonDown({
     param($sender, $e)  # Declare parameters!
     # Now $sender and $e are available
     $sender.Opacity = 0.8  # Works!
+    $e.Handled = $true
 })
 ```
 
@@ -306,14 +357,20 @@ Always use `param($sender, $e)` in event handlers, even if you don't use the par
 - "Image file not found" errors
 - Images specified in config.json not loading
 - Different behavior when running from different directories
+- Works when running from script directory, fails from other locations
 
 **Root Cause:**
 Relative paths don't work consistently:
 ```powershell
 # ❌ WRONG - Relative paths are unreliable
-$iconPath = "./PNG/appicon.png"  # May not work
-$bgPath = "PNG/ModernUI-WinBG.png"  # Depends on working directory
+$iconPath = "./PNG/appicon.png"  # Depends on current directory
+$bgPath = "PNG/ModernUI-WinBG.png"  # May not work
 ```
+
+The current directory when PowerShell executes a script can vary:
+- Running from different directories
+- Called from another script
+- Executed by a scheduler or automation tool
 
 **Solution:**
 Convert all paths to absolute paths using script root:
@@ -335,6 +392,9 @@ function Resolve-ImagePath {
     
     return $null
 }
+
+# Usage in config loading
+$bgImagePath = Resolve-ImagePath -ImageName $config.paths.backgroundImage
 ```
 
 **Key Learning:**
@@ -426,7 +486,7 @@ Write-Host "Background path: $bgPath"
 Test-Path $bgPath -PathType Leaf | Write-Host  # Should be True
 
 # Test image loading
-$testBitmap = Load-BitmapImage -ImagePath $bgPath -ImageName "TestBG"
+$testBitmap = Load-BitmapImage -ImagePath $bgPath
 if ($testBitmap -eq $null) {
     Write-Host "ERROR: Image failed to load"
 } else {
@@ -446,8 +506,42 @@ if ($testBitmap -eq $null) {
 **Debug Code:**
 ```powershell
 $titleBar = $window.FindName("TitleBar")
-Write-Host "TitleBar Background: $($titleBar.Background)"  # Should be TransparentBrush
-Write-Host "Window Background: $($window.Background)"  # Should be ImageBrush
+Write-Host "TitleBar Background: $($titleBar.Background)"  # Should show Transparent
+Write-Host "Window Background: $($window.Background)"  # Should show ImageBrush
+```
+
+**Fix:**
+Verify XAML has transparent backgrounds:
+```xaml
+<!-- Check XAML TitleBar -->
+<Border x:Name="TitleBar" Background="Transparent" ...>
+    <!-- Should NOT have: Background="#FFFFFF" or any color -->
+</Border>
+```
+
+---
+
+### Scenario 6: Hover Effect Not Working
+
+**Check:**
+1. Images are pre-loaded in script scope
+2. `script:CloseButtonImageControl` is set correctly
+3. MouseEnter and MouseLeave events are registered
+4. Image sources are not null
+
+**Debug Code:**
+```powershell
+$closeButton.Add_MouseEnter({
+    param($sender, $e)
+    Write-Host "MouseEnter triggered"
+    Write-Host "Normal image: $($script:CloseButtonImageSource_Normal -eq $null)"
+    Write-Host "Hover image: $($script:CloseButtonImageSource_Hover -eq $null)"
+    Write-Host "Image control: $($script:CloseButtonImageControl -eq $null)"
+    if ($script:CloseButtonImageSource_Hover -ne $null) {
+        $script:CloseButtonImageControl.Source = $script:CloseButtonImageSource_Hover
+        Write-Host "Source updated successfully"
+    }
+})
 ```
 
 ---
@@ -489,7 +583,7 @@ function Initialize {
 
 ```powershell
 # ❌ WRONG
-$button.Add_Click({ Write-Host $_ })  # $_  is not the button!
+$button.Add_Click({ Write-Host $_ })  # $_ is not the button!
 
 # ✅ CORRECT
 $button.Add_Click({ param($sender, $e) 
@@ -543,6 +637,22 @@ $window.Background = $imageBrush
 
 <!-- ✅ CORRECT - Lets background image show through -->
 <Border Background="Transparent" />
+```
+
+### Rule 8: Pre-Load Images, Don't Load in Event Handlers
+
+```powershell
+# ❌ WRONG - Slow and unpredictable
+$button.Add_MouseEnter({
+    $image = Load-BitmapImage ...  # Slow!
+    $control.Source = $image
+})
+
+# ✅ CORRECT - Fast and reliable
+$script:HoverImage = Load-BitmapImage ...  # Load once
+$button.Add_MouseEnter({
+    $script:ImageControl.Source = $script:HoverImage  # Fast!
+})
 ```
 
 ---
@@ -599,7 +709,7 @@ Before releasing any changes, verify:
 - [ ] Close button click works
 - [ ] Close button hover effect works (image changes)
 - [ ] No crash when hovering over close button
-- [ ] Hover effect PNG swaps correctly
+- [ ] Hover effect PNG swaps correctly (gray → red)
 - [ ] Standard cursor displays (no hand cursor on button)
 - [ ] OK button is clickable
 - [ ] Application closes cleanly
@@ -607,6 +717,8 @@ Before releasing any changes, verify:
 - [ ] No memory leaks on repeated close/open
 - [ ] Titlebar is transparent (background image shows through)
 - [ ] All UI elements visible over background image
+- [ ] Window can still be dragged after hover
+- [ ] Hover effect works consistently
 
 ---
 
