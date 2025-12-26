@@ -12,15 +12,19 @@
 .VERSION
     1.00.00 (Stable Release)
     - Fenster verschiebbar
-    - Hover-Effekte fuer Close Button (mit XAML Triggers)
+    - Hover-Effekte fuer Close Button
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
     - Rahmenloses Fenster Design
-    - Hintergrundbild korrekt als Grid Background
+    - **FIX: Hintergrundbild korrekt auf Window-Ebene (nicht Grid!)**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
     GitHub: https://github.com/praetoriani/PowerShell.Lib
+    
+    CRITICAL FIX for Frameless Windows:
+    In AllowsTransparency="True" WPF windows, Grid.Background is ignored.
+    Solution: Set Window.Background directly with ImageBrush.
 #>
 
 param(
@@ -148,17 +152,20 @@ function Load-BitmapImage {
 }
 
 # ============================================================================
-# IMAGE BRUSH HELPER
+# IMAGE BRUSH HELPER (für Frameless Windows)
 # ============================================================================
 
 function Create-ImageBrush {
     <#
     .SYNOPSIS
         Erstellt einen ImageBrush aus einem BitmapImage
+        WICHTIG: Für rahmenloses WPF muss der Brush speziell konfiguriert werden
     #>
     param(
         [System.Windows.Media.Imaging.BitmapImage]$BitmapImage,
-        [System.Windows.Media.Stretch]$Stretch = [System.Windows.Media.Stretch]::UniformToFill
+        [System.Windows.Media.Stretch]$Stretch = [System.Windows.Media.Stretch]::UniformToFill,
+        [System.Windows.Media.AlignmentX]$AlignmentX = [System.Windows.Media.AlignmentX]::Center,
+        [System.Windows.Media.AlignmentY]$AlignmentY = [System.Windows.Media.AlignmentY]::Center
     )
     
     if ($null -eq $BitmapImage) {
@@ -169,6 +176,9 @@ function Create-ImageBrush {
         $brush = New-Object System.Windows.Media.ImageBrush
         $brush.ImageSource = $BitmapImage
         $brush.Stretch = $Stretch
+        $brush.AlignmentX = $AlignmentX
+        $brush.AlignmentY = $AlignmentY
+        $brush.Opacity = 1.0  # Volle Deckkraft
         return $brush
     }
     catch {
@@ -210,6 +220,7 @@ function Initialize-WindowResources {
             $script:WindowIcon = Load-BitmapImage -ImagePath $iconPath -ImageName "Window Icon"
         }
         
+        # CRITICAL: Load background image AND create brush
         if ($bgPath) {
             $script:BackgroundImage = Load-BitmapImage -ImagePath $bgPath -ImageName "Background Image"
             if ($script:BackgroundImage) {
@@ -241,8 +252,11 @@ function Initialize-WindowResources {
 }
 
 # ============================================================================
-# XAML DEFINITION (FRAMELESS WINDOW WITH BACKGROUND BRUSH)
+# XAML DEFINITION (FRAMELESS WINDOW - MINIMAL)
 # ============================================================================
+# CRITICAL: Window.Background wird NICHT hier gesetzt!
+# Wir setzen es in PowerShell nach dem Laden der Ressourcen.
+# Das ist die einzige Weise, wie es in rahmenlosen Windows korrekt funktioniert.
 
 $xaml = @"
 <Window 
@@ -254,12 +268,10 @@ $xaml = @"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
     AllowsTransparency="True"
+    Background="Transparent"
     x:Name="MainWindow">
 
-    <Grid x:Name="RootGrid">
-        <!-- BACKGROUND AS GRID BACKGROUND (NOT IMAGE ELEMENT!) -->
-        <!-- This ensures background displays correctly and stays behind all other elements -->
-        
+    <Grid x:Name="RootGrid" Background="Transparent">
         <!-- OVERLAY GRID -->
         <Grid>
             <Grid.RowDefinitions>
@@ -303,7 +315,7 @@ $xaml = @"
 
                     <!-- Window Controls (Right) -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                        <!-- Close Button - Button with Image Content -->
+                        <!-- Close Button -->
                         <Button 
                             x:Name="CloseButton" 
                             Width="32" 
@@ -315,7 +327,6 @@ $xaml = @"
                             VerticalContentAlignment="Center"
                             FocusVisualStyle="{x:Null}">
                             
-                            <!-- Button Content: Image -->
                             <Image 
                                 x:Name="CloseButtonImage" 
                                 Width="16" 
@@ -389,16 +400,20 @@ function Initialize-WPF {
         $okButton = $window.FindName("OKButton")
 
         # =====================================================================
-        # SET BACKGROUND IMAGE AS GRID BACKGROUND BRUSH
+        # **CRITICAL FIX: SET BACKGROUND ON WINDOW, NOT GRID!**
         # =====================================================================
-        # This is the KEY FIX - Background images MUST be set via Grid.Background
-        # NOT via an Image element (Image elements don't render backgrounds properly)
+        # In rahmenlosen (AllowsTransparency="True") WPF-Fenstern wird 
+        # Grid.Background ignoriert. Die einzige Methode, die funktioniert:
+        # Window.Background direkt setzen mit dem ImageBrush!
         
         if ($script:BackgroundBrush) {
-            $rootGrid.Background = $script:BackgroundBrush
-            Write-Host "[OK] Hintergrundbild als Grid-Background gesetzt" -ForegroundColor Green
+            # HIER ist der Fix: Brush auf Window, nicht auf Grid!
+            $window.Background = $script:BackgroundBrush
+            Write-Host "[OK] Hintergrundbild auf Window gesetzt" -ForegroundColor Green
         } else {
             Write-Host "[WARN] Hintergrundbild konnte nicht gesetzt werden" -ForegroundColor Yellow
+            # Fallback: Wenigstens ein solider Hintergrund
+            $window.Background = [System.Windows.Media.Brushes]::DarkGray
         }
 
         # =====================================================================
@@ -420,7 +435,6 @@ function Initialize-WPF {
         # =====================================================================
         # STORE IMAGE REFERENCES FOR EVENT HANDLERS
         # =====================================================================
-        # Store in script scope so event handlers can access them
         $script:CloseButtonImageControl = $closeButtonImage
         $script:CloseButtonImageSource_Normal = $script:CloseButtonNormalImage
         $script:CloseButtonImageSource_Hover = $script:CloseButtonHoverImage
@@ -443,16 +457,11 @@ function Initialize-WPF {
         # =====================================================================
         # CLOSE BUTTON HOVER EFFECTS
         # =====================================================================
-        # CRITICAL: The event handlers MUST be on the BUTTON, not the IMAGE!
-        # Image controls don't register mouse events reliably.
-        # We set the Image.Source property from button events.
-        
         $closeButton.Add_MouseEnter({
             param($sender, $e)
             try {
                 if ($script:CloseButtonImageSource_Hover -ne $null -and $script:CloseButtonImageControl -ne $null) {
                     $script:CloseButtonImageControl.Source = $script:CloseButtonImageSource_Hover
-                    Write-Host "[DEBUG] Close Button: Hover ON" -ForegroundColor DarkGray
                 }
             }
             catch {
@@ -465,7 +474,6 @@ function Initialize-WPF {
             try {
                 if ($script:CloseButtonImageSource_Normal -ne $null -and $script:CloseButtonImageControl -ne $null) {
                     $script:CloseButtonImageControl.Source = $script:CloseButtonImageSource_Normal
-                    Write-Host "[DEBUG] Close Button: Hover OFF" -ForegroundColor DarkGray
                 }
             }
             catch {
