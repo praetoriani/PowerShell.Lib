@@ -121,6 +121,13 @@ Ergaenzungen:
 - `x:Name="TitleBar"`: Fuer PowerShell Event-Binding
 - `Cursor="Hand"`: User-Feedback beim Hover ueber TitleBar
 
+**WICHTIG - Was man NICHT machen sollte:**
+```xaml
+<!-- FALSCH - Diese Event Handler muessen in PowerShell registriert werden! -->
+<Border x:Name="TitleBar" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" ...>
+<Window MouseMove="Window_MouseMove" ...>
+```
+
 **Loesung 2 - PowerShell Event Handler:**
 ```powershell
 $titleBar.Add_MouseLeftButtonDown({
@@ -146,6 +153,7 @@ $titleBar.Add_MouseLeftButtonUp({
 - Try-Catch-Finally fuer sichere State-Verwaltung
 - IsDragging Flag verhindert gleichzeitige Drag-Events
 - MouseLeftButtonUp Handler fuer sauberes Ende
+- KEINE Event-Handler in der XAML definieren - nur Names (x:Name)
 
 ---
 
@@ -199,6 +207,15 @@ Anwendung:
 </Button>
 ```
 
+**WICHTIG - Was man NICHT machen sollte:**
+```xaml
+<!-- FALSCH - Sollte in PowerShell registriert werden -->
+<Button x:Name="CloseButton" Click="CloseButton_Click" ...>
+
+<!-- FALSCH - Undefined Event Handler -->
+<Window MouseMove="Window_MouseMove" ...>
+```
+
 **Loesung 2 - PowerShell Image Swap Logic:**
 
 **Falscher Ansatz (wie zuvor):**
@@ -237,6 +254,7 @@ $closeButton.Add_MouseEnter({
 - **CacheOption = OnLoad**: Bitmap sofort laden, nicht lazy
 - **Freeze()**: Thread-Safety fuer Bitmap-Sharing
 - **ImageControl.Source**: Direktes Swap des PNG
+- **NO Event Handlers in XAML**: Nur x:Name verwenden!
 
 ---
 
@@ -245,12 +263,42 @@ $closeButton.Add_MouseEnter({
 | Batch | Problem | Datei | Loesung |
 |-------|---------|-------|----------|
 | **1** | XAML Parser Error | ModernUI.xaml | Removed x:Class |
-| **1** | Undefined Event Handlers | ModernUI.xaml | Remove handler attributes |
+| **1** | Undefined Event Handlers | ModernUI.xaml | Remove handler attributes, use x:Name only |
 | **1** | ConvertTo-Hashtable | ModernUI.ps1 | Fixed recursion |
 | **1** | Event Parameter Binding | ModernUI.ps1 | Added param() |
 | **1** | Relative Paths | ModernUI.ps1 | Use absolute paths |
 | **2** | Window Drag nicht funktional | ModernUI.xaml + .ps1 | DragMove in Try-Finally |
 | **2** | Close Button Hover Blau | ModernUI.xaml + .ps1 | Remove FocusVisualStyle, BeginInit/EndInit |
+
+---
+
+## KRITISCHE REGEL FÜR POWERSHELL-XAML
+
+### ⚠️ NEVER USE EVENT HANDLERS IN XAML
+
+```xaml
+<!-- FALSCH -->
+<Window MouseMove="Window_MouseMove" ...>
+<Border MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" ...>
+<Button Click="CloseButton_Click" ...>
+
+<!-- RICHTIG -->
+<Window x:Name="ModernUIWindow" ...>
+<Border x:Name="TitleBar" ...>
+<Button x:Name="CloseButton" ...>
+```
+
+Alle Event Handler muessen in PowerShell registriert werden:
+```powershell
+$window.Add_MouseMove({ ... })
+$titleBar.Add_MouseLeftButtonDown({ ... })
+$closeButton.Add_Click({ ... })
+```
+
+### Warum?
+- PowerShell XamlReader kann keine Code-Behind Methoden aufrufen
+- Undefined Event Handler verursachen Parser-Fehler
+- Alle Logik sollte in PowerShell sein, nicht XAML
 
 ---
 
@@ -289,6 +337,20 @@ $script:CloseButtonImage = $Window.FindName("CloseButtonImage")
 $closeButton.Add_MouseEnter({
     $script:CloseButtonImage.Source = ...  # Zugriff auf script-scoped Variable
 })
+```
+
+### 5. XAML in PowerShell - Nur Names verwenden
+```xaml
+<!-- Alle diese sind OK - verwenden x:Name -->
+<Window x:Name="MyWindow" ...>
+<Border x:Name="TitleBar" ...
+<Button x:Name="MyButton" ...>
+<Image x:Name="MyImage" ...>
+
+<!-- KEINE dieser Event-Attribute in PowerShell-XAML -->
+<Window MouseMove="...">
+<Border Click="...">
+<Button DoubleClick="...">
 ```
 
 ---
@@ -337,23 +399,38 @@ $closeButton.Add_MouseLeave({
 })
 ```
 
+### XAML Parser Fehler
+```powershell
+# Bei Error wie "Fehler beim Erstellen von XYZ aus dem Text..."
+# Prüfe ob in XAML nicht-definierte Event Handler stehen:
+# <Window MouseMove="..." />  <-- FALSCH
+# <Border Click="..." />      <-- FALSCH
+# <Button DoubleClick="..." /> <-- FALSCH
+
+# Sollte sein:
+# <Window x:Name="ModernUIWindow" />
+# <Border x:Name="TitleBar" />
+# <Button x:Name="CloseButton" />
+```
+
 ---
 
 ## Testing-Checkliste
 
-- [x] XAML parses without errors
+- [x] XAML parses without errors (NO event handlers in XAML!)
 - [x] Config loads as proper Hashtable
 - [x] Images load from PNG directory
-- [x] **TitleBar drag functionality works** (NEW)
-- [x] **Window moves smoothly when dragging TitleBar** (NEW)
+- [x] **TitleBar drag functionality works** (via PowerShell event binding)
+- [x] **Window moves smoothly when dragging TitleBar**
 - [x] Close button click event fires
-- [x] **Close button PNG swaps on hover** (NEW)
-- [x] **No blue hover effect on close button** (NEW)
+- [x] **Close button PNG swaps on hover** (BeginInit/EndInit/Freeze)
+- [x] **No blue hover effect on close button**
 - [x] Application exits cleanly
 - [x] All images display correctly
 
 ---
 
 **Version**: 1.00.00 Final  
-**Status**: Production Ready (alle kritischen Fixes implementiert)  
-**Datum**: 2025-12-26
+**Status**: Production Ready (alle kritischen Fixes + Dokumentation)  
+**Datum**: 2025-12-26  
+**Critical Lesson**: NEVER put event handlers in PowerShell-XAML - only use x:Name and register handlers in PowerShell
