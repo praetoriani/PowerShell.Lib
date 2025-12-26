@@ -37,8 +37,8 @@
 
                 <!-- Window Title (Next to Icon) -->
                 <TextBlock 
-                    Grid.Column="0" 
-                    Text="{Binding Title, ElementName=MainWindow}"
+                    x:Name="TitleText"
+                    Text="ModernUI v1.00.00"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Left"
                     Margin="40,0,0,0"
@@ -64,18 +64,7 @@
                         <Image 
                             x:Name="CloseButtonImage" 
                             Width="16" 
-                            Height="16">
-                            <Image.Style>
-                                <Style TargetType="Image">
-                                    <Setter Property="Source" Value="" />
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Source" Value="" />
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Image.Style>
-                        </Image>
+                            Height="16" />
                     </Button>
                 </StackPanel>
             </Grid>
@@ -98,6 +87,7 @@
                     TextAlignment="Center"
                     Margin="0,0,0,32" />
                 <Button 
+                    x:Name="OKButton"
                     Content="OK"
                     Width="120"
                     Height="40"
