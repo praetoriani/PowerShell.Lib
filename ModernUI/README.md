@@ -11,17 +11,18 @@
 
 ## Overview
 
-ModernUI is a lightweight, modern user interface framework for PowerShell WPF applications. It provides a frameless window design with Windows 11-style aesthetics, including smooth animations, hover effects, and modern color schemes.
+ModernUI is a lightweight, modern user interface framework for PowerShell WPF applications. It provides a frameless window design with Windows 11-style aesthetics, including smooth drag interactions, hover effects, and seamless background image integration.
 
 **Key Features:**
 - ✅ Frameless window design (WindowStyle="None")
-- ✅ Draggable title bar
-- ✅ Hover effects on UI controls
-- ✅ Background image support
+- ✅ Draggable title bar with transparent overlay
+- ✅ Hover effects on UI controls (image swapping)
+- ✅ Full-screen background image support
 - ✅ Config-driven image loading
 - ✅ Clean, production-ready code
 - ✅ Proper event handler scoping for PowerShell
 - ✅ Cross-thread safe image loading
+- ✅ Transparent UI overlays for visual integration
 
 ---
 
@@ -49,12 +50,13 @@ cd PowerShell.Lib\ModernUI
 
 After starting the application:
 - ✅ Window opens immediately
-- ✅ Background image displays correctly
-- ✅ Window title bar shows with icon
+- ✅ Background image displays correctly across entire window
+- ✅ Transparent title bar overlays cleanly on background
+- ✅ Window title and icon visible in title bar
 - ✅ Close button visible in top-right corner
 - ✅ Window is draggable via title bar
-- ✅ Close button hover effect works (PNG swaps)
-- ✅ No console errors
+- ✅ Close button hover effect works (PNG swaps from gray to red)
+- ✅ No console errors or warnings
 
 ---
 
@@ -64,7 +66,7 @@ After starting the application:
 ModernUI/
 ├── ModernUI.ps1                    # Main PowerShell script
 ├── config.json                     # Configuration file
-├── ModernUI.xaml                   # XAML window definition (not used directly)
+├── ModernUI.xaml                   # XAML window definition (reference)
 ├── PNG/
 │   ├── appicon.png                 # Window icon
 │   ├── ModernUI-WinBG.png          # Background image
@@ -99,9 +101,10 @@ The `config.json` file controls image paths and window properties:
 
 **Path Notes:**
 - All paths are relative to the `ModernUI/` directory
-- Use forward slashes (`/`) in JSON
+- Use forward slashes (`/`) in JSON for compatibility
 - PNG directory must exist with all required images
 - Images should be properly formatted and accessible
+- Path resolution uses `$PSScriptRoot` for reliability
 
 ---
 
@@ -120,6 +123,7 @@ Loads required WPF and .NET assemblies:
 #### 2. Configuration Loading
 - Reads `config.json` with UTF-8 encoding
 - Parses JSON into PowerShell objects
+- Validates configuration structure
 - Expands relative paths to absolute paths
 
 #### 3. Image Loading
@@ -127,24 +131,69 @@ Loads required WPF and .NET assemblies:
 - Implements proper BeginInit/EndInit pattern
 - Calls `Freeze()` for cross-thread safety
 - Uses `BitmapCacheOption.OnLoad` for memory efficiency
+- Supports UniformToFill stretching for backgrounds
 
 #### 4. WPF UI Initialization
 - Creates window from XAML
+- Sets Window.Background to background ImageBrush (critical!)
 - Binds event handlers in PowerShell (not XAML)
 - Sets static images (icon, background)
 - Registers dynamic event handlers (hover effects)
+- All overlay containers use transparent backgrounds
 
 #### 5. Event Handling
-- Title bar drag (MouseLeftButtonDown)
-- Close button hover effects (MouseEnter/MouseLeave)
-- Close button click (Close window)
-- OK button click (logging only)
+- **Title bar drag:** MouseLeftButtonDown → DragMove()
+- **Close button hover:** MouseEnter → Hover image, MouseLeave → Normal image
+- **Close button click:** Close window
+- **OK button click:** Logging only
 
 ---
 
 ## Critical Concepts
 
-### 1. Event Handler Scoping
+### 1. Frameless Window Background Image
+
+**The Key Fix:**
+
+In frameless Windows with `AllowsTransparency="True"`, WPF uses Direct3D rendering. In this mode:
+- ❌ `Grid.Background` is **IGNORED**
+- ✅ `Window.Background` is **RENDERED CORRECTLY**
+
+**Wrong Approach:**
+```powershell
+# This won't work with AllowsTransparency="True"
+$rootGrid.Background = $imageBrush  # Won't display!
+```
+
+**Correct Approach:**
+```powershell
+# This is the only way that works
+$window.Background = $imageBrush  # Works!
+```
+
+### 2. Transparent Titlebar for Visual Integration
+
+**The Key Fix:**
+
+To show the background image behind the title bar, the titlebar must be transparent:
+
+```xaml
+<!-- WRONG - Blocks background image -->
+<Border x:Name="TitleBar" Grid.Row="0" Background="#FFFFFF" ...>
+
+<!-- CORRECT - Background image shows through -->
+<Border x:Name="TitleBar" Grid.Row="0" Background="Transparent" ...>
+```
+
+All child containers also use transparent backgrounds:
+
+```xaml
+<Grid Background="Transparent">  <!-- Transparent overlay -->
+    <!-- Content here -->
+</Grid>
+```
+
+### 3. Event Handler Scoping
 
 PowerShell event handlers run in an isolated scope. Local function variables are **NOT** accessible:
 
@@ -174,7 +223,40 @@ function Register-Events {
 - ❌ Local variables - NOT accessible
 - ❌ Function parameters - NOT accessible
 
-### 2. Window.DragMove()
+### 4. Hover Effect Implementation
+
+**The Key Fix:**
+
+XAML Triggers are unreliable with dynamically-loaded images. Use PowerShell event handlers instead:
+
+```powershell
+# Store images in script scope
+$script:CloseButtonImageControl = $window.FindName("CloseButtonImage")
+$script:CloseButtonImageSource_Normal = Load-BitmapImage -ImagePath $normalPath
+$script:CloseButtonImageSource_Hover = Load-BitmapImage -ImagePath $hoverPath
+
+# Use MouseEnter/MouseLeave events for reliable swapping
+$closeButton.Add_MouseEnter({
+    param($sender, $e)
+    if ($script:CloseButtonImageSource_Hover -ne $null) {
+        $script:CloseButtonImageControl.Source = $script:CloseButtonImageSource_Hover
+    }
+})
+
+$closeButton.Add_MouseLeave({
+    param($sender, $e)
+    if ($script:CloseButtonImageSource_Normal -ne $null) {
+        $script:CloseButtonImageControl.Source = $script:CloseButtonImageSource_Normal
+    }
+})
+```
+
+**Why Not XAML Triggers?**
+- XAML Triggers only work with static resources
+- Dynamically loaded images from PowerShell don't bind reliably
+- PowerShell events give full control and reliability
+
+### 5. Window.DragMove()
 
 Must be called during `MouseLeftButtonDown` event:
 
@@ -191,7 +273,7 @@ $titleBar.Add_MouseLeftButtonDown({
 - Try-catch recommended for safety
 - Window reference must be in script scope
 
-### 3. BitmapImage Creation
+### 6. BitmapImage Creation
 
 Proper 5-step initialization:
 
@@ -210,27 +292,6 @@ $bitmap.Freeze()                                              # Step 5 (critical
 - Required for event handler usage
 - Improves performance
 
-### 4. Control.Tag Property for Event Data
-
-Store references in `.Tag` for event handler access:
-
-```powershell
-# During initialization
-$button.Tag = @{
-    NormalPath = $normalImagePath
-    HoverPath = $hoverImagePath
-    ImageControl = $imageElement
-}
-
-# In event handler
-$closeButton.Add_MouseEnter({
-    param($sender, $e)
-    # $sender = $closeButton
-    $hoverPath = $sender.Tag.HoverPath
-    $imageControl = $sender.Tag.ImageControl
-})
-```
-
 ---
 
 ## Troubleshooting
@@ -246,12 +307,13 @@ $closeButton.Add_MouseEnter({
 2. Check file format: Must be valid PNG
 3. Verify config.json paths are correct
 4. Check file permissions
+5. Ensure `Window.Background` is set (not `Grid.Background`)
 
 **Debugging:**
 ```powershell
 # Test image path resolution
 $bgPath = Join-Path $PSScriptRoot "PNG" | Join-Path -ChildPath "ModernUI-WinBG.png"
-Test-Path $bgPath -PathType Leaf
+Test-Path $bgPath -PathType Leaf  # Should return True
 ```
 
 ### Problem: Close button hover causes crash
@@ -284,6 +346,24 @@ Test-Path $bgPath -PathType Leaf
 - Call `$script:WindowReference.DragMove()` in handler
 - Wrap in try-catch for safety
 
+### Problem: Titlebar blocks background image
+
+**Symptoms:**
+- White/colored bar at top of window
+- Background image not visible under titlebar
+
+**Root Cause:**
+- TitleBar has opaque background instead of transparent
+
+**Solution:**
+```xaml
+<!-- Change from -->
+<Border x:Name="TitleBar" Background="#FFFFFF" ...>
+
+<!-- To -->
+<Border x:Name="TitleBar" Background="Transparent" ...>
+```
+
 ### Problem: JSON parsing error
 
 **Symptoms:**
@@ -312,12 +392,7 @@ Test-Path $bgPath -PathType Leaf
 <Button x:Name="MyButton" />
 ```
 
-Bind event handlers in PowerShell instead:
-
-```powershell
-$button = $window.FindName("MyButton")
-$button.Add_Click({ ... })
-```
+Bind event handlers in PowerShell instead.
 
 ### 2. Use x:Name Instead of Event Attributes
 
@@ -328,14 +403,6 @@ Every control that needs event handling must have `x:Name`:
 <Border x:Name="TitleBar" />
 <Button x:Name="CloseButton" />
 <Image x:Name="BackgroundImage" />
-```
-
-Access in PowerShell:
-
-```powershell
-$mainGrid = $window.FindName("MainGrid")
-$titleBar = $window.FindName("TitleBar")
-$closeButton = $window.FindName("CloseButton")
 ```
 
 ### 3. Always Use script: Scope for Event Data
@@ -377,6 +444,27 @@ $titleBar.Add_MouseLeftButtonDown({
 })
 ```
 
+### 6. Set Window.Background, Not Grid.Background
+
+For frameless windows with `AllowsTransparency="True"`:
+
+```powershell
+# ❌ WRONG - Won't display
+$rootGrid.Background = $imageBrush
+
+# ✅ CORRECT - Always displays
+$window.Background = $imageBrush
+```
+
+### 7. Use Transparent Backgrounds for Overlays
+
+```xaml
+<!-- For any overlay that should show background -->
+<Border Background="Transparent" />
+<Grid Background="Transparent" />
+<StackPanel Background="Transparent" />
+```
+
 ---
 
 ## System Requirements
@@ -393,8 +481,8 @@ $titleBar.Add_MouseLeftButtonDown({
 
 ## Performance
 
-**Startup Time:** ~2 seconds
-**Memory Usage:** 80-120 MB
+**Startup Time:** ~2 seconds  
+**Memory Usage:** 80-120 MB  
 **CPU Usage:** <5% (idle)
 
 ---
@@ -460,6 +548,7 @@ See [CHANGELOG.md](./CHANGELOG.md) for complete version history.
 **Marc Sczepanski (praetoriani)**
 - Full Stack Developer
 - PowerShell & .NET Expert
+- Windows 11 UI Design Enthusiast
 - Location: Freising, Bavaria, Germany
 - GitHub: [praetoriani](https://github.com/praetoriani)
 
