@@ -12,10 +12,10 @@
     "startupLocation": "CenterScreen",
     "resizable": true
   },
-  "windowIcon": "$PSScriptRoot\\Images\\ModernUI-Icon.png",
+  "windowIcon": "$PSScriptRoot/Images/ModernUI-Icon.png",
   "closeButton": {
-    "normalPath": "$PSScriptRoot\\Images\\axn-winclose-normal.png",
-    "hoverPath": "$PSScriptRoot\\Images\\axn-winclose-hover.png"
+    "normalPath": "$PSScriptRoot/Images/axn-winclose-normal.png",
+    "hoverPath": "$PSScriptRoot/Images/axn-winclose-hover.png"
   },
   "theme": {
     "primaryColor": "#007ACC",
