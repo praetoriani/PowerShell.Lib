@@ -31,6 +31,7 @@
     IsRunning = $false
     Window = $null
     LastMousePos = @{X = 0; Y = 0}
+    IsDragging = $false
 }
 
 # Global XAML Variable
@@ -221,6 +222,7 @@ function Load-ModernUIXAML {
                 $closeButton.Tag = @{
                     NormalPath = $closeNormal
                     HoverPath = $closeHover
+                    ImageControl = $closeButtonImage
                 }
             }
         } else {
@@ -256,18 +258,32 @@ function Register-EventHandlers {
     Write-Host "[ModernUI] Event handlers are being registered..." -ForegroundColor Cyan
     
     try {
+        # Store close button references globally for hover effects
+        $script:CloseButtonImage = $Window.FindName("CloseButtonImage")
+        $script:CloseButtonControl = $Window.FindName("CloseButton")
+        
         # Window Drag Handler - find TitleBar border element
         $titleBar = $Window.FindName("TitleBar")
         if ($null -ne $titleBar) {
             $titleBar.Add_MouseLeftButtonDown({
                 param($sender, $e)
                 try {
+                    $Global:ModernUI_State.IsDragging = $true
                     $Window.DragMove()
                 }
                 catch {
-                    Write-Verbose "[ModernUI] DragMove failed: $_"
+                    Write-Verbose "[ModernUI] DragMove error: $_"
+                }
+                finally {
+                    $Global:ModernUI_State.IsDragging = $false
                 }
             })
+            
+            # Also handle dragging from any part of window (for frameless window)
+            $titleBar.Add_MouseLeftButtonUp({
+                $Global:ModernUI_State.IsDragging = $false
+            })
+            
             Write-Host "  - TitleBar drag enabled" -ForegroundColor Green
         } else {
             Write-Warning "[ModernUI] TitleBar element not found in XAML"
@@ -282,14 +298,20 @@ function Register-EventHandlers {
             })
             Write-Host "  - Close button click handler enabled" -ForegroundColor Green
             
-            # Hover effects for close button image
-            $closeButtonImage = $Window.FindName("CloseButtonImage")
-            if ($null -ne $closeButtonImage -and $closeButton.Tag) {
+            # Hover effects for close button image - using direct image swap
+            if ($null -ne $script:CloseButtonImage -and $closeButton.Tag) {
+                # Mouse Enter - swap to hover image
                 $closeButton.Add_MouseEnter({
                     param($sender, $e)
                     try {
                         if (Test-Path $sender.Tag.HoverPath -PathType Leaf) {
-                            $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$sender.Tag.HoverPath)
+                            $hoverBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
+                            $hoverBitmap.BeginInit()
+                            $hoverBitmap.UriSource = [uri]$sender.Tag.HoverPath
+                            $hoverBitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+                            $hoverBitmap.EndInit()
+                            $hoverBitmap.Freeze()
+                            $sender.Tag.ImageControl.Source = $hoverBitmap
                         }
                     }
                     catch {
@@ -297,11 +319,18 @@ function Register-EventHandlers {
                     }
                 })
                 
+                # Mouse Leave - swap back to normal image
                 $closeButton.Add_MouseLeave({
                     param($sender, $e)
                     try {
                         if (Test-Path $sender.Tag.NormalPath -PathType Leaf) {
-                            $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$sender.Tag.NormalPath)
+                            $normalBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
+                            $normalBitmap.BeginInit()
+                            $normalBitmap.UriSource = [uri]$sender.Tag.NormalPath
+                            $normalBitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+                            $normalBitmap.EndInit()
+                            $normalBitmap.Freeze()
+                            $sender.Tag.ImageControl.Source = $normalBitmap
                         }
                     }
                     catch {
