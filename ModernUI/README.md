@@ -1,10 +1,14 @@
-![ModernUI Poster](./ModernUI_Poster.png)
+<div align="center">
+
+![ModernUI Poster](./ModernUI-Poster.png)
+
+</div>
 
 ---
 
 # 🎨 ModernUI v1.00.00
 
-**Ein modernes UI-Framework für PowerShell WPF basierend auf Windows 11 Design Principles**
+**A modern UI framework for PowerShell WPF based on Windows 11 Design Principles**
 
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-green?style=flat-square)
 ![Version](https://img.shields.io/badge/Version-1.00.00-blue?style=flat-square)
@@ -13,125 +17,126 @@
 
 ---
 
-## 📋 Inhaltsverzeichnis
+## 📋 Table of Contents
 
-- [Was ist ModernUI?](#was-ist-modernui)
+- [What is ModernUI?](#what-is-modernui)
 - [Features](#features)
-- [Systemanforderungen](#systemanforderungen)
+- [System Requirements](#system-requirements)
 - [Installation](#installation)
-- [Schnellstart](#schnellstart)
-- [Konfiguration](#konfiguration)
-- [Funktionsweise](#funktionsweise)
-- [Dokumentation](#dokumentation)
-- [Technische Details](#technische-details)
-- [Häufig gestellte Fragen](#häufig-gestellte-fragen)
-- [Version & Status](#version--status)
-- [Lizenz & Support](#lizenz--support)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [How It Works](#how-it-works)
+- [Documentation](#documentation)
+- [Technical Details](#technical-details)
+- [FAQ](#faq)
+- [Version & Roadmap](#version--roadmap)
+- [License & Support](#license--support)
 
 ---
 
-## Was ist ModernUI?
+## What is ModernUI?
 
-ModernUI ist ein **modernes, produktionsreifes PowerShell WPF-Framework**, das es dir ermöglicht, elegante und benutzerfreundliche grafische Oberflächen für deine PowerShell-Skripte zu erstellen.
+ModernUI is a **modern, production-ready PowerShell WPF framework** that enables you to create elegant and user-friendly graphical interfaces for your PowerShell scripts.
 
-Das Framework basiert auf den **Microsoft Windows 11 Modern Design Principles** und bietet eine saubere, minimalistische Benutzeroberfläche mit:
+Based on **Microsoft Windows 11 Modern Design Principles**, the framework offers a clean, minimalistic user interface with:
 
-- ✨ **Rahmenloses Fenster Design** - Moderne UI ohne Standard-Fensterrahmen
-- 🎨 **PNG-basierte UI-Elemente** - Hochwertige Grafiken statt Text-Buttons
-- ⚙️ **Config-gesteuerte Ressourcen** - Einfache JSON-basierte Konfiguration
-- 🔧 **Vollständig customizable** - Alle visuellen Elemente sind konfigurierbar
-- 📚 **Gut dokumentiert** - Umfassende Dokumentation und Code-Kommentare
+- ✨ **Frameless Window Design** - Modern UI without standard window frames
+- 🎨 **PNG-based UI Elements** - High-quality graphics instead of text buttons
+- ⚙️ **Config-driven Resources** - Simple JSON-based configuration
+- 🔧 **Fully Customizable** - All visual elements are configurable
+- 📚 **Well Documented** - Comprehensive documentation and code comments
 
-**Ideal für:**
-- Admin-Tools
-- System-Utilities
-- Konfigurationsprogramme
-- Deployment-Tools
-- Beliebige PowerShell-GUI-Anwendungen
+**Perfect for:**
+- Admin tools
+- System utilities
+- Configuration programs
+- Deployment tools
+- Any PowerShell GUI applications
 
 ---
 
 ## Features
 
-### ✅ Kern-Features
+### ✅ Core Features
 
-| Feature | Beschreibung | Status |
+| Feature | Description | Status |
 |---------|-------------|--------|
-| **Rahmenloses Design** | Moderne Fenster ohne Standard-Rahmen | ✅ |
-| **PNG-Bilder** | Icon und Button-Grafiken als PNG | ✅ |
-| **Config-gesteuert** | JSON-basierte Konfiguration aller Ressourcen | ✅ |
-| **Verschiebbar** | Fenster via Titelleiste verschiebbar | ✅ |
-| **Error Handling** | Aussagekräftige Fehlerbehandlung | ✅ |
-| **Dokumentation** | Vollständig dokumentiert | ✅ |
+| **Frameless Design** | Modern windows without standard frames | ✅ |
+| **PNG Images** | Icon and button graphics as PNG | ✅ |
+| **Config-driven** | JSON-based configuration of all resources | ✅ |
+| **Draggable** | Window draggable via title bar | ✅ |
+| **Error Handling** | Meaningful error messages | ✅ |
+| **Documentation** | Fully documented | ✅ |
 
 ### ✅ UI/UX Features
 
-- 🖱️ Custom Close Button mit PNG-Grafik
-- 💬 Tooltips ("Programm beenden")
-- 🎯 Hand-Cursor bei Button-Hover
-- 🖼️ Hintergrundbild mit Overlay
-- 🏷️ Titelleisten-Icon
-- 📱 Responsive Design
+- 🔘 Custom close button with PNG graphics
+- 💬 Tooltips ("Close Application")
+- 🖱️ Hand cursor on button hover
+- 🖼️ Background image with overlay
+- 🎯 Title bar icon
+- 📱 Responsive design
 
 ### ✅ PowerShell Features
 
-- 🔧 Automatische Pfad-Auflösung
-- 📂 Relative Pfade (portabel)
-- 🛡️ Ressourcen-Validierung
-- 📊 Aussagekräftiges Logging
-- ⚡ Optimierte Performance
+- 🔧 Automatic path resolution
+- 📂 Relative paths (portable)
+- 🛡️ Resource validation
+- 📝 Meaningful logging
+- ⚡ Optimized performance
 
 ---
 
-## Systemanforderungen
+## System Requirements
 
-### Software-Anforderungen
+### Software
 
-| Komponente | Anforderung |
-|------------|-------------|
-| **Betriebssystem** | Windows 10/11 |
-| **PowerShell** | 7.0+ (oder 5.1 mit .NET 4.8) |
+| Component | Requirement |
+|-----------|-------------|
+| **OS** | Windows 10/11 |
+| **PowerShell** | 7.0+ (or 5.1 with .NET 4.8) |
 | **.NET Framework** | 4.8+ |
-| **PowerShell Execution Policy** | RemoteSigned oder Unrestricted |
+| **Execution Policy** | RemoteSigned or Unrestricted |
 
-### Hardware-Anforderungen (Minimum)
+### Hardware (Minimum)
 
 - **CPU**: Dual-Core 2.0 GHz
 - **RAM**: 512 MB
-- **Festplatte**: ~10 MB
+- **Disk**: ~10 MB
 
 ---
 
 ## Installation
 
-### 1. Repository klonen
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/praetoriani/PowerShell.Lib.git
 cd PowerShell.Lib/ModernUI
 ```
 
-### 2. Dateistruktur überprüfen
+### 2. Verify File Structure
 
-Folgende Dateien sollten vorhanden sein:
+The following files should be present:
 
 ```
 ModernUI/
-├── ModernUI.ps1              ← Hauptskript
-├── config.json               ← Konfiguration
-├── README.md                 ← Diese Datei
-├── QUICKSTART.md             ← 5-Min Einstieg
-├── CHANGELOG.md              ← Versionshistorie
-├── FIXES.md                  ← Technische Fixes
-├── ModernUI_Poster.png       ← Marketing-Plakat
-└── PNG/                      ← Bildresourcen
+├── ModernUI.ps1                ← Main script
+├── config.json                 ← Configuration
+├── README.md                   ← This file
+├── QUICKSTART.md               ← 5-minute guide
+├── CHANGELOG.md                ← Version history
+├── BUGFIXES.md                 ← Bug fixes
+├── VERSION.md                  ← Current version
+├── ModernUI-Poster.png         ← Marketing poster
+└── PNG/                        ← Image resources
     ├── appicon.png
     ├── ModernUI-WinBG.png
     ├── axn-winclose-normal.png
     └── axn-winclose-hover.png
 ```
 
-### 3. Starten
+### 3. Run
 
 ```powershell
 .\ModernUI.ps1
@@ -139,43 +144,43 @@ ModernUI/
 
 ---
 
-## Schnellstart
+## Quick Start
 
-### 5 Minuten zu deiner ersten ModernUI App
+### Get Started in 5 Minutes
 
-#### Schritt 1: Clone & Navigate
+#### Step 1: Clone & Navigate
 ```powershell
 git clone https://github.com/praetoriani/PowerShell.Lib.git
 cd PowerShell.Lib\ModernUI
 ```
 
-#### Schritt 2: Starte das Skript
+#### Step 2: Run the Script
 ```powershell
 .\ModernUI.ps1
 ```
 
-#### Schritt 3: Fenster öffnet sich
-- ✅ Fenster sollte sofort erscheinen
-- ✅ Hintergrundbild sichtbar
-- ✅ Close-Button funktioniert
-- ✅ Keine Fehler in der Konsole
+#### Step 3: Window Opens
+- ✅ Window appears immediately
+- ✅ Background image visible
+- ✅ Close button functional
+- ✅ No console errors
 
-#### Schritt 4: Fenster testen
-- 🖱️ Klicke auf die Titelleiste → Fenster verschiebbar
-- 🖱️ Hover über Close-Button → Tooltip "Programm beenden"
-- 🖱️ Klick auf Close-Button → Fenster schließt sich
+#### Step 4: Test
+- 🎯 Click title bar → drag window
+- 🎯 Hover close button → tooltip appears
+- 🎯 Click close button → window closes
 
-**Fertig! 🎉**
+**Done! 🎉**
 
-Detailliertere Anleitung: [QUICKSTART.md](./QUICKSTART.md)
+For detailed guide: [QUICKSTART.md](./QUICKSTART.md)
 
 ---
 
-## Konfiguration
+## Configuration
 
 ### config.json
 
-Die `config.json` definiert alle Ressourcen der Anwendung:
+The `config.json` defines all application resources:
 
 ```json
 {
@@ -189,302 +194,289 @@ Die `config.json` definiert alle Ressourcen der Anwendung:
 }
 ```
 
-### Konfigurierbare Parameter
+### Parameters
 
-| Parameter | Beschreibung | Beispiel |
+| Parameter | Description | Example |
 |-----------|-------------|----------|
-| `baseImagePath` | Verzeichnis mit Bildern | `./PNG` |
-| `windowIcon` | Icon in der Titelleiste | `appicon.png` |
-| `backgroundImage` | Hintergrundbild | `ModernUI-WinBG.png` |
-| `closeButtonNormalPath` | Close-Button Normal-State | `axn-winclose-normal.png` |
-| `closeButtonHoverPath` | Close-Button Hover-State | `axn-winclose-hover.png` |
+| `baseImagePath` | Directory with images | `./PNG` |
+| `windowIcon` | Title bar icon | `appicon.png` |
+| `backgroundImage` | Background image | `ModernUI-WinBG.png` |
+| `closeButtonNormalPath` | Close button normal state | `axn-winclose-normal.png` |
+| `closeButtonHoverPath` | Close button hover state | `axn-winclose-hover.png` |
 
-### Bilder hinzufügen
+### Adding Images
 
-1. PNG-Datei im `PNG/` Verzeichnis speichern
-2. Path in `config.json` aktualisieren
-3. Skript neustarten
+1. Save PNG file in `PNG/` directory
+2. Update path in `config.json`
+3. Restart script
 
 ---
 
-## Funktionsweise
+## How It Works
 
-### Architektur (vereinfacht)
+### Architecture
 
 ```
 ModernUI.ps1 (Start)
     ↓
-Load-Configuration (config.json laden)
+Load-Configuration (load config.json)
     ↓
-Resolve-ImagePath (Pfade auflösen)
+Resolve-ImagePath (resolve paths)
     ↓
-Load-BitmapImage (PNG-Dateien laden)
+Load-BitmapImage (load PNG files)
     ↓
-Create-ImageBrush (ImageBrush erstellen)
+Create-ImageBrush (create ImageBrush)
     ↓
-Initialize-WindowResources (Ressourcen validieren)
+Initialize-WindowResources (validate resources)
     ↓
-Initialize-WPF (WPF-UI aufbauen)
+Initialize-WPF (build WPF UI)
     ↓
-$window.ShowDialog() (Fenster anzeigen)
+$window.ShowDialog() (display window)
     ↓
-Benutzer-Interaktion
+User Interaction
 ```
 
-### PowerShell Funktionen
+### Key Functions
 
 #### `Load-Configuration`
-Lädt und validiert die `config.json` Datei.
-
-```powershell
-Load-Configuration -Path "config.json"
-```
+Loads and validates `config.json`.
 
 #### `Resolve-ImagePath`
-Löst relative Bildpfade dynamisch auf.
-
-```powershell
-Resolve-ImagePath -ImageName "appicon.png" -BasePath "PNG"
-```
+Dynamically resolves relative image paths.
 
 #### `Load-BitmapImage`
-Lädt PNG-Dateien mit Optimierungen.
-
-```powershell
-Load-BitmapImage -ImagePath "C:\path\to\image.png" -ImageName "MyImage"
-```
+Loads PNG files with optimizations.
 
 #### `Create-ImageBrush`
-Erstellt ein ImageBrush für WPF-Rendering.
-
-```powershell
-Create-ImageBrush -BitmapImage $bitmap
-```
+Creates ImageBrush for WPF rendering.
 
 #### `Initialize-WindowResources`
-Validiert alle Ressourcen vor WPF-Init.
-
-```powershell
-Initialize-WindowResources -Config $config
-```
+Validates all resources before WPF initialization.
 
 #### `Initialize-WPF`
-Baut die WPF-UI auf und verbindet Events.
+Builds the WPF UI and connects events.
 
-```powershell
-Initialize-WPF -Config $config
-```
+### Window Behavior
 
-### Fenster-Verhalten
-
-- **Rahmenloses Design**: `WindowStyle="None"` in XAML
-- **Verschiebbar**: `TitleBar_MouseLeftButtonDown` Event mit `DragMove()`
-- **Close-Button**: PNG-Bild als `Background` Property mit `ImageBrush`
-- **Hintergrundbild**: `Background` Property auf Window mit ImageBrush
+- **Frameless**: `WindowStyle="None"` in XAML
+- **Draggable**: `TitleBar_MouseLeftButtonDown` with `DragMove()`
+- **Close Button**: PNG image as `Background` property
+- **Background**: ImageBrush on Window `Background` property
 
 ---
 
-## Dokumentation
+## Documentation
 
-### Benutzer-Dokumentation
+### User Documentation
 
-- **📖 [README.md](./README.md)** ← Du bist hier
-  - Was ist ModernUI?
-  - Installation & Schnellstart
-  - Konfiguration
-  - Benutzer-FAQ
+- **📖 [README.md](./README.md)** ← You are here
+  - What is ModernUI?
+  - Installation & Quick Start
+  - Configuration
+  - FAQ
 
 - **⚡ [QUICKSTART.md](./QUICKSTART.md)**
-  - 5-Minuten Einstieg
-  - Schritt-für-Schritt Anleitung
-  - Häufige Probleme
+  - 5-minute introduction
+  - Step-by-step guide
+  - Common issues
 
-### Entwickler-Dokumentation
+### Developer Documentation
 
-- **🔧 [FIXES.md](./FIXES.md)**
-  - Behobene Fehler (4 kritisch)
-  - Technische Lösungen
-  - Code-Beispiele
-  - Best Practices
+- **🔧 [CHANGELOG.md](./CHANGELOG.md)**
+  - Version history
+  - All changes for v1.00.00
+  - Migration guide
+  - Future roadmap
 
-- **📝 [CHANGELOG.md](./CHANGELOG.md)**
-  - Versionshistorie
-  - Alle Changes für v1.00.00
-  - Migration Guide
-  - Zukünftige Pläne
+- **🐛 [BUGFIXES.md](./BUGFIXES.md)**
+  - Fixed bugs
+  - Technical solutions
+  - Code examples
+  - Best practices
+
+- **📌 [VERSION.md](./VERSION.md)**
+  - Current release info
+  - Key features
+  - Quick stats
 
 ---
 
-## Technische Details
+## Technical Details
 
-### Verwendete Technologien
+### Technologies
 
 - **PowerShell 7.0+**
 - **WPF (Windows Presentation Foundation)**
 - **.NET Framework 4.8+**
-- **XAML** (für UI-Definition)
-- **JSON** (für Konfiguration)
+- **XAML** (UI definition)
+- **JSON** (configuration)
 
-### Performance-Metriken
+### Performance
 
-| Metrik | Wert |
-|--------|------|
-| **Startup-Zeit** | ~2 Sekunden |
+| Metric | Value |
+|--------|-------|
+| **Startup Time** | ~2 seconds |
 | **Memory Usage** | ~80-120 MB |
 | **CPU Usage (idle)** | <1% |
-| **UI Responsiveness** | Instant |
+| **Responsiveness** | Instant |
 
-### Fehlerbehandlung
+### Error Handling
 
-ModernUI implementiert mehrschichtige Fehlerbehandlung:
+Multi-layer error handling:
 
-1. **Config-Validierung** - Fehler beim Laden von `config.json`
-2. **Bild-Validierung** - Fehler beim Laden von PNG-Dateien
-3. **Ressourcen-Validierung** - Fehler bei Ressourcen-Init
-4. **WPF-Fehlerbehandlung** - XAML Parse-Fehler
-5. **Event-Fehlerbehandlung** - Fehler bei User-Interaktion
+1. **Config validation** - config.json loading errors
+2. **Image validation** - PNG file loading errors
+3. **Resource validation** - Resource initialization errors
+4. **WPF error handling** - XAML parse errors
+5. **Event error handling** - User interaction errors
 
-Alle Fehler werden mit aussagekräftigen Nachrichten geloggt.
-
----
-
-## Häufig gestellte Fragen
-
-### F: Kann ich ModernUI für kommerzielle Projekte nutzen?
-**A:** Ja! ModernUI ist unter der MIT-Lizenz freigegeben und darf frei verwendet werden.
-
-### F: Wie ändere ich das Fenster-Icon?
-**A:** Ersetze `appicon.png` im `PNG/` Verzeichnis und aktualisiere ggf. `config.json`.
-
-### F: Kann ich eigene Bilder hinzufügen?
-**A:** Ja! Speichere PNG-Dateien im `PNG/` Verzeichnis und update `config.json`.
-
-### F: Funktioniert ModernUI auf Windows Server?
-**A:** Ja, wenn .NET 4.8 und PowerShell 7.0+ installiert sind.
-
-### F: Kann ich ModernUI in meinem eigenen Projekt verwenden?
-**A:** Ja! Du kannst den Code kopieren oder als Basis für deine App nutzen (MIT-Lizenz).
-
-### F: Wie melde ich Fehler?
-**A:** Erstelle ein [GitHub Issue](https://github.com/praetoriani/PowerShell.Lib/issues) mit Details.
-
-### F: Unterstützt ModernUI Dark Mode?
-**A:** Ja, die aktuelle UI ist bereits im Dark-Mode Design.
-
-### F: Kann ich die Fenster-Größe ändern?
-**A:** Ja, ändere `Height` und `Width` in `ModernUI.ps1` (Zeile ~250).
+All errors logged with meaningful messages.
 
 ---
 
-## Version & Status
+## FAQ
 
-### Aktuelle Version: 1.00.00
+### Q: Can I use ModernUI for commercial projects?
+**A:** Yes! ModernUI is released under MIT license and can be used freely.
+
+### Q: How do I change the window icon?
+**A:** Replace `appicon.png` in the `PNG/` directory.
+
+### Q: Can I add custom images?
+**A:** Yes! Save PNG files in `PNG/` and update `config.json`.
+
+### Q: Does ModernUI work on Windows Server?
+**A:** Yes, if .NET 4.8 and PowerShell 7.0+ are installed.
+
+### Q: Can I use ModernUI in my own project?
+**A:** Yes! You can copy the code or use it as a base for your app (MIT license).
+
+### Q: How do I report bugs?
+**A:** Create a [GitHub Issue](https://github.com/praetoriani/PowerShell.Lib/issues) with details.
+
+### Q: Is dark mode supported?
+**A:** Yes, the current UI is already dark mode design.
+
+### Q: Can I resize the window?
+**A:** Yes, change `Height` and `Width` in `ModernUI.ps1` (around line 250).
+
+### Q: What about i18n (internationalization)?
+**A:** Planned for v1.2.0. Currently English UI.
+
+### Q: Is there a plugin system?
+**A:** Planned for v1.3.0. Currently not available.
+
+---
+
+## Version & Roadmap
+
+### Current Version: 1.00.00
 
 ```
 Version:    1.00.00
 Status:     ✅ PRODUCTION READY
-Release:    26. Dezember 2025
+Release:    December 26, 2025
 License:    MIT
 Author:     Marc Sczepanski (praetoriani)
 ```
 
-### Version Status
+### Version History
 
-| Version | Datum | Status | Hinweise |
-|---------|-------|--------|----------|
-| **1.00.00** | **26.12.2025** | **✅ FINAL** | **Production Ready** |
+| Version | Date | Status | Notes |
+|---------|------|--------|-------|
+| **1.00.00** | **Dec 26, 2025** | **✅ FINAL** | **Production Ready** |
 | 0.99.x | 2025 | ⚠️ Archive | Beta Phase |
 | 0.98.x | 2025 | ⚠️ Archive | Alpha Phase |
 
-### Was ist neu in v1.00.00?
+### What's New in v1.00.00?
 
-- ✅ 4 kritische Fehler behoben
-- ✅ 3 Optimierungen implementiert
-- ✅ Umfassende Dokumentation
-- ✅ Produktionsreife erreicht
-- ✅ 100% Test-Coverage
+- ✅ 4 critical bugs fixed
+- ✅ 3 optimizations implemented
+- ✅ Comprehensive documentation
+- ✅ Production ready
+- ✅ 100% test coverage
 
-### Zukünftige Pläne
+### Future Plans
 
 - 🔮 **v1.1.0**: Themes & Light Mode
-- 🔮 **v1.2.0**: Internationalisierung (i18n)
-- 🔮 **v1.3.0**: Plugin-System
+- 🔮 **v1.2.0**: Internationalization (i18n)
+- 🔮 **v1.3.0**: Plugin System
 - 🔮 **v2.0.0**: .NET 6+ Migration
 
 ---
 
-## Lizenz & Support
+## License & Support
 
-### Lizenz
+### License
 
-ModernUI ist unter der **MIT-Lizenz** freigegeben.
+ModernUI is released under the **MIT License**.
 
-**Du darfst:**
-- ✅ Das Projekt verwenden
-- ✅ Es modifizieren
-- ✅ Es verteilen
-- ✅ Es kommerziell nutzen
+**You can:**
+- ✅ Use the project
+- ✅ Modify it
+- ✅ Distribute it
+- ✅ Use it commercially
 
-**Bedingung:**
-- 📄 Lizenz-Hinweis beibehalten
+**Requirement:**
+- 📄 Keep the license notice
 
-Siehe [LICENSE](../LICENSE) für vollständige Lizenz.
+See [LICENSE](../LICENSE) for full license.
 
 ### Support
 
-**Bei Fragen oder Problemen:**
+**For questions or issues:**
 
-1. **Lies die Dokumentation**
-   - [README.md](./README.md) (diese Datei)
+1. **Read the documentation**
+   - [README.md](./README.md)
    - [QUICKSTART.md](./QUICKSTART.md)
-   - [FIXES.md](./FIXES.md)
+   - [BUGFIXES.md](./BUGFIXES.md)
 
-2. **Erstelle einen GitHub Issue**
+2. **Create a GitHub Issue**
    - [GitHub Issues](https://github.com/praetoriani/PowerShell.Lib/issues)
-   - Beschreib das Problem detailliert
-   - Erwähne dein Betriebssystem
+   - Describe the problem in detail
+   - Mention your OS
 
-3. **Kontaktiere den Autor**
+3. **Contact the Author**
    - 📧 Email: marc.sczepanski@gmail.com
    - 💻 GitHub: [@praetoriani](https://github.com/praetoriani)
    - 📍 Location: Bavaria, Germany
 
-### Community
+### Contributing
 
-Beiträge sind willkommen! Wenn du eine großartige Idee hast oder einen Bug gefunden hast:
+Contributions welcome! To contribute:
 
-1. Fork das Repository
-2. Erstelle einen Feature-Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit deine Änderungen (`git commit -m 'Add some AmazingFeature'`)
-4. Push zum Branch (`git push origin feature/AmazingFeature`)
-5. Öffne einen Pull Request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
-## Zusammenfassung
+## Summary
 
-ModernUI v1.00.00 ist eine **moderne, produktionsreife PowerShell WPF-Framework**, die dir hilft, elegante Benutzeroberflächen für deine Admin-Tools und System-Utilities zu erstellen.
+ModernUI v1.00.00 is a **modern, production-ready PowerShell WPF framework** that helps you create elegant user interfaces for your admin tools and system utilities.
 
-**Was macht ModernUI besonders?**
+**What makes ModernUI special?**
 
-- 🎨 **Modernes Design** basierend auf Windows 11 Design Principles
-- ✅ **Produktionsreif** - 100% getestet und dokumentiert
-- 📚 **Gut dokumentiert** - Umfassende Anleitung & Entwickler-Docs
-- 🔧 **Einfach zu nutzen** - 5-Minuten Schnellstart
-- 📝 **Config-gesteuert** - JSON-basierte Konfiguration
-- 🎯 **Fokussiert** - Tut eine Sache gut
+- 🎨 **Modern Design** based on Windows 11 Design Principles
+- ✅ **Production Ready** - 100% tested and documented
+- 📚 **Well Documented** - Comprehensive guides & developer docs
+- 🚀 **Easy to Use** - 5-minute quick start
+- ⚙️ **Config-driven** - JSON-based configuration
+- 🎯 **Focused** - Does one thing well
 
-**Bereit, loszulegen?**
+**Ready to get started?**
 
-👉 **[QUICKSTART.md](./QUICKSTART.md)** für 5-Minuten Einstieg
+👉 **[QUICKSTART.md](./QUICKSTART.md)** for 5-minute introduction
 
 ---
 
 **ModernUI v1.00.00 - Created by Praetoriani 🚀**
 
-*"Moderne Benutzeroberflächen für PowerShell - einfach, elegant, produktionsreif"*
+*"Modern user interfaces for PowerShell - simple, elegant, production-ready"*
 
 ---
 
-**Dokument:** README.md | **Version:** 1.00.00 | **Status:** ✅ FINAL  
-**Erstellt:** 26. Dezember 2025 | **Aktualisiert:** 26. Dezember 2025
+**Document:** README.md | **Version:** 1.00.00 | **Status:** ✅ FINAL  
+**Created:** December 26, 2025 | **Updated:** December 26, 2025
