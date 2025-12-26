@@ -1,9 +1,3 @@
-<div align="center">
-
-![ModernUI Poster](./ModernUI-Poster.png)
-
-</div>
-
 ---
 
 # 🎨 ModernUI v1.00.00
