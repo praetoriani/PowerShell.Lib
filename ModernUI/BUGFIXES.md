@@ -93,153 +93,86 @@ if (Test-Path $windowPath -PathType Leaf) {
 
 ---
 
-## Batch 2: Functionality Issues (Window Dragging & Hover Effects)
+## Batch 2: Functionality Issues (Window Dragging & Hover Effects) - INITIAL ATTEMPT
 
-### Fehler 1: Fenster kann nicht verschoben werden
+### Fehler 1: Fenster kann nicht verschoben werden (First Attempt)
 
 **Symptome:**
 - Klick und Drag auf TitleBar funktioniert nicht
 - Fenster bewegt sich nicht
 - DragMove() wird ausgefuehrt, hat aber keine Wirkung
 
-**Ursache:**
-Die Kombination von `WindowStyle="None"` + `AllowsTransparency="True"` braucht spezielles Handling.
-Die DragMove()-Methode funktioniert nur wenn:
-1. Sie innerhalb eines MouseLeftButtonDown-Events aufgerufen wird
-2. Das Event von einem interaktiven Element stammt
-3. Der Dragging-State korrekt verwaltet wird
+**Root Cause - Variable Scoping Problem:**
+Das Hauptproblem war die Variable-Referenz in Event Handlern. Die `$Window` Variable war nicht korrekt in den Event Handler Scopes verfügbar:
 
-**Loesung 1 - XAML Update:**
-```xaml
-<Border x:Name="TitleBar"
-        DockPanel.Dock="Top" 
-        Height="36" 
-        Cursor="Hand">
-```
-
-Ergaenzungen:
-- `x:Name="TitleBar"`: Fuer PowerShell Event-Binding
-- `Cursor="Hand"`: User-Feedback beim Hover ueber TitleBar
-
-**WICHTIG - Was man NICHT machen sollte:**
-```xaml
-<!-- FALSCH - Diese Event Handler muessen in PowerShell registriert werden! -->
-<Border x:Name="TitleBar" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" ...>
-<Window MouseMove="Window_MouseMove" ...>
-```
-
-**Loesung 2 - PowerShell Event Handler:**
 ```powershell
+# FALSCH - $Window ist im Event Handler nicht verfügbar!
 $titleBar.Add_MouseLeftButtonDown({
     param($sender, $e)
-    try {
-        $Global:ModernUI_State.IsDragging = $true
-        $Window.DragMove()  # Nur im MouseLeftButtonDown Event aufrufbar!
-    }
-    catch {
-        Write-Verbose "[ModernUI] DragMove error: $_"
-    }
-    finally {
-        $Global:ModernUI_State.IsDragging = $false
-    }
-})
-
-$titleBar.Add_MouseLeftButtonUp({
-    $Global:ModernUI_State.IsDragging = $false
+    $Window.DragMove()  # ERROR: $Window is $null here!
 })
 ```
 
-**Wichtige Details:**
-- Try-Catch-Finally fuer sichere State-Verwaltung
-- IsDragging Flag verhindert gleichzeitige Drag-Events
-- MouseLeftButtonUp Handler fuer sauberes Ende
-- KEINE Event-Handler in der XAML definieren - nur Names (x:Name)
+**Ursache der Variable-Unverfügbarkeit:**
+- Event Handler werden in einem neuen Script-Scope ausgeführt
+- Lokale Funktionsvariablen sind nicht im Event-Handler-Scope verfügbar
+- Nur `$Global:` und `$script:` Variablen sind zugänglich
+
+**Loesung - Script-Scoped Variable:**
+```powershell
+# RICHTIG - $script:WindowReference ist im Event Handler verfügbar
+function Register-EventHandlers {
+    param([System.Windows.Window]$Window)
+    
+    # Store window reference in script scope
+    $script:WindowReference = $Window
+    
+    $titleBar.Add_MouseLeftButtonDown({
+        param($sender, $e)
+        try {
+            if ($script:WindowReference -ne $null) {
+                $script:WindowReference.DragMove()
+            }
+        }
+        catch {
+            Write-Verbose "[ModernUI] DragMove error: $_"
+        }
+    })
+}
+```
+
+**Key Points:**
+- `$script:WindowReference` ist im Event Handler IMMER verfügbar
+- Null-Check verhindert Fehler bei unerwarteten State-Änderungen
+- Direkter Zugriff auf `DragMove()` Methode durch gespeicherte Referenz
 
 ---
 
-### Fehler 2: Close Button Hover zeigt blaues Quadrat
+### Fehler 2: Close Button Hover-Effekt funktioniert nicht
 
 **Symptome:**
-- Hover ueber Close Button zeigt hellblaues Farbquadrat
-- PNG wird halb sichtbar dahinter
-- Soll stattdessen PNG tauschen (normal <-> hover)
+- Hover ueber Close Button zeigt kein visuelles Feedback
+- PNG tauscht nicht zwischen normal und hover
+- Soll: PNG-Swap (normal <-> hover)
+- Ist: Keine Aenderung beim Hover
 
-**Ursache:**
-Der WPF Button hat einen Default-Hover-Style, der das PNG verdeckt:
-```xaml
-<!-- Standard Button Behavior -->
-<Button>...
-  <!-- Default: Blaer Hover-Hintergrund wird gezeichnet -->
-```
+**Root Cause - Tag Property nicht korrekt verfügbar:**
+Das Problem war ähnlich wie bei Window Dragging - der Zugriff auf `$sender.Tag` im Event Handler war nicht optimal implementiert:
 
-**Loesung 1 - XAML Button Style:**
-```xaml
-<Style x:Key="CloseButtonStyle" TargetType="Button">
-    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-    <Setter Property="Template">
-        <Setter.Value>
-            <ControlTemplate TargetType="Button">
-                <Border Background="{TemplateBinding Background}">
-                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <ControlTemplate.Triggers>
-                    <!-- Remove default hover effect -->
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="Transparent"/>
-                    </Trigger>
-                    <Trigger Property="IsPressed" Value="True">
-                        <Setter Property="Background" Value="Transparent"/>
-                    </Trigger>
-                </ControlTemplate.Triggers>
-            </ControlTemplate>
-        </Setter.Value>
-    </Setter>
-</Style>
-```
-
-Anwendung:
-```xaml
-<Button x:Name="CloseButton" 
-        Style="{StaticResource CloseButtonStyle}"
-        ...
-        Padding="6">
-    <Image x:Name="CloseButtonImage" />
-</Button>
-```
-
-**WICHTIG - Was man NICHT machen sollte:**
-```xaml
-<!-- FALSCH - Sollte in PowerShell registriert werden -->
-<Button x:Name="CloseButton" Click="CloseButton_Click" ...>
-
-<!-- FALSCH - Undefined Event Handler -->
-<Window MouseMove="Window_MouseMove" ...>
-```
-
-**Loesung 2 - PowerShell Image Swap Logic:**
-
-**Falscher Ansatz (wie zuvor):**
+**Loesung - Korrekter Tag-Zugriff:**
 ```powershell
-# FALSCH - Fehler bei BitmapImage-Erstellung
-$closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closePath)
-```
-
-**Richtiger Ansatz:**
-```powershell
+# Korrekt - Tag Property vom Button wird genutzt
 $closeButton.Add_MouseEnter({
     param($sender, $e)
     try {
-        if (Test-Path $sender.Tag.HoverPath -PathType Leaf) {
-            # Proper BitmapImage initialization
+        # $sender ist der Button - Tag wurde beim Laden gespeichert
+        if ($sender.Tag.HoverPath -and (Test-Path $sender.Tag.HoverPath -PathType Leaf)) {
             $hoverBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
-            $hoverBitmap.BeginInit()               # Start initialization
+            $hoverBitmap.BeginInit()
             $hoverBitmap.UriSource = [uri]$sender.Tag.HoverPath
-            $hoverBitmap.CacheOption = `
-                [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad  # Load sofort
-            $hoverBitmap.EndInit()                 # End initialization
-            $hoverBitmap.Freeze()                  # Thread-safe
-            
-            # Swap image
+            $hoverBitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+            $hoverBitmap.EndInit()
+            $hoverBitmap.Freeze()
             $sender.Tag.ImageControl.Source = $hoverBitmap
         }
     }
@@ -247,18 +180,75 @@ $closeButton.Add_MouseEnter({
         Write-Verbose "[ModernUI] Error setting hover image: $_"
     }
 })
+
+$closeButton.Add_MouseLeave({
+    param($sender, $e)
+    try {
+        if ($sender.Tag.NormalPath -and (Test-Path $sender.Tag.NormalPath -PathType Leaf)) {
+            $normalBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
+            $normalBitmap.BeginInit()
+            $normalBitmap.UriSource = [uri]$sender.Tag.NormalPath
+            $normalBitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+            $normalBitmap.EndInit()
+            $normalBitmap.Freeze()
+            $sender.Tag.ImageControl.Source = $normalBitmap
+        }
+    }
+    catch {
+        Write-Verbose "[ModernUI] Error setting normal image: $_"
+    }
+})
 ```
 
-**Wichtige Details:**
-- **BeginInit/EndInit**: XAML-Pattern fuer WPF Object-Initialisierung
-- **CacheOption = OnLoad**: Bitmap sofort laden, nicht lazy
-- **Freeze()**: Thread-Safety fuer Bitmap-Sharing
-- **ImageControl.Source**: Direktes Swap des PNG
-- **NO Event Handlers in XAML**: Nur x:Name verwenden!
+**What we store in Button.Tag during XAML load:**
+```powershell
+# In Load-ModernUIXAML function:
+$closeButton.Tag = @{
+    NormalPath = $closeNormal
+    HoverPath = $closeHover
+    ImageControl = $closeButtonImage
+}
+```
+
+**Key Points:**
+- `$sender` Parameter ist IMMER der Button der den Event getriggert hat
+- `$sender.Tag` enthält die gespeicherten Pfade und Image-Referenzen
+- Image Control Referenz ist auch im Tag gespeichert
+- BeginInit/EndInit/Freeze Pattern für sichere BitmapImage-Erstellung
 
 ---
 
-## Zusammenfassung der Aenderungen
+## Batch 3: Cursor Styling (v1.00.00 Final)
+
+### Fehler 3: Falsche Cursor-Anzeige
+
+**Symptome:**
+- Hand-Cursor wird angezeigt statt Standard-Cursor
+- Nicht konsistent mit Windows 11 Verhalten
+- Unerwünschte visuelle Feedback
+
+**Ursache:**
+In der XAML wurden `Cursor="Hand"` Attribute gesetzt:
+```xaml
+<Border Cursor="Hand" ...>      <!-- FALSCH -->
+<Button Cursor="Hand" ...>      <!-- FALSCH -->
+```
+
+**Loesung:**
+```xaml
+<!-- Alle Cursor Attribute entfernen -->
+<Border x:Name="TitleBar" ...>  <!-- Standard Cursor -->
+<Button x:Name="CloseButton" ...> <!-- Standard Cursor -->
+```
+
+**Ergebnis:**
+- Standard-Cursor wird überall angezeigt
+- Konsistent mit Windows 11 UI-Verhalten
+- Kein Cursor-Flicker oder visuelles Chaos
+
+---
+
+## Zusammenfassung aller Aenderungen v1.00.00
 
 | Batch | Problem | Datei | Loesung |
 |-------|---------|-------|----------|
@@ -267,14 +257,15 @@ $closeButton.Add_MouseEnter({
 | **1** | ConvertTo-Hashtable | ModernUI.ps1 | Fixed recursion |
 | **1** | Event Parameter Binding | ModernUI.ps1 | Added param() |
 | **1** | Relative Paths | ModernUI.ps1 | Use absolute paths |
-| **2** | Window Drag nicht funktional | ModernUI.xaml + .ps1 | DragMove in Try-Finally |
-| **2** | Close Button Hover Blau | ModernUI.xaml + .ps1 | Remove FocusVisualStyle, BeginInit/EndInit |
+| **2a** | Window Drag nicht funktional | ModernUI.ps1 | **script:WindowReference Variable** |
+| **2b** | Close Button Hover nicht funktional | ModernUI.ps1 | **Tag Property richtig nutzen** |
+| **3** | Falscher Cursor | ModernUI.xaml | Remove Cursor attributes |
 
 ---
 
-## KRITISCHE REGEL FÜR POWERSHELL-XAML
+## KRITISCHE REGELN FÜR POWERSHELL-XAML UND WPF
 
-### ⚠️ NEVER USE EVENT HANDLERS IN XAML
+### 1. ⚠️ NEVER USE EVENT HANDLERS IN XAML
 
 ```xaml
 <!-- FALSCH -->
@@ -288,17 +279,74 @@ $closeButton.Add_MouseEnter({
 <Button x:Name="CloseButton" ...>
 ```
 
-Alle Event Handler muessen in PowerShell registriert werden:
+### 2. ⚠️ VARIABLE SCOPING IN EVENT HANDLERS
+
+Event Handler Scopes sind ISOLIERT - normale Funktionsvariablen sind NOT verfügbar:
+
 ```powershell
-$window.Add_MouseMove({ ... })
-$titleBar.Add_MouseLeftButtonDown({ ... })
-$closeButton.Add_Click({ ... })
+# FALSCH - $Window ist im Handler nicht verfügbar
+function Register-Events {
+    param($Window)
+    $titleBar.Add_MouseLeftButtonDown({
+        $Window.DragMove()  # ERROR: $Window is $null
+    })
+}
+
+# RICHTIG - script:WindowReference IST im Handler verfügbar
+function Register-Events {
+    param($Window)
+    $script:WindowReference = $Window
+    $titleBar.Add_MouseLeftButtonDown({
+        $script:WindowReference.DragMove()  # OK: $script: scope is accessible
+    })
+}
 ```
 
-### Warum?
-- PowerShell XamlReader kann keine Code-Behind Methoden aufrufen
-- Undefined Event Handler verursachen Parser-Fehler
-- Alle Logik sollte in PowerShell sein, nicht XAML
+**Available Scopes in Event Handlers:**
+- ✅ `$Global:` - Global scope (always accessible)
+- ✅ `$script:` - Script scope (accessible within same script)
+- ✅ `param($sender, $e)` - Event parameters
+- ❌ Function local variables - NOT accessible
+- ❌ Parent function scope - NOT accessible
+
+### 3. ⚠️ SENDER PARAMETER IS YOUR FRIEND
+
+Der `$sender` Parameter ist IMMER das Control das den Event getriggert hat:
+
+```powershell
+# $sender ist der Button
+$closeButton.Add_Click({
+    param($sender, $e)
+    # $sender = $closeButton
+})
+
+# $sender ist der Border/TitleBar
+$titleBar.Add_MouseLeftButtonDown({
+    param($sender, $e)
+    # $sender = $titleBar
+})
+```
+
+### 4. ⚠️ STORE DATA IN CONTROL.TAG FOR EVENT ACCESS
+
+Wenn ihr Daten in Event Handlern braucht, speichert sie in `.Tag`:
+
+```powershell
+# Im Initialisierungscode
+$button.Tag = @{
+    NormalPath = "path\to\normal.png"
+    HoverPath = "path\to\hover.png"
+    ImageControl = $imageObject
+}
+
+# Im Event Handler
+$closeButton.Add_MouseEnter({
+    param($sender, $e)
+    # Zugriff auf Data via $sender.Tag
+    $hoverPath = $sender.Tag.HoverPath
+    $imageControl = $sender.Tag.ImageControl
+})
+```
 
 ---
 
@@ -308,16 +356,17 @@ $closeButton.Add_Click({ ... })
 - Muss innerhalb eines **MouseLeftButtonDown** Event aufgerufen werden
 - Braucht `WindowStyle="None"` fuer rahmenloses Fenster
 - Try-Catch empfohlen da Exception bei bestimmten Window-States
+- **KRITISCH**: Fenster-Referenz muss verfügbar sein (script-scoped)
 
 ### 2. BitmapImage Initialization
 ```powershell
-# RICHTIG - 3-Schritt Prozess
+# RICHTIG - 5-Schritt Prozess
 $bitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
-$bitmap.BeginInit()
-$bitmap.UriSource = [uri]"path\to\image.png"
-$bitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
-$bitmap.EndInit()
-$bitmap.Freeze()
+$bitmap.BeginInit()                                           # Step 1
+$bitmap.UriSource = [uri]"path\to\image.png"                # Step 2
+$bitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad  # Step 3
+$bitmap.EndInit()                                             # Step 4
+$bitmap.Freeze()                                              # Step 5
 
 # FALSCH - One-liner schlaegt fehl
 $bitmap = [System.Windows.Media.Imaging.BitmapImage]::new([uri]"path")
@@ -330,12 +379,14 @@ $bitmap = [System.Windows.Media.Imaging.BitmapImage]::new([uri]"path")
 
 ### 4. Event Handler Scope
 ```powershell
-# Global Access
-$script:CloseButtonImage = $Window.FindName("CloseButtonImage")
+# RICHTIG - Lokale Variablen in script: scope speichern
+$script:ImageControl = $Window.FindName("CloseButtonImage")
+$script:WindowRef = $Window
 
 # Im Handler
-$closeButton.Add_MouseEnter({
-    $script:CloseButtonImage.Source = ...  # Zugriff auf script-scoped Variable
+$button.Add_Click({
+    $script:ImageControl.Source = ...  # OK
+    $script:WindowRef.DragMove()        # OK
 })
 ```
 
@@ -343,7 +394,7 @@ $closeButton.Add_MouseEnter({
 ```xaml
 <!-- Alle diese sind OK - verwenden x:Name -->
 <Window x:Name="MyWindow" ...>
-<Border x:Name="TitleBar" ...
+<Border x:Name="TitleBar" ...>
 <Button x:Name="MyButton" ...>
 <Image x:Name="MyImage" ...>
 
@@ -359,11 +410,16 @@ $closeButton.Add_MouseEnter({
 
 ### DragMove Probleme
 ```powershell
-# Teste DragMove direkt
+# Teste DragMove direkter
+$script:WindowRef = $window
 $titleBar.Add_MouseLeftButtonDown({
     Write-Host "MouseDown triggered"
-    $Window.DragMove()
-    Write-Host "DragMove executed"
+    if ($script:WindowRef -ne $null) {
+        $script:WindowRef.DragMove()
+        Write-Host "DragMove executed"
+    } else {
+        Write-Host "ERROR: WindowRef is null!"
+    }
 })
 ```
 
@@ -389,13 +445,11 @@ catch {
 ```powershell
 $closeButton.Add_MouseEnter({
     Write-Host "Hover started"
-    # ...image swap logic...
-    Write-Host "Image swapped"
+    Write-Host "sender.Tag = $($args[0].Tag | ConvertTo-Json)"
 })
 
 $closeButton.Add_MouseLeave({
     Write-Host "Hover ended"
-    # ...restore logic...
 })
 ```
 
@@ -420,11 +474,12 @@ $closeButton.Add_MouseLeave({
 - [x] XAML parses without errors (NO event handlers in XAML!)
 - [x] Config loads as proper Hashtable
 - [x] Images load from PNG directory
-- [x] **TitleBar drag functionality works** (via PowerShell event binding)
+- [x] **TitleBar drag functionality works** (via PowerShell event binding with script:WindowReference)
 - [x] **Window moves smoothly when dragging TitleBar**
 - [x] Close button click event fires
-- [x] **Close button PNG swaps on hover** (BeginInit/EndInit/Freeze)
+- [x] **Close button PNG swaps on hover** (using $sender.Tag property)
 - [x] **No blue hover effect on close button**
+- [x] **Standard cursor shown** (no Hand cursor)
 - [x] Application exits cleanly
 - [x] All images display correctly
 
@@ -433,4 +488,8 @@ $closeButton.Add_MouseLeave({
 **Version**: 1.00.00 Final  
 **Status**: Production Ready (alle kritischen Fixes + Dokumentation)  
 **Datum**: 2025-12-26  
-**Critical Lesson**: NEVER put event handlers in PowerShell-XAML - only use x:Name and register handlers in PowerShell
+**Critical Lessons**: 
+1. NEVER put event handlers in PowerShell-XAML
+2. Use `$script:` scope for variables needed in event handlers
+3. Use `$sender` and `.Tag` property for accessing handler data
+4. Test variable availability in isolated event handler scopes
