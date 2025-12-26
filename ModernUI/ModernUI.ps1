@@ -258,7 +258,10 @@ function Register-EventHandlers {
     Write-Host "[ModernUI] Event handlers are being registered..." -ForegroundColor Cyan
     
     try {
-        # Store close button references globally for hover effects
+        # Store window reference in script scope for use in event handlers
+        $script:WindowReference = $Window
+        
+        # Store close button references for hover effects
         $script:CloseButtonImage = $Window.FindName("CloseButtonImage")
         $script:CloseButtonControl = $Window.FindName("CloseButton")
         
@@ -268,20 +271,13 @@ function Register-EventHandlers {
             $titleBar.Add_MouseLeftButtonDown({
                 param($sender, $e)
                 try {
-                    $Global:ModernUI_State.IsDragging = $true
-                    $Window.DragMove()
+                    if ($script:WindowReference -ne $null) {
+                        $script:WindowReference.DragMove()
+                    }
                 }
                 catch {
                     Write-Verbose "[ModernUI] DragMove error: $_"
                 }
-                finally {
-                    $Global:ModernUI_State.IsDragging = $false
-                }
-            })
-            
-            # Also handle dragging from any part of window (for frameless window)
-            $titleBar.Add_MouseLeftButtonUp({
-                $Global:ModernUI_State.IsDragging = $false
             })
             
             Write-Host "  - TitleBar drag enabled" -ForegroundColor Green
@@ -304,7 +300,7 @@ function Register-EventHandlers {
                 $closeButton.Add_MouseEnter({
                     param($sender, $e)
                     try {
-                        if (Test-Path $sender.Tag.HoverPath -PathType Leaf) {
+                        if ($sender.Tag.HoverPath -and (Test-Path $sender.Tag.HoverPath -PathType Leaf)) {
                             $hoverBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
                             $hoverBitmap.BeginInit()
                             $hoverBitmap.UriSource = [uri]$sender.Tag.HoverPath
@@ -323,7 +319,7 @@ function Register-EventHandlers {
                 $closeButton.Add_MouseLeave({
                     param($sender, $e)
                     try {
-                        if (Test-Path $sender.Tag.NormalPath -PathType Leaf) {
+                        if ($sender.Tag.NormalPath -and (Test-Path $sender.Tag.NormalPath -PathType Leaf)) {
                             $normalBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
                             $normalBitmap.BeginInit()
                             $normalBitmap.UriSource = [uri]$sender.Tag.NormalPath
