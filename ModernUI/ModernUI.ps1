@@ -12,12 +12,12 @@
 .VERSION
     1.00.00 (Stable Release - FINAL)
     - Fenster verschiebbar
-    - Tooltip statt Hover-Bildwechsel (STABLE & RELIABLE)
+    - PNG Close Button (stabil, keine Hover-Effekte)
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
     - Rahmenloses Fenster Design mit transparenter Titelleiste
-    - **FINAL: Tooltip bei Close Button Hover (Best Practice)**
-    - **PRAGMATIC: Fokus auf Stabilität statt komplexen Effekten**
+    - **FINAL: PNG Close Button + Tooltip (Best Practice)**
+    - **PRAGMATIC: Fokus auf Stabilit\u00e4t statt komplexen Effekten**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -202,10 +202,12 @@ function Initialize-WindowResources {
         # Resolve image paths
         $iconPath = Resolve-ImagePath -ImageName $Config.paths.windowIcon
         $bgPath = Resolve-ImagePath -ImageName $Config.paths.backgroundImage
+        $closeButtonPath = Resolve-ImagePath -ImageName $Config.paths.closeButtonNormalPath
         
         # Load images
         $script:WindowIcon = $null
         $script:BackgroundBrush = $null
+        $script:CloseButtonImage = $null
         
         if ($iconPath) {
             $script:WindowIcon = Load-BitmapImage -ImagePath $iconPath -ImageName "Window Icon"
@@ -219,9 +221,19 @@ function Initialize-WindowResources {
             }
         }
         
+        # Load close button image
+        if ($closeButtonPath) {
+            $script:CloseButtonImage = Load-BitmapImage -ImagePath $closeButtonPath -ImageName "Close Button"
+        }
+        
         # Validiere kritische Ressourcen
         if ($null -eq $script:BackgroundBrush) {
             Write-Error "[ERROR] Hintergrundbild konnte nicht geladen werden: $bgPath"
+            return $false
+        }
+        
+        if ($null -eq $script:CloseButtonImage) {
+            Write-Error "[ERROR] Close Button Image konnte nicht geladen werden: $closeButtonPath"
             return $false
         }
         
@@ -255,27 +267,21 @@ $xaml = @"
         <!-- Close Button Style -->
         <Style x:Key="CloseButtonStyle" TargetType="Button">
             <Setter Property="OverridesDefaultStyle" Value="True"/>
-            <Setter Property="Background" Value="#404040"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border 
                             Name="ButtonBorder"
-                            Width="32"
-                            Height="32"
+                            Width="40"
+                            Height="40"
                             BorderThickness="0"
                             Background="{TemplateBinding Background}"
-                            CornerRadius="0">
-                            <TextBlock 
-                                Text="×" 
-                                HorizontalAlignment="Center" 
-                                VerticalAlignment="Center" 
-                                Foreground="{TemplateBinding Foreground}"
-                                FontSize="{TemplateBinding FontSize}"
-                                FontWeight="{TemplateBinding FontWeight}"/>
+                            Padding="8">
+                            <Image 
+                                x:Name="CloseButtonImg"
+                                Stretch="UniformToFill"
+                                RenderOptions.BitmapScalingMode="HighQuality"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -416,6 +422,22 @@ function Initialize-WPF {
         }
 
         # =====================================================================
+        # SET CLOSE BUTTON IMAGE
+        # =====================================================================
+        if ($script:CloseButtonImage) {
+            $closeButton.Content = $null
+            
+            # Create Image control for the button
+            $buttonImage = New-Object System.Windows.Controls.Image
+            $buttonImage.Source = $script:CloseButtonImage
+            $buttonImage.Stretch = [System.Windows.Media.Stretch]::Uniform
+            $buttonImage.RenderOptions.SetBitmapScalingMode($buttonImage, [System.Windows.Media.BitmapScalingMode]::HighQuality)
+            
+            $closeButton.Content = $buttonImage
+            Write-Host "[OK] Close Button Image gesetzt" -ForegroundColor Green
+        }
+
+        # =====================================================================
         # CREATE TOOLTIP FOR CLOSE BUTTON
         # =====================================================================
         $tooltip = New-Object System.Windows.Controls.ToolTip
@@ -429,31 +451,9 @@ function Initialize-WPF {
         Write-Host "[OK] Tooltip fuer Close Button hinzugefuegt" -ForegroundColor Green
 
         # =====================================================================
-        # HOVER EFFECT: CHANGE BUTTON COLOR
+        # NO HOVER EFFECTS - STABLE & RELIABLE
         # =====================================================================
-        $closeButton.Add_MouseEnter({
-            param($sender, $e)
-            try {
-                $sender.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(200, 50, 50))
-                Write-Host "[HOVER] Close Button -> Hover State (Rot)" -ForegroundColor Yellow
-            }
-            catch {
-                Write-Warning "[WARN] Fehler bei MouseEnter: $_"
-            }
-        })
-        
-        $closeButton.Add_MouseLeave({
-            param($sender, $e)
-            try {
-                $sender.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(64, 64, 64))
-                Write-Host "[NORMAL] Close Button -> Normal State (Grau)" -ForegroundColor Cyan
-            }
-            catch {
-                Write-Warning "[WARN] Fehler bei MouseLeave: $_"
-            }
-        })
-        
-        Write-Host "[OK] Hover-Effekt fuer Close Button (Farbe) registriert" -ForegroundColor Green
+        Write-Host "[OK] Close Button ohne Hover-Effekte (stabil)" -ForegroundColor Green
 
         # =====================================================================
         # TITLE BAR DRAG HANDLER
@@ -549,8 +549,8 @@ function Show-ModernUI {
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host "   [OK] Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
         Write-Host "   [OK] Hintergrundbild angezeigt" -ForegroundColor Green
-        Write-Host "   [OK] Close Button mit Tooltip" -ForegroundColor Green
-        Write-Host "   [OK] Hover-Effekt: Farbwechsel (Grau zu Rot)" -ForegroundColor Green
+        Write-Host "   [OK] PNG Close Button mit Tooltip" -ForegroundColor Green
+        Write-Host "   [OK] Cursor-Feedback (Hand)" -ForegroundColor Green
         Write-Host "   [OK] Config-driven Image Loading" -ForegroundColor Green
         Write-Host "   [OK] Rahmenloses Fenster Design" -ForegroundColor Green
         Write-Host "   [OK] FINAL STABLE RELIABLE VERSION" -ForegroundColor Green
