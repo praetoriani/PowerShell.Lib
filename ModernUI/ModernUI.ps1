@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     ModernUI v1.00.00 - Modern UI Framework for PowerShell WPF
 
@@ -300,8 +300,8 @@ $xaml = @"
                         <!-- CRITICAL: Border with EXPLICIT Width/Height (THIS IS THE FIX!) -->
                         <Border 
                             Name="ButtonBorder"
-                            Width="16"
-                            Height="16"
+                            Width="24"
+                            Height="24"
                             BorderThickness="0"
                             Background="{TemplateBinding Background}">
                             <!-- No Content needed - Background is the Image! -->
