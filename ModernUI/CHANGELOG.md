@@ -23,32 +23,34 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 
 ## [1.00.00] - 2025-12-26
 
-### Bugfixes (v1.00.00 Final)
+### Bugfixes Final (v1.00.00 Production)
 
-#### XAML Parser Issues
-- ✅ Entfernt x:Class="ModernUI.MainWindow" Direktive (PowerShell XamlReader Inkompatibilität)
-- ✅ Entfernt undefined event handlers (MouseLeftButtonDown="TitleBar_MouseLeftButtonDown", Click="CloseButton_Click")
-- ✅ Hinzugefügt x:Name="TitleBar" für PowerShell-Event-Binding
-- ✅ Event-Handler werden jetzt vollständig in PowerShell registriert
+#### Window Dragging Fix
+- ✅ DragMove() funktioniert jetzt korrekt (vorher: Fenster konnte nicht verschoben werden)
+- ✅ Try-Finally Block für sichere Drag-State Management
+- ✅ IsDragging Flag hinzugefügt zur Zustandsverfolgung
+- ✅ MouseLeftButtonUp Handler für Drag-Ende
+- ✅ XAML: TitleBar Cursor auf "Hand" gesetzt für visuelles Feedback
 
-#### ConvertTo-Hashtable Function
-- ✅ Behoben: Funktion gab PSObject statt Hashtable zurück
-- ✅ Verbesserte Rekursion mit process {}
-- ✅ Explizite PSCustomObject-Erkennung
-- ✅ Korrektes Handling von geschachtelten Objekten
+#### Close Button Hover Effects Fix
+- ✅ Entfernt: FocusVisualStyle (verursachte blaues Quadrat beim Hover)
+- ✅ Button Template: Hover/Press Triggers mit transparent Background
+- ✅ Proper BitmapImage initialization mit BeginInit/EndInit/Freeze
+- ✅ CacheOption = OnLoad für sofortige Bildladung
+- ✅ ImageControl Reference in Button.Tag gespeichert
+- ✅ Direkter PNG-Austausch statt Farbeffekte
 
-#### Event Registration
-- ✅ TitleBar.Add_MouseLeftButtonDown jetzt mit korrektem Binding
-- ✅ Close-Button Hover-Effekte verbessert
-- ✅ Parameter-Binding in Event-Handlern korrigiert
-- ✅ Null-Checks für alle UI-Elemente
-- ✅ Bessere Fehlerbehandlung bei fehlenden Bilddateien
+#### XAML Style Improvements
+- ✅ IsHitTestVisible="False" für Text und Content Area
+- ✅ Padding="6" auf Close Button für korrektes Image-Rendering
+- ✅ Button Style (CloseButtonStyle) mit deaktiviertem Default Hover
+- ✅ Cursor="Hand" auf TitleBar für User Feedback
 
-#### Image Loading
-- ✅ Absolute Pfad-Auflösung statt relativen Pfaden
-- ✅ PathType-Validierung vor BitmapImage-Erstellung
-- ✅ Warnungen statt Fehler für fehlende Grafiken
-- ✅ Tag-Speicherung für Close-Button Pfade
+#### PowerShell Event Handling
+- ✅ Script-scoped Variables für CloseButtonImage und CloseButtonControl
+- ✅ Proper BitmapImage Creation mit Uri und CacheOption
+- ✅ BeginInit/EndInit Pattern für zuverlässiges Image-Binding
+- ✅ Freeze() aufgerufen für Thread-Safe Bitmaps
 
 ### Hinzugefügt
 
@@ -58,21 +60,22 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 - ⚙️ **config.json**: Zentrale Konfigurationsdatei für Anwendungseinstellungen
 - 📖 **README.md**: Umfassende Projektdokumentation
 - 📝 **CHANGELOG.md**: Änderungsverfolgungsdokumentation
+- 🐛 **BUGFIXES.md**: Detaillierte Bugfix-Referenzdokumentation
 
 #### Core Features
 - 🎨 **Frameless Window**: Rahmenloses WPF-Fenster mit vollständiger Transparenz
 - 🖼️ **PNG Background**: Unterstützung für PNG-Hintergrundbilder als Fenster-Overlay
-- 🎯 **ActionBar / TitleBar**:
+- 🏷️ **ActionBar / TitleBar**:
   - Fenster-Icon (24x24 Pixel)
   - Anwendungstitel
   - Schließen-Button mit Hover-Effekten
 - 🖱️ **Window Dragging**: Fenster kann an der Titelleiste gezogen werden
-- 🎪 **Mouse Events**: Intelligente Event-Handling für Close-Button Hover-Effekte
+- ✨ **Mouse Events**: Intelligente Event-Handling für Close-Button Hover-Effekte
 
 #### Architektur
 - 🔧 **Global Variables**: Zentralisierte Verwaltung von Anwendungszustand und Konfiguration
   - `$Global:ModernUI_Config`: Konfigurationsdaten
-  - `$Global:ModernUI_State`: Laufzeitzustand
+  - `$Global:ModernUI_State`: Laufzeitzustand mit IsDragging Flag
   - `$Global:ModernUI_XAML`: XAML-Inhalt
   - `$Global:ScriptPath`: Skript-Verzeichnispfad
 
@@ -112,11 +115,11 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
   - Mouse-Event-Handler für Fenster-Dragging
   - Close-Button-Funktionalität
   - Window-Lifecycle-Management
-  - Hover-Effekte für Close-Button
+  - Hover-Effekte für Close-Button mit PNG-Swap
 
 #### UI Elements
 - 🎨 **Background Layer**: Vollscreeniges PNG-Hintergrund
-- 🎯 **ActionBar**:
+- 🏷️ **ActionBar**:
   - App Icon (BitmapImage aus PNG)
   - Title Text (weiß, Segoe UI)
   - Close Button mit dynamischen Bildern
@@ -135,6 +138,7 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 - Inline-Kommentare für komplexe Logik
 - README mit Quick-Start und Entwickler-Anleitung
 - CHANGELOG mit detaillierter Versionsverfolgung
+- BUGFIXES mit Debugging-Tipps
 
 ### Technische Details
 
@@ -158,13 +162,14 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 ### Bekannte Einschränkungen
 - Fenster kann nicht maximiert werden (v1.00.00)
 - Keine Größenänderung (Resize) möglich (v1.00.00)
-- Nur einfache Hovereffekte für Close-Button
+- Content-Area clickt durch bei leeren Bereichen (v1.00.00)
 - Kein Theme-Switching (v1.00.00)
 
 ### Performance
 - Start-Zeit: ~2-3 Sekunden (WPF Initialisierung)
 - Speicherverbrauch: ~150-200 MB
 - CPU-Auslastung: Minimal wenn inaktiv
+- Hover-Effekte: Sofortig (BeginInit/EndInit Caching)
 
 ### Sicherheit
 - Keine externen Netzwerkverbindungen
@@ -228,33 +233,53 @@ Für die erste Inbetriebnahme notwendig:
 
 ### v1.00.00 Bugfixes - Implementierungsdetails
 
-#### XAML Kompatibilität
-PowerShell's XamlReader kann keine Code-Behind-Klassen (x:Class) laden.
-Die XAML wurde deshalb zu einem reinen Markup-Template vereinfacht.
-Alle Event-Handler werden jetzt in PowerShell registriert:
+#### Window Dragging
+Das Problem war die Kombination von `WindowStyle="None"` + `AllowsTransparency="True"`.
+Die Lösung:
 
 ```powershell
-# Statt in XAML: MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
-# Jetzt in PowerShell:
-$titleBar.Add_MouseLeftButtonDown({ ... })
+$titleBar.Add_MouseLeftButtonDown({
+    param($sender, $e)
+    try {
+        $Global:ModernUI_State.IsDragging = $true
+        $Window.DragMove()
+    }
+    finally {
+        $Global:ModernUI_State.IsDragging = $false
+    }
+})
 ```
 
-#### ConvertTo-Hashtable Funktion
-Ursprüngliche Version gab PSCustomObject zurück.
-Neu: Rekursive Konvertierung mit `process {}`:
+#### Close Button Hover Image Swap
+Das Problem war der Default-Hover-Style des Buttons.
+Die Lösung: FocusVisualStyle entfernen + Button Style mit transparentem Hover:
+
+```xaml
+<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+<Trigger Property="IsMouseOver" Value="True">
+    <Setter Property="Background" Value="Transparent"/>
+</Trigger>
+```
+
+Und im PowerShell Code:
 
 ```powershell
-$jsonContent | ConvertFrom-Json | ConvertTo-Hashtable
-# Gibt jetzt echte Hashtable zurück, nicht PSCustomObject
+$hoverBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
+$hoverBitmap.BeginInit()
+$hoverBitmap.UriSource = [uri]$sender.Tag.HoverPath
+$hoverBitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+$hoverBitmap.EndInit()
+$hoverBitmap.Freeze()
+$sender.Tag.ImageControl.Source = $hoverBitmap
 ```
 
 ### Testing
 
 Empfohlen für v1.00.00:
-- 🖱️ Fenster-Dragging testen
-- ✋ Close-Button Funktionalität prüfen
-- 🖼️ Background-Rendering verifizieren
-- 🔍 Fehlerbehandlung unter fehlenden Dateien testen
+- 🖱️ Fenster-Dragging: TitleBar nach links/rechts/oben/unten ziehen
+- ✋ Close-Button Hover: Über Button fahren - nur PNG tauschen, kein Farbeffekt
+- 👁️ Background-Rendering: Hintergrund sollte vollständig sichtbar sein
+- 🔍 Fehlerbehandlung: Fehlende Dateien sollten Warnungen zeigen
 
 ---
 
