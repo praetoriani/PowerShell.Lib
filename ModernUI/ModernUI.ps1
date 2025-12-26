@@ -18,7 +18,7 @@
     - Rahmenloses Fenster Design mit transparenter Titelleiste
     - **FIX: Custom ControlTemplate fuer Close Button (KEINE Hover-Overlay!)**
     - **FIX: IsMouseOver Trigger in Template fuer zuverlassige Visuals**
-    - **FIX: Image schwapping mit binding+converter statt PowerShell Events**
+    - **FIX: Image schwapping mit PowerShell Events**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -266,7 +266,7 @@ function Initialize-WindowResources {
 # Der Close Button bekommt eine CUSTOM ControlTemplate, die:
 # 1. KEIN Hover-Overlay hat (kein Border mit MouseOver Trigger)
 # 2. NUR die Image anzeigt
-# 3. IsMouseOver Trigger fuer Image-Swapping nutzt (KEIN Hintergrund!)
+# 3. PowerShell Events fuer Image-Swapping nutzt
 
 $xaml = @"
 <Window 
@@ -293,11 +293,6 @@ $xaml = @"
                     Stretch="UniformToFill"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center" />
-                
-                <!-- CRITICAL: IsMouseOver Trigger for image swapping - NO background changes! -->
-                <ControlTemplate.Triggers>
-                    <!-- We don't change Background or add overlay, only image via DataContext binding -->
-                </ControlTemplate.Triggers>
             </Grid>
         </ControlTemplate>
     </Window.Resources>
@@ -484,8 +479,8 @@ function Initialize-WPF {
         # =====================================================================
         # CLOSE BUTTON HOVER EFFECTS - DIRECT IMAGE SWAPPING
         # =====================================================================
-        # CRITICAL: MouseEnter und MouseLeave für DIREKTES Image-Swapping
-        # (OHNE WPF Style/Template Overlay)
+        # CRITICAL: MouseEnter und MouseLeave fuer DIREKTES Image-Swapping
+        # (Mit Custom ControlTemplate - KEIN WPF Style/Template Overlay!)
         
         $closeButton.Add_MouseEnter({
             param($sender, $e)
