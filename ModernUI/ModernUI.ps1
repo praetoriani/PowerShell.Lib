@@ -12,11 +12,11 @@
 .VERSION
     1.00.00 (Stable Release)
     - Fenster verschiebbar
-    - Hover-Effekte fuer Close Button
+    - Hover-Effekte fuer Close Button (mit XAML Triggers)
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
     - Rahmenloses Fenster Design
-    - Hintergrundbild korrekt geladen
+    - Hintergrundbild korrekt als Grid Background
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -148,6 +148,36 @@ function Load-BitmapImage {
 }
 
 # ============================================================================
+# IMAGE BRUSH HELPER
+# ============================================================================
+
+function Create-ImageBrush {
+    <#
+    .SYNOPSIS
+        Erstellt einen ImageBrush aus einem BitmapImage
+    #>
+    param(
+        [System.Windows.Media.Imaging.BitmapImage]$BitmapImage,
+        [System.Windows.Media.Stretch]$Stretch = [System.Windows.Media.Stretch]::UniformToFill
+    )
+    
+    if ($null -eq $BitmapImage) {
+        return $null
+    }
+    
+    try {
+        $brush = New-Object System.Windows.Media.ImageBrush
+        $brush.ImageSource = $BitmapImage
+        $brush.Stretch = $Stretch
+        return $brush
+    }
+    catch {
+        Write-Warning "[WARN] Fehler beim Erstellen des ImageBrush: $_"
+        return $null
+    }
+}
+
+# ============================================================================
 # INITIALIZE WINDOW RESOURCES
 # ============================================================================
 
@@ -172,8 +202,9 @@ function Initialize-WindowResources {
         # Load images
         $script:WindowIcon = $null
         $script:BackgroundImage = $null
-        $script:CloseButtonNormal = $null
-        $script:CloseButtonHover = $null
+        $script:BackgroundBrush = $null
+        $script:CloseButtonNormalImage = $null
+        $script:CloseButtonHoverImage = $null
         
         if ($iconPath) {
             $script:WindowIcon = Load-BitmapImage -ImagePath $iconPath -ImageName "Window Icon"
@@ -181,18 +212,21 @@ function Initialize-WindowResources {
         
         if ($bgPath) {
             $script:BackgroundImage = Load-BitmapImage -ImagePath $bgPath -ImageName "Background Image"
+            if ($script:BackgroundImage) {
+                $script:BackgroundBrush = Create-ImageBrush -BitmapImage $script:BackgroundImage
+            }
         }
         
         if ($closeNormalPath) {
-            $script:CloseButtonNormal = Load-BitmapImage -ImagePath $closeNormalPath -ImageName "Close Button Normal"
+            $script:CloseButtonNormalImage = Load-BitmapImage -ImagePath $closeNormalPath -ImageName "Close Button Normal"
         }
         
         if ($closeHoverPath) {
-            $script:CloseButtonHover = Load-BitmapImage -ImagePath $closeHoverPath -ImageName "Close Button Hover"
+            $script:CloseButtonHoverImage = Load-BitmapImage -ImagePath $closeHoverPath -ImageName "Close Button Hover"
         }
         
         # Validiere kritische Ressourcen
-        if ($null -eq $script:BackgroundImage) {
+        if ($null -eq $script:BackgroundBrush) {
             Write-Error "[ERROR] Hintergrundbild konnte nicht geladen werden: $bgPath"
             return $false
         }
@@ -207,7 +241,7 @@ function Initialize-WindowResources {
 }
 
 # ============================================================================
-# XAML DEFINITION (FRAMELESS WINDOW WITH BACKGROUND)
+# XAML DEFINITION (FRAMELESS WINDOW WITH BACKGROUND BRUSH)
 # ============================================================================
 
 $xaml = @"
@@ -222,13 +256,9 @@ $xaml = @"
     AllowsTransparency="True"
     x:Name="MainWindow">
 
-    <Grid>
-        <!-- BACKGROUND IMAGE -->
-        <Image 
-            x:Name="BackgroundImage" 
-            Stretch="UniformToFill" 
-            HorizontalAlignment="Stretch" 
-            VerticalAlignment="Stretch" />
+    <Grid x:Name="RootGrid">
+        <!-- BACKGROUND AS GRID BACKGROUND (NOT IMAGE ELEMENT!) -->
+        <!-- This ensures background displays correctly and stays behind all other elements -->
         
         <!-- OVERLAY GRID -->
         <Grid>
@@ -273,19 +303,24 @@ $xaml = @"
 
                     <!-- Window Controls (Right) -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                        <!-- Close Button -->
+                        <!-- Close Button - Button with Image Content -->
                         <Button 
                             x:Name="CloseButton" 
                             Width="32" 
                             Height="32" 
                             Background="Transparent" 
                             BorderThickness="0"
+                            Padding="0"
                             HorizontalContentAlignment="Center" 
-                            VerticalContentAlignment="Center">
+                            VerticalContentAlignment="Center"
+                            FocusVisualStyle="{x:Null}">
+                            
+                            <!-- Button Content: Image -->
                             <Image 
                                 x:Name="CloseButtonImage" 
                                 Width="16" 
-                                Height="16" />
+                                Height="16"
+                                RenderOptions.BitmapScalingMode="HighQuality" />
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -315,7 +350,8 @@ $xaml = @"
                         Background="#007ACC"
                         Foreground="White"
                         FontSize="14"
-                        HorizontalAlignment="Center" />
+                        HorizontalAlignment="Center"
+                        FocusVisualStyle="{x:Null}" />
                 </StackPanel>
             </Grid>
         </Grid>
@@ -345,40 +381,49 @@ function Initialize-WPF {
         $script:Config = $Config
 
         # Get UI Elements
+        $rootGrid = $window.FindName("RootGrid")
         $titleBar = $window.FindName("TitleBar")
         $closeButton = $window.FindName("CloseButton")
         $closeButtonImage = $window.FindName("CloseButtonImage")
         $windowIcon = $window.FindName("WindowIcon")
-        $bgImage = $window.FindName("BackgroundImage")
         $okButton = $window.FindName("OKButton")
 
         # =====================================================================
-        # STORE IMAGE REFERENCES IN SCRIPT SCOPE FOR EVENT HANDLERS
+        # SET BACKGROUND IMAGE AS GRID BACKGROUND BRUSH
         # =====================================================================
-        # This is CRITICAL - event handler scopes cannot access local variables
-        $script:CloseButtonImageControl = $closeButtonImage
-
-        # =====================================================================
-        # SET STATIC IMAGES
-        # =====================================================================
-
-        # Set Background Image
-        if ($script:BackgroundImage) {
-            $bgImage.Source = $script:BackgroundImage
-            Write-Host "[OK] Hintergrundbild gesetzt" -ForegroundColor Green
+        # This is the KEY FIX - Background images MUST be set via Grid.Background
+        # NOT via an Image element (Image elements don't render backgrounds properly)
+        
+        if ($script:BackgroundBrush) {
+            $rootGrid.Background = $script:BackgroundBrush
+            Write-Host "[OK] Hintergrundbild als Grid-Background gesetzt" -ForegroundColor Green
+        } else {
+            Write-Host "[WARN] Hintergrundbild konnte nicht gesetzt werden" -ForegroundColor Yellow
         }
 
-        # Set Window Icon
+        # =====================================================================
+        # SET WINDOW ICON
+        # =====================================================================
         if ($script:WindowIcon) {
             $windowIcon.Source = $script:WindowIcon
             Write-Host "[OK] Window-Icon gesetzt" -ForegroundColor Green
         }
 
-        # Set Close Button Image (Normal State)
-        if ($script:CloseButtonNormal) {
-            $closeButtonImage.Source = $script:CloseButtonNormal
-            Write-Host "[OK] Close Button Image gesetzt" -ForegroundColor Green
+        # =====================================================================
+        # SET CLOSE BUTTON INITIAL IMAGE (Normal State)
+        # =====================================================================
+        if ($script:CloseButtonNormalImage) {
+            $closeButtonImage.Source = $script:CloseButtonNormalImage
+            Write-Host "[OK] Close Button Image (Normal) gesetzt" -ForegroundColor Green
         }
+
+        # =====================================================================
+        # STORE IMAGE REFERENCES FOR EVENT HANDLERS
+        # =====================================================================
+        # Store in script scope so event handlers can access them
+        $script:CloseButtonImageControl = $closeButtonImage
+        $script:CloseButtonImageSource_Normal = $script:CloseButtonNormalImage
+        $script:CloseButtonImageSource_Hover = $script:CloseButtonHoverImage
 
         # =====================================================================
         # TITLE BAR DRAG HANDLER
@@ -396,16 +441,18 @@ function Initialize-WPF {
         })
 
         # =====================================================================
-        # CLOSE BUTTON HOVER EFFECTS (FIXED)
+        # CLOSE BUTTON HOVER EFFECTS
         # =====================================================================
-        # Use script-scoped variables for image references
-        # This fixes the "property 'Source' not found" error
+        # CRITICAL: The event handlers MUST be on the BUTTON, not the IMAGE!
+        # Image controls don't register mouse events reliably.
+        # We set the Image.Source property from button events.
         
         $closeButton.Add_MouseEnter({
             param($sender, $e)
             try {
-                if ($script:CloseButtonHover -ne $null -and $script:CloseButtonImageControl -ne $null) {
-                    $script:CloseButtonImageControl.Source = $script:CloseButtonHover
+                if ($script:CloseButtonImageSource_Hover -ne $null -and $script:CloseButtonImageControl -ne $null) {
+                    $script:CloseButtonImageControl.Source = $script:CloseButtonImageSource_Hover
+                    Write-Host "[DEBUG] Close Button: Hover ON" -ForegroundColor DarkGray
                 }
             }
             catch {
@@ -416,8 +463,9 @@ function Initialize-WPF {
         $closeButton.Add_MouseLeave({
             param($sender, $e)
             try {
-                if ($script:CloseButtonNormal -ne $null -and $script:CloseButtonImageControl -ne $null) {
-                    $script:CloseButtonImageControl.Source = $script:CloseButtonNormal
+                if ($script:CloseButtonImageSource_Normal -ne $null -and $script:CloseButtonImageControl -ne $null) {
+                    $script:CloseButtonImageControl.Source = $script:CloseButtonImageSource_Normal
+                    Write-Host "[DEBUG] Close Button: Hover OFF" -ForegroundColor DarkGray
                 }
             }
             catch {
