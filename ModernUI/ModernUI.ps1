@@ -53,7 +53,39 @@ function Load-Configuration {
 }
 
 # ============================================================================
-# XAML DEFINITION
+# IMAGE LOADING HELPER
+# ============================================================================
+
+function Load-BitmapImage {
+    <#
+    .SYNOPSIS
+        Lädt ein Bild mit korrektem URI Format
+    #>
+    param(
+        [string]$ImagePath
+    )
+    
+    if ([string]::IsNullOrEmpty($ImagePath) -or -not (Test-Path $ImagePath)) {
+        return $null
+    }
+    
+    try {
+        $bitmapImage = New-Object System.Windows.Media.Imaging.BitmapImage
+        $bitmapImage.BeginInit()
+        $bitmapImage.UriSource = New-Object System.Uri($ImagePath)
+        $bitmapImage.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+        $bitmapImage.EndInit()
+        $bitmapImage.Freeze()  # Freeze für Cross-Thread Zugriff
+        return $bitmapImage
+    }
+    catch {
+        Write-Warning "❌ Fehler beim Laden des Bildes '$ImagePath': $_"
+        return $null
+    }
+}
+
+# ============================================================================
+# XAML DEFINITION (WITHOUT TRIGGERS)
 # ============================================================================
 
 $xaml = @"
@@ -110,7 +142,7 @@ $xaml = @"
 
                 <!-- Window Controls (Right) -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                    <!-- Close Button with Image Hover Trigger -->
+                    <!-- Close Button -->
                     <Button 
                         x:Name="CloseButton" 
                         Width="32" 
@@ -123,21 +155,7 @@ $xaml = @"
                         <Image 
                             x:Name="CloseButtonImage" 
                             Width="16" 
-                            Height="16">
-                            <Image.Style>
-                                <Style TargetType="Image">
-                                    <!-- Standard State: Normal Image -->
-                                    <Setter Property="Source" Value="" />
-                                    
-                                    <!-- Hover State: Hover Image -->
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Source" Value="" />
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Image.Style>
-                        </Image>
+                            Height="16" />
                     </Button>
                 </StackPanel>
             </Grid>
@@ -208,31 +226,45 @@ function Initialize-WPF {
     # ========================================================================
     
     if ($Config.WindowIcon -and (Test-Path $Config.WindowIcon)) {
-        $windowIcon.Source = $Config.WindowIcon
-    }
-
-    # Close Button Images - Loaded into Image.Style Triggers
-    if ($Config.CloseButton.NormalPath -and (Test-Path $Config.CloseButton.NormalPath)) {
-        $closeButtonImage.Source = $Config.CloseButton.NormalPath
-    }
-
-    # The Hover image is automatically handled by XAML Trigger!
-    # When IsMouseOver = True, the Trigger changes the Source property
-    if ($Config.CloseButton.HoverPath -and (Test-Path $Config.CloseButton.HoverPath)) {
-        # Update the Trigger setter in the Style to use the hover image
-        $style = $closeButtonImage.Style
-        if ($style -and $style.Triggers) {
-            foreach ($trigger in $style.Triggers) {
-                if ($trigger -is [System.Windows.Trigger] -and $trigger.Property.Name -eq "IsMouseOver") {
-                    foreach ($setter in $trigger.Setters) {
-                        if ($setter.Property.Name -eq "Source") {
-                            $setter.Value = $Config.CloseButton.HoverPath
-                        }
-                    }
-                }
-            }
+        $iconBitmap = Load-BitmapImage -ImagePath $Config.WindowIcon
+        if ($iconBitmap) {
+            $windowIcon.Source = $iconBitmap
         }
     }
+
+    # Close Button - Normal State
+    $script:NormalButtonImage = $null
+    $script:HoverButtonImage = $null
+    
+    if ($Config.CloseButton.NormalPath -and (Test-Path $Config.CloseButton.NormalPath)) {
+        $script:NormalButtonImage = Load-BitmapImage -ImagePath $Config.CloseButton.NormalPath
+        if ($script:NormalButtonImage) {
+            $closeButtonImage.Source = $script:NormalButtonImage
+        }
+    }
+
+    # Close Button - Hover State
+    if ($Config.CloseButton.HoverPath -and (Test-Path $Config.CloseButton.HoverPath)) {
+        $script:HoverButtonImage = Load-BitmapImage -ImagePath $Config.CloseButton.HoverPath
+    }
+
+    # ========================================================================
+    # HOVER EFFECT HANDLER (Alternative zu XAML Triggers)
+    # ========================================================================
+    
+    $closeButton.Add_MouseEnter({
+        param($sender, $e)
+        if ($script:HoverButtonImage -ne $null) {
+            $closeButtonImage.Source = $script:HoverButtonImage
+        }
+    })
+
+    $closeButton.Add_MouseLeave({
+        param($sender, $e)
+        if ($script:NormalButtonImage -ne $null) {
+            $closeButtonImage.Source = $script:NormalButtonImage
+        }
+    })
 
     # ========================================================================
     # EVENT HANDLER REGISTRATION
