@@ -15,6 +15,7 @@
     - Hover-Effekte fuer Close Button
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
+    - Rahmenloses Fenster Design
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -102,7 +103,7 @@ function Load-BitmapImage {
 }
 
 # ============================================================================
-# XAML DEFINITION (CLEAN & SIMPLE)
+# XAML DEFINITION (FRAMELESS WINDOW)
 # ============================================================================
 
 $xaml = @"
@@ -114,7 +115,8 @@ $xaml = @"
     Width="800"
     Background="#F5F5F5"
     WindowStartupLocation="CenterScreen"
-    ResizeMode="CanResizeWithGrip"
+    WindowStyle="None"
+    AllowsTransparency="True"
     x:Name="MainWindow">
 
     <Grid Background="#FAFAFA">
@@ -343,6 +345,7 @@ function Show-ModernUI {
         Write-Host "   - Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
         Write-Host "   - Hover-Effekte aktiv (Close Button)" -ForegroundColor Green
         Write-Host "   - Config-driven Images" -ForegroundColor Green
+        Write-Host "   - Rahmenloses Fenster Design" -ForegroundColor Green
         Write-Host ""
         
         $window.ShowDialog() | Out-Null
