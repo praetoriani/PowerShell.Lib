@@ -16,9 +16,9 @@
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
     - Rahmenloses Fenster Design mit transparenter Titelleiste
-    - **FIX: Proper ControlTemplate with IsMouseOver Trigger + Border Background**
+    - **FIX: Proper ControlTemplate with IsMouseOver Trigger + ImageBrush Background**
     - **FIX: Background als ImageBrush (nicht Image-Control!)**
-    - **FIX: TemplateBinding Background in Border**
+    - **FIX: TemplateBinding Background in Border + explizite Width/Height**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -274,6 +274,7 @@ function Initialize-WindowResources {
 # 1. Border mit TemplateBinding Background (CRUCIAL!)
 # 2. IsMouseOver Trigger in ControlTemplate.Triggers
 # 3. Background als ImageBrush (nicht Image-Control!)
+# 4. **CRITICAL: Explizite Width/Height auf Border (NICHT nur am Button!)**
 
 $xaml = @"
 <Window 
@@ -296,13 +297,13 @@ $xaml = @"
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <!-- CRITICAL: Border with TemplateBinding Background (this is where the magic happens!) -->
+                        <!-- CRITICAL: Border with EXPLICIT Width/Height (THIS IS THE FIX!) -->
                         <Border 
                             Name="ButtonBorder"
+                            Width="16"
+                            Height="16"
                             BorderThickness="0"
-                            Background="{TemplateBinding Background}"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
+                            Background="{TemplateBinding Background}">
                             <!-- No Content needed - Background is the Image! -->
                         </Border>
                         
