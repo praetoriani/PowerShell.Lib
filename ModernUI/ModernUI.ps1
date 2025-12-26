@@ -12,7 +12,7 @@
 .VERSION
     1.00.00 (Stable Release)
     - Fenster verschiebbar
-    - Hover-Effekte für Close Button (XAML Triggers)
+    - Hover-Effekte für Close Button
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
 
@@ -24,6 +24,23 @@
 param(
     [string]$ConfigPath = "$PSScriptRoot\config.json"
 )
+
+# ============================================================================
+# ASSEMBLY LOADING (CRITICAL FOR WPF)
+# ============================================================================
+
+try {
+    # Load required WPF and .NET assemblies
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("PresentationFramework")
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("PresentationCore")
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("WindowsBase")
+    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Xaml")
+}
+catch {
+    Write-Error "❌ Fehler beim Laden der erforderlichen Assemblies: $_"
+    exit 1
+}
 
 # ============================================================================
 # CONFIGURATION LOADING
@@ -85,7 +102,7 @@ function Load-BitmapImage {
 }
 
 # ============================================================================
-# XAML DEFINITION (WITHOUT TRIGGERS)
+# XAML DEFINITION (CLEAN & SIMPLE)
 # ============================================================================
 
 $xaml = @"
@@ -206,102 +223,109 @@ function Initialize-WPF {
         [pscustomobject]$Config
     )
 
-    # Create XamlReader
-    $xmlReader = [System.Xml.XmlNodeReader]::new($Xaml)
-    $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
+    try {
+        # Create XamlReader
+        $xmlReader = [System.Xml.XmlNodeReader]::new($Xaml)
+        $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
 
-    # Store window reference globally for event handlers
-    $script:WindowReference = $window
-    $script:Config = $Config
+        # Store window reference globally for event handlers
+        $script:WindowReference = $window
+        $script:Config = $Config
 
-    # Get UI Elements
-    $titleBar = $window.FindName("TitleBar")
-    $closeButton = $window.FindName("CloseButton")
-    $closeButtonImage = $window.FindName("CloseButtonImage")
-    $windowIcon = $window.FindName("WindowIcon")
-    $okButton = $window.FindName("OKButton")
+        # Get UI Elements
+        $titleBar = $window.FindName("TitleBar")
+        $closeButton = $window.FindName("CloseButton")
+        $closeButtonImage = $window.FindName("CloseButtonImage")
+        $windowIcon = $window.FindName("WindowIcon")
+        $okButton = $window.FindName("OKButton")
 
-    # ========================================================================
-    # LOAD IMAGES FROM CONFIG
-    # ========================================================================
-    
-    if ($Config.WindowIcon -and (Test-Path $Config.WindowIcon)) {
-        $iconBitmap = Load-BitmapImage -ImagePath $Config.WindowIcon
-        if ($iconBitmap) {
-            $windowIcon.Source = $iconBitmap
+        # ====================================================================
+        # LOAD IMAGES FROM CONFIG
+        # ====================================================================
+        
+        if ($Config.WindowIcon -and (Test-Path $Config.WindowIcon)) {
+            $iconBitmap = Load-BitmapImage -ImagePath $Config.WindowIcon
+            if ($iconBitmap) {
+                $windowIcon.Source = $iconBitmap
+            }
         }
+
+        # Close Button - Normal State
+        $script:NormalButtonImage = $null
+        $script:HoverButtonImage = $null
+        
+        if ($Config.CloseButton.NormalPath -and (Test-Path $Config.CloseButton.NormalPath)) {
+            $script:NormalButtonImage = Load-BitmapImage -ImagePath $Config.CloseButton.NormalPath
+            if ($script:NormalButtonImage) {
+                $closeButtonImage.Source = $script:NormalButtonImage
+            }
+        }
+
+        # Close Button - Hover State
+        if ($Config.CloseButton.HoverPath -and (Test-Path $Config.CloseButton.HoverPath)) {
+            $script:HoverButtonImage = Load-BitmapImage -ImagePath $Config.CloseButton.HoverPath
+        }
+
+        # ====================================================================
+        # HOVER EFFECT HANDLER
+        # ====================================================================
+        
+        $closeButton.Add_MouseEnter({
+            param($sender, $e)
+            if ($script:HoverButtonImage -ne $null) {
+                $closeButtonImage.Source = $script:HoverButtonImage
+            }
+        })
+
+        $closeButton.Add_MouseLeave({
+            param($sender, $e)
+            if ($script:NormalButtonImage -ne $null) {
+                $closeButtonImage.Source = $script:NormalButtonImage
+            }
+        })
+
+        # ====================================================================
+        # EVENT HANDLER REGISTRATION
+        # ====================================================================
+
+        # Window Dragging (Title Bar)
+        $titleBar.Add_MouseLeftButtonDown({
+            param($sender, $e)
+            if ($script:WindowReference -ne $null) {
+                try {
+                    $script:WindowReference.DragMove()
+                }
+                catch {
+                    Write-Warning "Fehler beim Verschieben des Fensters: $_"
+                }
+            }
+        })
+
+        # Close Button Click
+        $closeButton.Add_Click({
+            param($sender, $e)
+            if ($script:WindowReference -ne $null) {
+                try {
+                    $script:WindowReference.Close()
+                }
+                catch {
+                    Write-Warning "Fehler beim Schließen des Fensters: $_"
+                }
+            }
+        })
+
+        # OK Button Click
+        $okButton.Add_Click({
+            Write-Host "✅ OK Button geklickt" -ForegroundColor Green
+        })
+
+        return $window
     }
-
-    # Close Button - Normal State
-    $script:NormalButtonImage = $null
-    $script:HoverButtonImage = $null
-    
-    if ($Config.CloseButton.NormalPath -and (Test-Path $Config.CloseButton.NormalPath)) {
-        $script:NormalButtonImage = Load-BitmapImage -ImagePath $Config.CloseButton.NormalPath
-        if ($script:NormalButtonImage) {
-            $closeButtonImage.Source = $script:NormalButtonImage
-        }
+    catch {
+        Write-Error "❌ Fehler beim Initialisieren der WPF-UI: $_"
+        Write-Error $_.ScriptStackTrace
+        return $null
     }
-
-    # Close Button - Hover State
-    if ($Config.CloseButton.HoverPath -and (Test-Path $Config.CloseButton.HoverPath)) {
-        $script:HoverButtonImage = Load-BitmapImage -ImagePath $Config.CloseButton.HoverPath
-    }
-
-    # ========================================================================
-    # HOVER EFFECT HANDLER (Alternative zu XAML Triggers)
-    # ========================================================================
-    
-    $closeButton.Add_MouseEnter({
-        param($sender, $e)
-        if ($script:HoverButtonImage -ne $null) {
-            $closeButtonImage.Source = $script:HoverButtonImage
-        }
-    })
-
-    $closeButton.Add_MouseLeave({
-        param($sender, $e)
-        if ($script:NormalButtonImage -ne $null) {
-            $closeButtonImage.Source = $script:NormalButtonImage
-        }
-    })
-
-    # ========================================================================
-    # EVENT HANDLER REGISTRATION
-    # ========================================================================
-
-    # Window Dragging (Title Bar)
-    $titleBar.Add_MouseLeftButtonDown({
-        param($sender, $e)
-        if ($script:WindowReference -ne $null) {
-            try {
-                $script:WindowReference.DragMove()
-            }
-            catch {
-                Write-Warning "Fehler beim Verschieben des Fensters: $_"
-            }
-        }
-    })
-
-    # Close Button Click
-    $closeButton.Add_Click({
-        param($sender, $e)
-        if ($script:WindowReference -ne $null) {
-            try {
-                $script:WindowReference.Close()
-            }
-            catch {
-                Write-Warning "Fehler beim Schließen des Fensters: $_"
-            }
-        }
-    })
-
-    # OK Button Click
-    $okButton.Add_Click({
-        Write-Host "✅ OK Button geklickt" -ForegroundColor Green
-    })
-
-    return $window
 }
 
 # ============================================================================
@@ -314,6 +338,8 @@ function Show-ModernUI {
         Zeigt die ModernUI an
     #>
     try {
+        Write-Host "⏳ Starte ModernUI v1.00.00..." -ForegroundColor Cyan
+        
         # Load Config
         $config = Load-Configuration -Path $ConfigPath
         if ($null -eq $config) {
@@ -327,10 +353,16 @@ function Show-ModernUI {
         # Initialize WPF and show Window
         $window = Initialize-WPF -Xaml $xamlXml -Config $config
         
-        Write-Host "✅ ModernUI v1.00.00 started successfully" -ForegroundColor Green
-        Write-Host "   - Fenster verschiebbar" -ForegroundColor Green
-        Write-Host "   - Hover-Effekte aktiv" -ForegroundColor Green
-        Write-Host "   - Config-driven Images" -ForegroundColor Green
+        if ($null -eq $window) {
+            Write-Error "❌ Fenster konnte nicht erstellt werden"
+            return
+        }
+        
+        Write-Host "✅ ModernUI v1.00.00 erfolgreich gestartet" -ForegroundColor Green
+        Write-Host "   ├─ Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
+        Write-Host "   ├─ Hover-Effekte aktiv (Close Button)" -ForegroundColor Green
+        Write-Host "   └─ Config-driven Images" -ForegroundColor Green
+        Write-Host ""
         
         $window.ShowDialog() | Out-Null
     }
