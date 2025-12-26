@@ -12,7 +12,7 @@
 .VERSION
     1.00.00 (Stable Release)
     - Fenster verschiebbar
-    - Hover-Effekte fuer Close Button via PowerShell Events
+    - Hover-Effekte fuer Close Button via PowerShell Events (Image Swapping)
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
     - Rahmenloses Fenster Design mit transparenter Titelleiste
@@ -20,6 +20,7 @@
     - **FIX: Transparente Titelleiste mit visuellen Effekten**
     - **FIX: PowerShell Events fuer zuverlaessige Hover-Effekte**
     - **FIX: Ungueltige Effect-Elemente entfernt**
+    - **FIX: WPF Default Button Style deaktiviert (Style={x:Null})**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -258,6 +259,7 @@ function Initialize-WindowResources {
 # 2. TitleBar hat Background="Transparent" damit Bild durchscheint
 # 3. Hover-Effekt wird mit PowerShell Events realisiert (zuverlassig!)
 # 4. KEINE Effect-Elemente (PowerShell XamlReader kann diese nicht laden)
+# 5. CloseButton hat Style={x:Null} um WPF Default Hover-Style zu deaktivieren!
 
 $xaml = @"
 <Window 
@@ -316,7 +318,7 @@ $xaml = @"
 
                     <!-- Window Controls (Right) -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                        <!-- Close Button with PowerShell Event Handlers for Hover -->
+                        <!-- Close Button with custom image swap (no WPF style!) -->
                         <Button 
                             x:Name="CloseButton" 
                             Width="32" 
@@ -327,6 +329,7 @@ $xaml = @"
                             HorizontalContentAlignment="Center" 
                             VerticalContentAlignment="Center"
                             FocusVisualStyle="{x:Null}"
+                            Style="{x:Null}"
                             Cursor="Arrow">
                             
                             <!-- Close Button Image -->
@@ -454,11 +457,13 @@ function Initialize-WPF {
         # CLOSE BUTTON HOVER EFFECTS - DIRECT IMAGE SWAPPING
         # =====================================================================
         # PowerShell Events fuer zuverlassiges Image-Swapping
+        # WICHTIG: Der Button hat Style={x:Null} um WPF Default Hover-Style zu deaktivieren!
         
         $closeButton.Add_MouseEnter({
             param($sender, $e)
             try {
                 if ($script:CloseButtonImageSource_Hover -ne $null -and $script:CloseButtonImageControl -ne $null) {
+                    Write-Host "[INFO] Close Button Hover: Image zu Hover gewechselt" -ForegroundColor Gray
                     $script:CloseButtonImageControl.Source = $script:CloseButtonImageSource_Hover
                 }
             }
@@ -471,6 +476,7 @@ function Initialize-WPF {
             param($sender, $e)
             try {
                 if ($script:CloseButtonImageSource_Normal -ne $null -and $script:CloseButtonImageControl -ne $null) {
+                    Write-Host "[INFO] Close Button Leave: Image zu Normal gewechselt" -ForegroundColor Gray
                     $script:CloseButtonImageControl.Source = $script:CloseButtonImageSource_Normal
                 }
             }
@@ -556,7 +562,7 @@ function Show-ModernUI {
         Write-Host "[OK] ModernUI v1.00.00 erfolgreich gestartet" -ForegroundColor Green
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host "   * Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
-        Write-Host "   * Hover-Effekte aktiv (Close Button)" -ForegroundColor Green
+        Write-Host "   * Hover-Effekte aktiv (Close Button - Image Swap)" -ForegroundColor Green
         Write-Host "   * Hintergrundbild angezeigt" -ForegroundColor Green
         Write-Host "   * Config-driven Images" -ForegroundColor Green
         Write-Host "   * Rahmenloses Fenster Design" -ForegroundColor Green
