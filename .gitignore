@@ -59,3 +59,5 @@ context-menu-switcher-release-v2.yml
 # EXCLUDE SPECIFIC FILES/FOLDERS FOR "ScanProfileSwitcher"
 /ScanProfileSwitcher/CONTRIBUTING.md
 
+# EXCLUDE SPECIFIC FILES/FOLDERS FOR "MagicWindow"
+/MagicWindow/*
