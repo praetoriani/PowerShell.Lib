@@ -9,8 +9,7 @@
         WindowStartupLocation="CenterScreen"
         Width="800"
         Height="600"
-        x:Name="ModernUIWindow"
-        MouseMove="Window_MouseMove">
+        x:Name="ModernUIWindow">
 
     <Window.Resources>
         <!-- Close Button Style - No default hover effects -->
