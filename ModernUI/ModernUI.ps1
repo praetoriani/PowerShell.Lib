@@ -162,7 +162,7 @@ function Initialize-WindowResources {
         
         $script:WindowIcon = $null
         $script:BackgroundBrush = $null
-        $script:CloseButtonImage = $null
+        $script:CloseButtonBrush = $null
         
         if ($iconPath) {
             $script:WindowIcon = Load-BitmapImage -ImagePath $iconPath -ImageName "Window Icon"
@@ -176,7 +176,10 @@ function Initialize-WindowResources {
         }
         
         if ($closeButtonPath) {
-            $script:CloseButtonImage = Load-BitmapImage -ImagePath $closeButtonPath -ImageName "Close Button"
+            $closeButtonImage = Load-BitmapImage -ImagePath $closeButtonPath -ImageName "Close Button"
+            if ($closeButtonImage) {
+                $script:CloseButtonBrush = Create-ImageBrush -BitmapImage $closeButtonImage
+            }
         }
         
         if ($null -eq $script:BackgroundBrush) {
@@ -184,7 +187,7 @@ function Initialize-WindowResources {
             return $false
         }
         
-        if ($null -eq $script:CloseButtonImage) {
+        if ($null -eq $script:CloseButtonBrush) {
             Write-Error "[ERROR] Close Button Image failed"
             return $false
         }
@@ -329,26 +332,15 @@ function Initialize-WPF {
         }
 
         # =====================================================================
-        # SET CLOSE BUTTON IMAGE - AS BACKGROUND
+        # SET CLOSE BUTTON - USE IMAGEBRUSH AS BACKGROUND
         # =====================================================================
-        if ($script:CloseButtonImage) {
+        if ($script:CloseButtonBrush) {
             try {
-                # Create Image control
-                $buttonImage = New-Object System.Windows.Controls.Image
-                $buttonImage.Source = $script:CloseButtonImage
-                $buttonImage.Stretch = [System.Windows.Media.Stretch]::Uniform
-                $buttonImage.Width = 32
-                $buttonImage.Height = 32
-                $buttonImage.RenderOptions.SetBitmapScalingMode($buttonImage, [System.Windows.Media.BitmapScalingMode]::HighQuality)
-                
-                $closeButton.Content = $buttonImage
-                $closeButton.Background = [System.Windows.Media.Brushes]::Transparent
-                $closeButton.Padding = New-Object System.Windows.Thickness(4)
-                
-                Write-Host "[OK] Close Button Image gesetzt (PNG)" -ForegroundColor Green
+                $closeButton.Background = $script:CloseButtonBrush
+                Write-Host "[OK] Close Button Image gesetzt (ImageBrush)" -ForegroundColor Green
             }
             catch {
-                Write-Warning "[WARN] Close button image error: $_"
+                Write-Warning "[WARN] Close button background error: $_"
             }
         }
 
