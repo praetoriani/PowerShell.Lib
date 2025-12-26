@@ -63,7 +63,8 @@ function Load-Configuration {
         # Lese config.json
         $configJson = Get-Content $Path -Raw
         
-        # Expandiere $PSScriptRoot Variable in der Config
+        # Expandiere $PSScriptRoot Variable in der Config (nur das exakte Pattern)
+        $PSScriptRootEscaped = [System.Text.RegularExpressions.Regex]::Escape($PSScriptRoot)
         $configJson = $configJson -replace '\$PSScriptRoot', $PSScriptRoot
         
         # Parse als JSON
