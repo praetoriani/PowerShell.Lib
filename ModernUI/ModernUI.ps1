@@ -3,7 +3,7 @@
     ModernUI v1.00.00 - Modern UI Framework for PowerShell WPF
 
 .DESCRIPTION
-    Eine moderne Benutzeroberfläche für PowerShell mit WPF, basierend auf 
+    Eine moderne Benutzeroberflaeche fuer PowerShell mit WPF, basierend auf 
     Microsoft Windows 11 Modern UI Design Principles.
 
 .AUTHOR
@@ -12,7 +12,7 @@
 .VERSION
     1.00.00 (Stable Release)
     - Fenster verschiebbar
-    - Hover-Effekte für Close Button
+    - Hover-Effekte fuer Close Button
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
 
@@ -38,7 +38,7 @@ try {
     [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Xaml")
 }
 catch {
-    Write-Error "❌ Fehler beim Laden der erforderlichen Assemblies: $_"
+    Write-Error "[ERROR] Fehler beim Laden der erforderlichen Assemblies: $_"
     exit 1
 }
 
@@ -49,7 +49,7 @@ catch {
 function Load-Configuration {
     <#
     .SYNOPSIS
-        Lädt die Konfiguration aus config.json
+        Laedt die Konfiguration aus config.json
     #>
     param([string]$Path)
 
@@ -60,11 +60,11 @@ function Load-Configuration {
 
     try {
         $config = Get-Content $Path -Raw | ConvertFrom-Json
-        Write-Host "✅ Config geladen" -ForegroundColor Green
+        Write-Host "[OK] Config geladen" -ForegroundColor Green
         return $config
     }
     catch {
-        Write-Error "❌ Fehler beim Laden der Config: $_"
+        Write-Error "[ERROR] Fehler beim Laden der Config: $_"
         return $null
     }
 }
@@ -76,7 +76,7 @@ function Load-Configuration {
 function Load-BitmapImage {
     <#
     .SYNOPSIS
-        Lädt ein Bild mit korrektem URI Format
+        Laedt ein Bild mit korrektem URI Format
     #>
     param(
         [string]$ImagePath
@@ -92,11 +92,11 @@ function Load-BitmapImage {
         $bitmapImage.UriSource = New-Object System.Uri($ImagePath)
         $bitmapImage.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
         $bitmapImage.EndInit()
-        $bitmapImage.Freeze()  # Freeze für Cross-Thread Zugriff
+        $bitmapImage.Freeze()  # Freeze fuer Cross-Thread Zugriff
         return $bitmapImage
     }
     catch {
-        Write-Warning "❌ Fehler beim Laden des Bildes '$ImagePath': $_"
+        Write-Warning "[WARN] Fehler beim Laden des Bildes $ImagePath : $_"
         return $null
     }
 }
@@ -189,7 +189,7 @@ $xaml = @"
                     TextAlignment="Center"
                     Margin="0,0,0,16" />
                 <TextBlock 
-                    Text="Modern UI Framework für PowerShell WPF"
+                    Text="Modern UI Framework fuer PowerShell WPF"
                     FontSize="16"
                     Foreground="#666666"
                     TextAlignment="Center"
@@ -214,10 +214,6 @@ $xaml = @"
 # ============================================================================
 
 function Initialize-WPF {
-    <#
-    .SYNOPSIS
-        Initialisiert die WPF-UI und registriert Event Handler
-    #>
     param(
         [xml]$Xaml,
         [pscustomobject]$Config
@@ -239,10 +235,7 @@ function Initialize-WPF {
         $windowIcon = $window.FindName("WindowIcon")
         $okButton = $window.FindName("OKButton")
 
-        # ====================================================================
-        # LOAD IMAGES FROM CONFIG
-        # ====================================================================
-        
+        # Load Images from Config
         if ($Config.WindowIcon -and (Test-Path $Config.WindowIcon)) {
             $iconBitmap = Load-BitmapImage -ImagePath $Config.WindowIcon
             if ($iconBitmap) {
@@ -250,7 +243,7 @@ function Initialize-WPF {
             }
         }
 
-        # Close Button - Normal State
+        # Close Button - Normal and Hover States
         $script:NormalButtonImage = $null
         $script:HoverButtonImage = $null
         
@@ -261,15 +254,11 @@ function Initialize-WPF {
             }
         }
 
-        # Close Button - Hover State
         if ($Config.CloseButton.HoverPath -and (Test-Path $Config.CloseButton.HoverPath)) {
             $script:HoverButtonImage = Load-BitmapImage -ImagePath $Config.CloseButton.HoverPath
         }
 
-        # ====================================================================
-        # HOVER EFFECT HANDLER
-        # ====================================================================
-        
+        # Hover Effect Handler
         $closeButton.Add_MouseEnter({
             param($sender, $e)
             if ($script:HoverButtonImage -ne $null) {
@@ -283,10 +272,6 @@ function Initialize-WPF {
                 $closeButtonImage.Source = $script:NormalButtonImage
             }
         })
-
-        # ====================================================================
-        # EVENT HANDLER REGISTRATION
-        # ====================================================================
 
         # Window Dragging (Title Bar)
         $titleBar.Add_MouseLeftButtonDown({
@@ -309,20 +294,20 @@ function Initialize-WPF {
                     $script:WindowReference.Close()
                 }
                 catch {
-                    Write-Warning "Fehler beim Schließen des Fensters: $_"
+                    Write-Warning "Fehler beim Schliessen des Fensters: $_"
                 }
             }
         })
 
         # OK Button Click
         $okButton.Add_Click({
-            Write-Host "✅ OK Button geklickt" -ForegroundColor Green
+            Write-Host "[OK] OK Button geklickt" -ForegroundColor Green
         })
 
         return $window
     }
     catch {
-        Write-Error "❌ Fehler beim Initialisieren der WPF-UI: $_"
+        Write-Error "[ERROR] Fehler beim Initialisieren der WPF-UI: $_"
         Write-Error $_.ScriptStackTrace
         return $null
     }
@@ -333,17 +318,13 @@ function Initialize-WPF {
 # ============================================================================
 
 function Show-ModernUI {
-    <#
-    .SYNOPSIS
-        Zeigt die ModernUI an
-    #>
     try {
-        Write-Host "⏳ Starte ModernUI v1.00.00..." -ForegroundColor Cyan
+        Write-Host "[INFO] Starte ModernUI v1.00.00..." -ForegroundColor Cyan
         
         # Load Config
         $config = Load-Configuration -Path $ConfigPath
         if ($null -eq $config) {
-            Write-Error "❌ Konfiguration konnte nicht geladen werden"
+            Write-Error "[ERROR] Konfiguration konnte nicht geladen werden"
             return
         }
 
@@ -354,20 +335,20 @@ function Show-ModernUI {
         $window = Initialize-WPF -Xaml $xamlXml -Config $config
         
         if ($null -eq $window) {
-            Write-Error "❌ Fenster konnte nicht erstellt werden"
+            Write-Error "[ERROR] Fenster konnte nicht erstellt werden"
             return
         }
         
-        Write-Host "✅ ModernUI v1.00.00 erfolgreich gestartet" -ForegroundColor Green
-        Write-Host "   ├─ Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
-        Write-Host "   ├─ Hover-Effekte aktiv (Close Button)" -ForegroundColor Green
-        Write-Host "   └─ Config-driven Images" -ForegroundColor Green
+        Write-Host "[OK] ModernUI v1.00.00 erfolgreich gestartet" -ForegroundColor Green
+        Write-Host "   - Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
+        Write-Host "   - Hover-Effekte aktiv (Close Button)" -ForegroundColor Green
+        Write-Host "   - Config-driven Images" -ForegroundColor Green
         Write-Host ""
         
         $window.ShowDialog() | Out-Null
     }
     catch {
-        Write-Error "❌ Fehler beim Starten der ModernUI: $_"
+        Write-Error "[ERROR] Fehler beim Starten der ModernUI: $_"
         Write-Error $_.ScriptStackTrace
     }
 }
