@@ -12,13 +12,14 @@
 .VERSION
     1.00.00 (Stable Release)
     - Fenster verschiebbar
-    - Hover-Effekte fuer Close Button via XAML Triggers
+    - Hover-Effekte fuer Close Button via PowerShell Events
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
     - Rahmenloses Fenster Design mit transparenter Titelleiste
     - **FIX: Hintergrundbild korrekt auf Window-Ebene**
     - **FIX: Transparente Titelleiste mit visuellen Effekten**
-    - **FIX: XAML Triggers fuer Hover-Effekte (nicht PowerShell Events)**
+    - **FIX: PowerShell Events fuer zuverlaessige Hover-Effekte**
+    - **FIX: Ungueltige Effect-Elemente entfernt**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -250,12 +251,13 @@ function Initialize-WindowResources {
 }
 
 # ============================================================================
-# XAML DEFINITION (FRAMELESS WINDOW - TRANSPARENT TITLEBAR + XAML TRIGGERS)
+# XAML DEFINITION (FRAMELESS WINDOW - TRANSPARENT TITLEBAR + CLEAN XAML)
 # ============================================================================
 # CRITICAL: 
 # 1. Window.Background wird in PowerShell gesetzt (nicht hier!)
 # 2. TitleBar hat Background="Transparent" damit Bild durchscheint
-# 3. Hover-Effekt wird mit XAML Triggers realisiert (nicht PowerShell Events)
+# 3. Hover-Effekt wird mit PowerShell Events realisiert (zuverlassig!)
+# 4. KEINE Effect-Elemente (PowerShell XamlReader kann diese nicht laden)
 
 $xaml = @"
 <Window 
@@ -269,13 +271,6 @@ $xaml = @"
     AllowsTransparency="True"
     Background="Transparent"
     x:Name="MainWindow">
-
-    <Window.Resources>
-        <!-- XAML Trigger Style fuer Close Button Image Hover Effect -->
-        <Style x:Key="CloseButtonImageStyle" TargetType="{x:Type Image}">
-            <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality" />
-        </Style>
-    </Window.Resources>
 
     <Grid x:Name="RootGrid" Background="Transparent">
         <!-- OVERLAY GRID (auf dem Hintergrundbild) -->
@@ -314,18 +309,14 @@ $xaml = @"
                         Margin="40,0,0,0"
                         FontSize="14"
                         Foreground="#FFFFFF"
-                        FontWeight="SemiBold"
-                        Effect="
-                            {Binding Source={x:Static Member=System.Windows.Media.Effects.DropShadowEffect}, 
-                             Path=new(ShadowDepth=2, Color=Black)}"
-                        />
+                        FontWeight="SemiBold" />
 
                     <!-- Spacer -->
                     <Border Grid.Column="1" />
 
                     <!-- Window Controls (Right) -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                        <!-- Close Button with XAML Trigger for Hover -->
+                        <!-- Close Button with PowerShell Event Handlers for Hover -->
                         <Button 
                             x:Name="CloseButton" 
                             Width="32" 
@@ -336,14 +327,13 @@ $xaml = @"
                             HorizontalContentAlignment="Center" 
                             VerticalContentAlignment="Center"
                             FocusVisualStyle="{x:Null}"
-                            Cursor="Hand">
+                            Cursor="Arrow">
                             
-                            <!-- Close Button Image with Trigger -->
+                            <!-- Close Button Image -->
                             <Image 
                                 x:Name="CloseButtonImage" 
                                 Width="16" 
-                                Height="16"
-                                Style="{StaticResource CloseButtonImageStyle}" />
+                                Height="16" />
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -439,10 +429,8 @@ function Initialize-WPF {
         }
 
         # =====================================================================
-        # STORE IMAGE REFERENCES FOR XAML TRIGGERS
+        # STORE IMAGE REFERENCES FOR EVENT HANDLERS
         # =====================================================================
-        # Diese werden von PowerShell aus direkt als Properties gesetzt
-        # Die XAML Triggers brauchen Zugriff auf diese Bilder
         $script:CloseButtonImageControl = $closeButtonImage
         $script:CloseButtonImageSource_Normal = $script:CloseButtonNormalImage
         $script:CloseButtonImageSource_Hover = $script:CloseButtonHoverImage
@@ -465,8 +453,7 @@ function Initialize-WPF {
         # =====================================================================
         # CLOSE BUTTON HOVER EFFECTS - DIRECT IMAGE SWAPPING
         # =====================================================================
-        # NOTE: XAML Triggers funktionieren nicht zuverlässig mit Image.Source
-        # Deswegen nutzen wir PowerShell Events für zuverlässiges Image-Swapping
+        # PowerShell Events fuer zuverlassiges Image-Swapping
         
         $closeButton.Add_MouseEnter({
             param($sender, $e)
