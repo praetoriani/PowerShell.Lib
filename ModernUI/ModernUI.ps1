@@ -15,9 +15,9 @@
     - PNG Close Button (stabil, keine Hover-Effekte)
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
-    - Rahmenloses Fenster Design mit transparenter Titelleiste
+    - Rahmenloses Fenster Design
     - **FINAL: PNG Close Button + Tooltip (Best Practice)**
-    - **PRAGMATIC: Fokus auf Stabilität statt komplexen Effekten**
+    - **PRAGMATIC: Fokus auf Stabilit\u00e4t**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -29,19 +29,16 @@ param(
 )
 
 # ============================================================================
-# ASSEMBLY LOADING (CRITICAL FOR WPF)
+# ASSEMBLY LOADING
 # ============================================================================
 
 try {
-    # Load required WPF and .NET assemblies
-    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
     [void] [System.Reflection.Assembly]::LoadWithPartialName("PresentationFramework")
     [void] [System.Reflection.Assembly]::LoadWithPartialName("PresentationCore")
     [void] [System.Reflection.Assembly]::LoadWithPartialName("WindowsBase")
-    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Xaml")
 }
 catch {
-    Write-Error "[ERROR] Fehler beim Laden der erforderlichen Assemblies: $_"
+    Write-Error "[ERROR] Assembly loading failed: $_"
     exit 1
 }
 
@@ -50,10 +47,6 @@ catch {
 # ============================================================================
 
 function Load-Configuration {
-    <#
-    .SYNOPSIS
-        Laedt die Konfiguration aus config.json und expandiert Pfade korrekt
-    #>
     param([string]$Path)
 
     if (-not (Test-Path $Path)) {
@@ -63,19 +56,13 @@ function Load-Configuration {
 
     try {
         Write-Host "[INFO] Lade Konfiguration von: $Path" -ForegroundColor Cyan
-        
-        # Lese config.json mit UTF8 Encoding
         $configJson = Get-Content -Path $Path -Raw -Encoding UTF8
-        
-        # Parse als JSON
         $config = $configJson | ConvertFrom-Json -ErrorAction Stop
-        
         Write-Host "[OK] Config erfolgreich geladen" -ForegroundColor Green
-        
         return $config
     }
     catch {
-        Write-Error "[ERROR] Fehler beim Laden der Config: $($_.Exception.Message)"
+        Write-Error "[ERROR] Config error: $($_.Exception.Message)"
         return $null
     }
 }
@@ -85,16 +72,11 @@ function Load-Configuration {
 # ============================================================================
 
 function Resolve-ImagePath {
-    <#
-    .SYNOPSIS
-        Resolved einen Bildpfad korrekt relativ zum Skript
-    #>
     param(
         [string]$ImageName,
         [string]$BasePath = "PNG"
     )
     
-    # Baue den Pfad zusammen
     $fullPath = Join-Path -Path $PSScriptRoot -ChildPath $BasePath | Join-Path -ChildPath $ImageName
     
     if (Test-Path -Path $fullPath -PathType Leaf) {
@@ -106,25 +88,16 @@ function Resolve-ImagePath {
 }
 
 # ============================================================================
-# IMAGE LOADING HELPER
+# IMAGE LOADING
 # ============================================================================
 
 function Load-BitmapImage {
-    <#
-    .SYNOPSIS
-        Laedt ein Bild mit korrektem URI Format
-    #>
     param(
         [string]$ImagePath,
         [string]$ImageName = "Unknown"
     )
     
-    if ([string]::IsNullOrEmpty($ImagePath)) {
-        Write-Warning "[WARN] Bildpfad ist leer fuer $ImageName"
-        return $null
-    }
-    
-    if (-not (Test-Path $ImagePath)) {
+    if ([string]::IsNullOrEmpty($ImagePath) -or -not (Test-Path $ImagePath)) {
         Write-Warning "[WARN] Bilddatei nicht gefunden: $ImagePath"
         return $null
     }
@@ -137,32 +110,23 @@ function Load-BitmapImage {
         $bitmapImage.UriSource = New-Object System.Uri($ImagePath, [System.UriKind]::Absolute)
         $bitmapImage.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
         $bitmapImage.EndInit()
-        $bitmapImage.Freeze()  # Freeze fuer Cross-Thread Zugriff
+        $bitmapImage.Freeze()
         
         Write-Host "[OK] Bild geladen: $ImageName" -ForegroundColor Green
         return $bitmapImage
     }
     catch {
-        Write-Warning "[WARN] Fehler beim Laden des Bildes $ImageName : $_"
+        Write-Warning "[WARN] Fehler beim Laden: $_"
         return $null
     }
 }
 
 # ============================================================================
-# IMAGE BRUSH HELPER (fuer Frameless Windows)
+# IMAGE BRUSH CREATION
 # ============================================================================
 
 function Create-ImageBrush {
-    <#
-    .SYNOPSIS
-        Erstellt einen ImageBrush aus einem BitmapImage
-    #>
-    param(
-        [System.Windows.Media.Imaging.BitmapImage]$BitmapImage,
-        [System.Windows.Media.Stretch]$Stretch = [System.Windows.Media.Stretch]::UniformToFill,
-        [System.Windows.Media.AlignmentX]$AlignmentX = [System.Windows.Media.AlignmentX]::Center,
-        [System.Windows.Media.AlignmentY]$AlignmentY = [System.Windows.Media.AlignmentY]::Center
-    )
+    param([System.Windows.Media.Imaging.BitmapImage]$BitmapImage)
     
     if ($null -eq $BitmapImage) {
         return $null
@@ -171,14 +135,13 @@ function Create-ImageBrush {
     try {
         $brush = New-Object System.Windows.Media.ImageBrush
         $brush.ImageSource = $BitmapImage
-        $brush.Stretch = $Stretch
-        $brush.AlignmentX = $AlignmentX
-        $brush.AlignmentY = $AlignmentY
-        $brush.Opacity = 1.0
+        $brush.Stretch = [System.Windows.Media.Stretch]::UniformToFill
+        $brush.AlignmentX = [System.Windows.Media.AlignmentX]::Center
+        $brush.AlignmentY = [System.Windows.Media.AlignmentY]::Center
         return $brush
     }
     catch {
-        Write-Warning "[WARN] Fehler beim Erstellen des ImageBrush: $_"
+        Write-Warning "[WARN] ImageBrush error: $_"
         return $null
     }
 }
@@ -188,23 +151,15 @@ function Create-ImageBrush {
 # ============================================================================
 
 function Initialize-WindowResources {
-    <#
-    .SYNOPSIS
-        Initialisiert alle Window-Ressourcen aus der Konfiguration
-    #>
-    param(
-        [pscustomobject]$Config
-    )
+    param([pscustomobject]$Config)
 
     try {
         Write-Host "[INFO] Initialisiere Window-Ressourcen..." -ForegroundColor Cyan
         
-        # Resolve image paths
         $iconPath = Resolve-ImagePath -ImageName $Config.paths.windowIcon
         $bgPath = Resolve-ImagePath -ImageName $Config.paths.backgroundImage
         $closeButtonPath = Resolve-ImagePath -ImageName $Config.paths.closeButtonNormalPath
         
-        # Load images
         $script:WindowIcon = $null
         $script:BackgroundBrush = $null
         $script:CloseButtonImage = $null
@@ -213,7 +168,6 @@ function Initialize-WindowResources {
             $script:WindowIcon = Load-BitmapImage -ImagePath $iconPath -ImageName "Window Icon"
         }
         
-        # Load background image
         if ($bgPath) {
             $backgroundImage = Load-BitmapImage -ImagePath $bgPath -ImageName "Background Image"
             if ($backgroundImage) {
@@ -221,19 +175,17 @@ function Initialize-WindowResources {
             }
         }
         
-        # Load close button image
         if ($closeButtonPath) {
             $script:CloseButtonImage = Load-BitmapImage -ImagePath $closeButtonPath -ImageName "Close Button"
         }
         
-        # Validiere kritische Ressourcen
         if ($null -eq $script:BackgroundBrush) {
-            Write-Error "[ERROR] Hintergrundbild konnte nicht geladen werden: $bgPath"
+            Write-Error "[ERROR] Background Image failed"
             return $false
         }
         
         if ($null -eq $script:CloseButtonImage) {
-            Write-Error "[ERROR] Close Button Image konnte nicht geladen werden: $closeButtonPath"
+            Write-Error "[ERROR] Close Button Image failed"
             return $false
         }
         
@@ -241,16 +193,16 @@ function Initialize-WindowResources {
         return $true
     }
     catch {
-        Write-Error "[ERROR] Fehler bei der Ressourcen-Initialisierung: $($_.Exception.Message)"
+        Write-Error "[ERROR] Resource initialization failed: $_"
         return $false
     }
 }
 
 # ============================================================================
-# XAML DEFINITION (CLEAN & STABLE)
+# XAML DEFINITION (SIMPLE & STABLE)
 # ============================================================================
 
-$xaml = @"
+$xamlString = @"
 <Window 
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -264,90 +216,35 @@ $xaml = @"
     x:Name="MainWindow">
 
     <Grid x:Name="RootGrid" Background="Transparent">
-        <!-- OVERLAY GRID -->
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="40" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <!-- TITLE BAR -->
-            <Border x:Name="TitleBar" Grid.Row="0" Background="Transparent" Opacity="1.0">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+        <!-- TITLE BAR -->
+        <Border x:Name="TitleBar" Grid.Row="0" Background="Transparent">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                    <!-- Window Icon (Left) -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
-                        <Image 
-                            x:Name="WindowIcon" 
-                            Width="24" 
-                            Height="24" 
-                            Margin="0,0,8,0"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Left" />
-                    </StackPanel>
-
-                    <!-- Window Title -->
-                    <TextBlock 
-                        x:Name="TitleText"
-                        Text="ModernUI v1.00.00"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Left"
-                        Margin="40,0,0,0"
-                        FontSize="14"
-                        Foreground="#FFFFFF"
-                        FontWeight="SemiBold" />
-
-                    <!-- Spacer -->
-                    <Border Grid.Column="1" />
-
-                    <!-- Window Controls (Right) -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                        <!-- Close Button -->
-                        <Button 
-                            x:Name="CloseButton" 
-                            Width="40"
-                            Height="40"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Cursor="Hand"
-                            Padding="6" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <!-- MAIN CONTENT AREA -->
-            <Grid Grid.Row="1" Background="Transparent">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock 
-                        Text="ModernUI v1.00.00" 
-                        FontSize="32" 
-                        FontWeight="Bold" 
-                        Foreground="#FFFFFF"
-                        TextAlignment="Center"
-                        Margin="0,0,0,16" />
-                    <TextBlock 
-                        Text="Modern UI Framework fuer PowerShell WPF"
-                        FontSize="16"
-                        Foreground="#E0E0E0"
-                        TextAlignment="Center"
-                        Margin="0,0,0,32" />
-                    <Button 
-                        x:Name="OKButton"
-                        Content="OK"
-                        Width="120"
-                        Height="40"
-                        Background="#007ACC"
-                        Foreground="White"
-                        FontSize="14"
-                        HorizontalAlignment="Center"
-                        FocusVisualStyle="{x:Null}" />
-                </StackPanel>
+                <Image x:Name="WindowIconImage" Grid.Column="0" Width="24" Height="24" Margin="8,0,0,0" VerticalAlignment="Center" />
+                
+                <TextBlock x:Name="TitleText" Grid.Column="1" Text="ModernUI v1.00.00" VerticalAlignment="Center" Margin="40,0,0,0" FontSize="14" Foreground="#FFFFFF" FontWeight="SemiBold" />
+                
+                <Button x:Name="CloseButton" Grid.Column="2" Width="40" Height="40" Background="Transparent" BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" VerticalAlignment="Center" />
             </Grid>
+        </Border>
+
+        <!-- MAIN CONTENT -->
+        <Grid Grid.Row="1" Background="Transparent">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="ModernUI v1.00.00" FontSize="32" FontWeight="Bold" Foreground="#FFFFFF" TextAlignment="Center" Margin="0,0,0,16" />
+                <TextBlock Text="Modern UI Framework fuer PowerShell WPF" FontSize="16" Foreground="#E0E0E0" TextAlignment="Center" Margin="0,0,0,32" />
+                <Button x:Name="OKButton" Content="OK" Width="120" Height="40" Background="#007ACC" Foreground="White" FontSize="14" HorizontalAlignment="Center" />
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>
@@ -358,44 +255,55 @@ $xaml = @"
 # ============================================================================
 
 function Initialize-WPF {
-    param(
-        [xml]$Xaml,
-        [pscustomobject]$Config
-    )
+    param([pscustomobject]$Config)
 
     try {
         Write-Host "[INFO] Initialisiere WPF-UI..." -ForegroundColor Cyan
         
-        # Create XamlReader
-        $xmlReader = [System.Xml.XmlNodeReader]::new($Xaml)
+        # Parse XAML
+        $xamlXml = [xml]$xamlString
+        $xmlReader = [System.Xml.XmlNodeReader]::new($xamlXml)
         $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
 
-        # Store window reference
-        $script:WindowReference = $window
-        $script:Config = $Config
+        if ($null -eq $window) {
+            Write-Error "[ERROR] XAML parsing returned null"
+            return $null
+        }
 
-        # Get UI Elements
-        $titleBar = $window.FindName("TitleBar")
-        $closeButton = $window.FindName("CloseButton")
-        $windowIcon = $window.FindName("WindowIcon")
-        $okButton = $window.FindName("OKButton")
+        $script:WindowReference = $window
 
         # =====================================================================
-        # SET BACKGROUND ON WINDOW
+        # GET UI ELEMENTS
+        # =====================================================================
+        
+        $titleBar = $window.FindName("TitleBar")
+        $closeButton = $window.FindName("CloseButton")
+        $windowIconImg = $window.FindName("WindowIconImage")
+        $okButton = $window.FindName("OKButton")
+
+        if ($null -eq $closeButton) {
+            Write-Error "[ERROR] CloseButton element not found in XAML"
+            return $null
+        }
+
+        if ($null -eq $titleBar) {
+            Write-Error "[ERROR] TitleBar element not found in XAML"
+            return $null
+        }
+
+        # =====================================================================
+        # SET BACKGROUND
         # =====================================================================
         if ($script:BackgroundBrush) {
             $window.Background = $script:BackgroundBrush
             Write-Host "[OK] Hintergrundbild auf Window gesetzt" -ForegroundColor Green
-        } else {
-            Write-Host "[WARN] Hintergrundbild konnte nicht gesetzt werden" -ForegroundColor Yellow
-            $window.Background = [System.Windows.Media.Brushes]::DarkGray
         }
 
         # =====================================================================
         # SET WINDOW ICON
         # =====================================================================
-        if ($script:WindowIcon) {
-            $windowIcon.Source = $script:WindowIcon
+        if ($script:WindowIcon -and $windowIconImg) {
+            $windowIconImg.Source = $script:WindowIcon
             Write-Host "[OK] Window-Icon gesetzt" -ForegroundColor Green
         }
 
@@ -403,67 +311,61 @@ function Initialize-WPF {
         # SET CLOSE BUTTON IMAGE
         # =====================================================================
         if ($script:CloseButtonImage) {
-            # Create Image control for the button
-            $buttonImage = New-Object System.Windows.Controls.Image
-            $buttonImage.Source = $script:CloseButtonImage
-            $buttonImage.Stretch = [System.Windows.Media.Stretch]::Uniform
-            $buttonImage.RenderOptions.SetBitmapScalingMode($buttonImage, [System.Windows.Media.BitmapScalingMode]::HighQuality)
-            
-            $closeButton.Content = $buttonImage
-            Write-Host "[OK] Close Button Image gesetzt" -ForegroundColor Green
+            try {
+                $closeButton.Content = $script:CloseButtonImage
+                $closeButton.Padding = New-Object System.Windows.Thickness(4)
+                Write-Host "[OK] Close Button Image gesetzt" -ForegroundColor Green
+            }
+            catch {
+                Write-Warning "[WARN] Close button content error: $_"
+            }
         }
 
         # =====================================================================
-        # CREATE TOOLTIP FOR CLOSE BUTTON
+        # ADD TOOLTIP
         # =====================================================================
-        $tooltip = New-Object System.Windows.Controls.ToolTip
-        $tooltip.Content = "Programm beenden"
-        $tooltip.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(64, 64, 64))
-        $tooltip.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(255, 255, 255))
-        $tooltip.FontSize = 12
-        $tooltip.Padding = New-Object System.Windows.Thickness(8)
-        $closeButton.ToolTip = $tooltip
-        
-        Write-Host "[OK] Tooltip fuer Close Button hinzugefuegt" -ForegroundColor Green
+        try {
+            $tooltip = New-Object System.Windows.Controls.ToolTip
+            $tooltip.Content = "Programm beenden"
+            $tooltip.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(64, 64, 64))
+            $tooltip.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(255, 255, 255))
+            $tooltip.FontSize = 12
+            $tooltip.Padding = New-Object System.Windows.Thickness(8)
+            $closeButton.ToolTip = $tooltip
+            Write-Host "[OK] Tooltip fuer Close Button hinzugefuegt" -ForegroundColor Green
+        }
+        catch {
+            Write-Warning "[WARN] Tooltip error: $_"
+        }
 
-        # =====================================================================
-        # NO HOVER EFFECTS - STABLE & RELIABLE
-        # =====================================================================
         Write-Host "[OK] Close Button ohne Hover-Effekte (stabil)" -ForegroundColor Green
 
         # =====================================================================
-        # TITLE BAR DRAG HANDLER
+        # TITLE BAR DRAG
         # =====================================================================
         $titleBar.Add_MouseLeftButtonDown({
-            param($sender, $e)
             if ($script:WindowReference -ne $null) {
-                try {
-                    $script:WindowReference.DragMove()
-                }
-                catch {
-                    # Fehler ignorieren wenn Fenster nicht verschiebbar
-                }
+                try { $script:WindowReference.DragMove() } catch { }
             }
         })
 
         # =====================================================================
-        # CLOSE BUTTON CLICK HANDLER
+        # CLOSE BUTTON CLICK
         # =====================================================================
         $closeButton.Add_Click({
-            param($sender, $e)
             if ($script:WindowReference -ne $null) {
                 try {
                     Write-Host "[OK] Close Button geklickt - Fenster wird geschlossen" -ForegroundColor Green
                     $script:WindowReference.Close()
                 }
                 catch {
-                    Write-Warning "[WARN] Fehler beim Schliessen des Fensters: $_"
+                    Write-Warning "[WARN] Close error: $_"
                 }
             }
         })
 
         # =====================================================================
-        # OK BUTTON CLICK HANDLER
+        # OK BUTTON CLICK
         # =====================================================================
         $okButton.Add_Click({
             Write-Host "[OK] OK Button geklickt" -ForegroundColor Green
@@ -473,76 +375,63 @@ function Initialize-WPF {
         return $window
     }
     catch {
-        Write-Error "[ERROR] Fehler beim Initialisieren der WPF-UI: $_"
+        Write-Error "[ERROR] WPF initialization failed: $_"
         Write-Error $_.ScriptStackTrace
         return $null
     }
 }
 
 # ============================================================================
-# MAIN EXECUTION
+# MAIN
 # ============================================================================
 
-function Show-ModernUI {
-    try {
-        Write-Host ""
-        Write-Host "=================================================" -ForegroundColor Cyan
-        Write-Host "[INFO] Starte ModernUI v1.00.00 (FINAL STABLE)..." -ForegroundColor Cyan
-        Write-Host "=================================================" -ForegroundColor Cyan
-        Write-Host ""
-        
-        # Load Config
-        $config = Load-Configuration -Path $ConfigPath
-        if ($null -eq $config) {
-            Write-Error "[ERROR] Konfiguration konnte nicht geladen werden"
-            return
-        }
-
-        Write-Host ""
-        
-        # Initialize Resources
-        if (-not (Initialize-WindowResources -Config $config)) {
-            Write-Error "[ERROR] Ressourcen-Initialisierung fehlgeschlagen"
-            return
-        }
-
-        Write-Host ""
-        
-        # Convert XAML String to XML
-        $xamlXml = [xml]$xaml
-
-        # Initialize WPF and show Window
-        $window = Initialize-WPF -Xaml $xamlXml -Config $config
-        
-        if ($null -eq $window) {
-            Write-Error "[ERROR] Fenster konnte nicht erstellt werden"
-            return
-        }
-        
-        Write-Host ""
-        Write-Host "=================================================" -ForegroundColor Green
-        Write-Host "[OK] ModernUI v1.00.00 erfolgreich gestartet" -ForegroundColor Green
-        Write-Host "=================================================" -ForegroundColor Green
-        Write-Host "   [OK] Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
-        Write-Host "   [OK] Hintergrundbild angezeigt" -ForegroundColor Green
-        Write-Host "   [OK] PNG Close Button mit Tooltip" -ForegroundColor Green
-        Write-Host "   [OK] Cursor-Feedback (Hand)" -ForegroundColor Green
-        Write-Host "   [OK] Config-driven Image Loading" -ForegroundColor Green
-        Write-Host "   [OK] Rahmenloses Fenster Design" -ForegroundColor Green
-        Write-Host "   [OK] FINAL STABLE RELIABLE VERSION" -ForegroundColor Green
-        Write-Host "=================================================" -ForegroundColor Green
-        Write-Host ""
-        
-        $window.ShowDialog() | Out-Null
+try {
+    Write-Host ""
+    Write-Host "=================================================" -ForegroundColor Cyan
+    Write-Host "[INFO] Starte ModernUI v1.00.00 (FINAL STABLE)..." -ForegroundColor Cyan
+    Write-Host "=================================================" -ForegroundColor Cyan
+    Write-Host ""
+    
+    $config = Load-Configuration -Path $ConfigPath
+    if ($null -eq $config) {
+        Write-Error "[ERROR] Config loading failed"
+        exit 1
     }
-    catch {
-        Write-Error "[ERROR] Fehler beim Starten der ModernUI: $_"
-        Write-Error $_.ScriptStackTrace
+
+    Write-Host ""
+    
+    if (-not (Initialize-WindowResources -Config $config)) {
+        Write-Error "[ERROR] Resource initialization failed"
+        exit 1
     }
+
+    Write-Host ""
+    
+    $window = Initialize-WPF -Config $config
+    
+    if ($null -eq $window) {
+        Write-Error "[ERROR] Window creation failed"
+        exit 1
+    }
+    
+    Write-Host ""
+    Write-Host "=================================================" -ForegroundColor Green
+    Write-Host "[OK] ModernUI v1.00.00 erfolgreich gestartet" -ForegroundColor Green
+    Write-Host "=================================================" -ForegroundColor Green
+    Write-Host "   [OK] Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
+    Write-Host "   [OK] Hintergrundbild angezeigt" -ForegroundColor Green
+    Write-Host "   [OK] PNG Close Button mit Tooltip" -ForegroundColor Green
+    Write-Host "   [OK] Cursor-Feedback (Hand)" -ForegroundColor Green
+    Write-Host "   [OK] Config-driven Image Loading" -ForegroundColor Green
+    Write-Host "   [OK] Rahmenloses Fenster Design" -ForegroundColor Green
+    Write-Host "   [OK] FINAL STABLE RELIABLE VERSION" -ForegroundColor Green
+    Write-Host "=================================================" -ForegroundColor Green
+    Write-Host ""
+    
+    $window.ShowDialog() | Out-Null
 }
-
-# ============================================================================
-# ENTRY POINT
-# ============================================================================
-
-Show-ModernUI
+catch {
+    Write-Error "[ERROR] Fatal error: $_"
+    Write-Error $_.ScriptStackTrace
+    exit 1
+}
