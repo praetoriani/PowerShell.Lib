@@ -70,8 +70,6 @@ function Load-Configuration {
         $config = $configJson | ConvertFrom-Json -ErrorAction Stop
         
         Write-Host "[OK] Config erfolgreich geladen" -ForegroundColor Green
-        Write-Host "     Version: $($config.version)" -ForegroundColor Gray
-        Write-Host "     Application: $($config.application.name)" -ForegroundColor Gray
         
         return $config
     }
@@ -282,7 +280,6 @@ $xaml = @"
                             Height="32" 
                             Background="Transparent" 
                             BorderThickness="0"
-                            Cursor="Arrow"
                             HorizontalContentAlignment="Center" 
                             VerticalContentAlignment="Center">
                             <Image 
@@ -343,7 +340,7 @@ function Initialize-WPF {
         $xmlReader = [System.Xml.XmlNodeReader]::new($Xaml)
         $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
 
-        # Store window reference globally for event handlers
+        # Store window reference in script scope (CRITICAL for event handlers)
         $script:WindowReference = $window
         $script:Config = $Config
 
@@ -354,6 +351,16 @@ function Initialize-WPF {
         $windowIcon = $window.FindName("WindowIcon")
         $bgImage = $window.FindName("BackgroundImage")
         $okButton = $window.FindName("OKButton")
+
+        # =====================================================================
+        # STORE IMAGE REFERENCES IN SCRIPT SCOPE FOR EVENT HANDLERS
+        # =====================================================================
+        # This is CRITICAL - event handler scopes cannot access local variables
+        $script:CloseButtonImageControl = $closeButtonImage
+
+        # =====================================================================
+        # SET STATIC IMAGES
+        # =====================================================================
 
         # Set Background Image
         if ($script:BackgroundImage) {
@@ -367,41 +374,15 @@ function Initialize-WPF {
             Write-Host "[OK] Window-Icon gesetzt" -ForegroundColor Green
         }
 
-        # Set Close Button Image
+        # Set Close Button Image (Normal State)
         if ($script:CloseButtonNormal) {
             $closeButtonImage.Source = $script:CloseButtonNormal
             Write-Host "[OK] Close Button Image gesetzt" -ForegroundColor Green
         }
 
-        # Hover Effects
-        $closeButton.Add_MouseEnter({
-            param($sender, $e)
-            if ($script:CloseButtonHover -ne $null) {
-                $sender.FindName("CloseButtonImage").Source = $script:CloseButtonHover
-            }
-        })
-
-        $closeButton.Add_MouseLeave({
-            param($sender, $e)
-            if ($script:CloseButtonNormal -ne $null) {
-                $sender.FindName("CloseButtonImage").Source = $script:CloseButtonNormal
-            }
-        })
-
-        # Alternative: Access via parent window
-        $closeButton.Add_MouseEnter({
-            if ($script:CloseButtonHover -ne $null) {
-                $closeButtonImage.Source = $script:CloseButtonHover
-            }
-        })
-
-        $closeButton.Add_MouseLeave({
-            if ($script:CloseButtonNormal -ne $null) {
-                $closeButtonImage.Source = $script:CloseButtonNormal
-            }
-        })
-
-        # Window Dragging (Title Bar)
+        # =====================================================================
+        # TITLE BAR DRAG HANDLER
+        # =====================================================================
         $titleBar.Add_MouseLeftButtonDown({
             param($sender, $e)
             if ($script:WindowReference -ne $null) {
@@ -409,12 +390,44 @@ function Initialize-WPF {
                     $script:WindowReference.DragMove()
                 }
                 catch {
-                    Write-Warning "Fehler beim Verschieben des Fensters: $_"
+                    Write-Warning "[WARN] Fehler beim Verschieben des Fensters: $_"
                 }
             }
         })
 
-        # Close Button Click
+        # =====================================================================
+        # CLOSE BUTTON HOVER EFFECTS (FIXED)
+        # =====================================================================
+        # Use script-scoped variables for image references
+        # This fixes the "property 'Source' not found" error
+        
+        $closeButton.Add_MouseEnter({
+            param($sender, $e)
+            try {
+                if ($script:CloseButtonHover -ne $null -and $script:CloseButtonImageControl -ne $null) {
+                    $script:CloseButtonImageControl.Source = $script:CloseButtonHover
+                }
+            }
+            catch {
+                Write-Warning "[WARN] Fehler beim Hover-Enter: $_"
+            }
+        })
+
+        $closeButton.Add_MouseLeave({
+            param($sender, $e)
+            try {
+                if ($script:CloseButtonNormal -ne $null -and $script:CloseButtonImageControl -ne $null) {
+                    $script:CloseButtonImageControl.Source = $script:CloseButtonNormal
+                }
+            }
+            catch {
+                Write-Warning "[WARN] Fehler beim Hover-Leave: $_"
+            }
+        })
+
+        # =====================================================================
+        # CLOSE BUTTON CLICK HANDLER
+        # =====================================================================
         $closeButton.Add_Click({
             param($sender, $e)
             if ($script:WindowReference -ne $null) {
@@ -422,12 +435,14 @@ function Initialize-WPF {
                     $script:WindowReference.Close()
                 }
                 catch {
-                    Write-Warning "Fehler beim Schliessen des Fensters: $_"
+                    Write-Warning "[WARN] Fehler beim Schliessen des Fensters: $_"
                 }
             }
         })
 
-        # OK Button Click
+        # =====================================================================
+        # OK BUTTON CLICK HANDLER
+        # =====================================================================
         $okButton.Add_Click({
             Write-Host "[OK] OK Button geklickt" -ForegroundColor Green
         })
