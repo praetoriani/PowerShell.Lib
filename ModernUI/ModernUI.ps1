@@ -12,13 +12,13 @@
 .VERSION
     1.00.00 (Stable Release)
     - Fenster verschiebbar
-    - Hover-Effekte fuer Close Button via PowerShell Events + Custom ControlTemplate
+    - Hover-Effekte fuer Close Button via WPF IsMouseOver Trigger + ImageBrush Background
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
     - Rahmenloses Fenster Design mit transparenter Titelleiste
-    - **FIX: Custom ControlTemplate fuer Close Button (KEINE Hover-Overlay!)**
-    - **FIX: IsMouseOver Trigger in Template fuer zuverlassige Visuals**
-    - **FIX: Image schwapping mit PowerShell Events**
+    - **FIX: Proper ControlTemplate with IsMouseOver Trigger + Border Background**
+    - **FIX: Background als ImageBrush (nicht Image-Control!)**
+    - **FIX: TemplateBinding Background in Border**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -211,8 +211,8 @@ function Initialize-WindowResources {
         $script:WindowIcon = $null
         $script:BackgroundImage = $null
         $script:BackgroundBrush = $null
-        $script:CloseButtonNormalImage = $null
-        $script:CloseButtonHoverImage = $null
+        $script:CloseButtonNormalBrush = $null
+        $script:CloseButtonHoverBrush = $null
         
         if ($iconPath) {
             $script:WindowIcon = Load-BitmapImage -ImagePath $iconPath -ImageName "Window Icon"
@@ -226,12 +226,19 @@ function Initialize-WindowResources {
             }
         }
         
+        # CRITICAL: Load close button images AND create brushes for triggers
         if ($closeNormalPath) {
-            $script:CloseButtonNormalImage = Load-BitmapImage -ImagePath $closeNormalPath -ImageName "Close Button Normal"
+            $normalImage = Load-BitmapImage -ImagePath $closeNormalPath -ImageName "Close Button Normal"
+            if ($normalImage) {
+                $script:CloseButtonNormalBrush = Create-ImageBrush -BitmapImage $normalImage -Stretch Uniform
+            }
         }
         
         if ($closeHoverPath) {
-            $script:CloseButtonHoverImage = Load-BitmapImage -ImagePath $closeHoverPath -ImageName "Close Button Hover"
+            $hoverImage = Load-BitmapImage -ImagePath $closeHoverPath -ImageName "Close Button Hover"
+            if ($hoverImage) {
+                $script:CloseButtonHoverBrush = Create-ImageBrush -BitmapImage $hoverImage -Stretch Uniform
+            }
         }
         
         # Validiere kritische Ressourcen
@@ -240,13 +247,13 @@ function Initialize-WindowResources {
             return $false
         }
         
-        if ($null -eq $script:CloseButtonNormalImage) {
-            Write-Error "[ERROR] Close Button Normal Image konnte nicht geladen werden: $closeNormalPath"
+        if ($null -eq $script:CloseButtonNormalBrush) {
+            Write-Error "[ERROR] Close Button Normal Brush konnte nicht erstellt werden: $closeNormalPath"
             return $false
         }
         
-        if ($null -eq $script:CloseButtonHoverImage) {
-            Write-Error "[ERROR] Close Button Hover Image konnte nicht geladen werden: $closeHoverPath"
+        if ($null -eq $script:CloseButtonHoverBrush) {
+            Write-Error "[ERROR] Close Button Hover Brush konnte nicht erstellt werden: $closeHoverPath"
             return $false
         }
         
@@ -260,13 +267,13 @@ function Initialize-WindowResources {
 }
 
 # ============================================================================
-# XAML DEFINITION (WITH CUSTOM CONTROL TEMPLATE FOR CLOSE BUTTON)
+# XAML DEFINITION (WITH PROPER CONTROL TEMPLATE + ISMOUSEOVER TRIGGER)
 # ============================================================================
-# CRITICAL FIX:
-# Der Close Button bekommt eine CUSTOM ControlTemplate, die:
-# 1. KEIN Hover-Overlay hat (kein Border mit MouseOver Trigger)
-# 2. NUR die Image anzeigt
-# 3. PowerShell Events fuer Image-Swapping nutzt
+# CRITICAL:
+# Der Close Button bekommt ein Style mit Custom ControlTemplate, das:
+# 1. Border mit TemplateBinding Background (CRUCIAL!)
+# 2. IsMouseOver Trigger in ControlTemplate.Triggers
+# 3. Background als ImageBrush (nicht Image-Control!)
 
 $xaml = @"
 <Window 
@@ -282,19 +289,33 @@ $xaml = @"
     x:Name="MainWindow">
 
     <Window.Resources>
-        <!-- CRITICAL: Custom ControlTemplate for Close Button WITHOUT hover overlay -->
-        <ControlTemplate x:Key="CloseButtonTemplate" TargetType="Button">
-            <Grid Background="Transparent" x:Name="ButtonGrid">
-                <!-- ONLY the Image - NO background border that would cause overlay -->
-                <Image 
-                    x:Name="CloseButtonImageInTemplate" 
-                    Width="16" 
-                    Height="16" 
-                    Stretch="UniformToFill"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Center" />
-            </Grid>
-        </ControlTemplate>
+        <!-- CRITICAL: Style for Close Button with IsMouseOver Trigger + ImageBrush Background -->
+        <Style x:Key="CloseButtonStyle" TargetType="Button">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Background" Value="{DynamicResource CloseButtonNormalBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <!-- CRITICAL: Border with TemplateBinding Background (this is where the magic happens!) -->
+                        <Border 
+                            Name="ButtonBorder"
+                            BorderThickness="0"
+                            Background="{TemplateBinding Background}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                            <!-- No Content needed - Background is the Image! -->
+                        </Border>
+                        
+                        <!-- CRITICAL: IsMouseOver Trigger - Changes Background to Hover Brush -->
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource CloseButtonHoverBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid x:Name="RootGrid" Background="Transparent">
@@ -341,26 +362,13 @@ $xaml = @"
 
                     <!-- Window Controls (Right) -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                        <!-- Close Button WITH CUSTOM CONTROL TEMPLATE -->
+                        <!-- Close Button WITH STYLE -->
                         <Button 
                             x:Name="CloseButton" 
                             Width="32" 
                             Height="32" 
-                            Background="Transparent" 
-                            BorderThickness="0"
-                            Padding="0"
-                            HorizontalContentAlignment="Center" 
-                            VerticalContentAlignment="Center"
-                            FocusVisualStyle="{x:Null}"
-                            Template="{StaticResource CloseButtonTemplate}"
-                            Cursor="Arrow">
-                            
-                            <!-- Close Button Image -->
-                            <Image 
-                                x:Name="CloseButtonImage" 
-                                Width="16" 
-                                Height="16" />
-                        </Button>
+                            Style="{StaticResource CloseButtonStyle}"
+                            Cursor="Arrow" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -423,9 +431,16 @@ function Initialize-WPF {
         $rootGrid = $window.FindName("RootGrid")
         $titleBar = $window.FindName("TitleBar")
         $closeButton = $window.FindName("CloseButton")
-        $closeButtonImage = $window.FindName("CloseButtonImage")
         $windowIcon = $window.FindName("WindowIcon")
         $okButton = $window.FindName("OKButton")
+
+        # =====================================================================
+        # REGISTER DYNAMIC RESOURCES FOR TRIGGERS
+        # =====================================================================
+        # Diese Brushes werden von den XAML Triggers verwendet!
+        $window.Resources.Add("CloseButtonNormalBrush", $script:CloseButtonNormalBrush)
+        $window.Resources.Add("CloseButtonHoverBrush", $script:CloseButtonHoverBrush)
+        Write-Host "[OK] Dynamic Resources registriert" -ForegroundColor Green
 
         # =====================================================================
         # CRITICAL FIX: SET BACKGROUND ON WINDOW
@@ -447,19 +462,12 @@ function Initialize-WPF {
         }
 
         # =====================================================================
-        # SET CLOSE BUTTON INITIAL IMAGE (Normal State)
+        # SET CLOSE BUTTON INITIAL BACKGROUND (via Style)
         # =====================================================================
-        if ($script:CloseButtonNormalImage) {
-            $closeButtonImage.Source = $script:CloseButtonNormalImage
-            Write-Host "[OK] Close Button Image (Normal) gesetzt" -ForegroundColor Green
+        if ($script:CloseButtonNormalBrush) {
+            $closeButton.Background = $script:CloseButtonNormalBrush
+            Write-Host "[OK] Close Button Background (Normal) gesetzt" -ForegroundColor Green
         }
-
-        # =====================================================================
-        # STORE IMAGE REFERENCES FOR EVENT HANDLERS
-        # =====================================================================
-        $script:CloseButtonImageControl = $closeButtonImage
-        $script:CloseButtonImageSource_Normal = $script:CloseButtonNormalImage
-        $script:CloseButtonImageSource_Hover = $script:CloseButtonHoverImage
 
         # =====================================================================
         # TITLE BAR DRAG HANDLER
@@ -477,44 +485,13 @@ function Initialize-WPF {
         })
 
         # =====================================================================
-        # CLOSE BUTTON HOVER EFFECTS - DIRECT IMAGE SWAPPING
-        # =====================================================================
-        # CRITICAL: MouseEnter und MouseLeave fuer DIREKTES Image-Swapping
-        # (Mit Custom ControlTemplate - KEIN WPF Style/Template Overlay!)
-        
-        $closeButton.Add_MouseEnter({
-            param($sender, $e)
-            try {
-                if ($script:CloseButtonImageSource_Hover -ne $null -and $script:CloseButtonImageControl -ne $null) {
-                    Write-Host "[INFO] Close Button Hover: Image zu Hover gewechselt" -ForegroundColor Gray
-                    $script:CloseButtonImageControl.Source = $script:CloseButtonImageSource_Hover
-                }
-            }
-            catch {
-                Write-Warning "[WARN] Fehler beim Hover-Enter: $_"
-            }
-        })
-
-        $closeButton.Add_MouseLeave({
-            param($sender, $e)
-            try {
-                if ($script:CloseButtonImageSource_Normal -ne $null -and $script:CloseButtonImageControl -ne $null) {
-                    Write-Host "[INFO] Close Button Leave: Image zu Normal gewechselt" -ForegroundColor Gray
-                    $script:CloseButtonImageControl.Source = $script:CloseButtonImageSource_Normal
-                }
-            }
-            catch {
-                Write-Warning "[WARN] Fehler beim Hover-Leave: $_"
-            }
-        })
-
-        # =====================================================================
         # CLOSE BUTTON CLICK HANDLER
         # =====================================================================
         $closeButton.Add_Click({
             param($sender, $e)
             if ($script:WindowReference -ne $null) {
                 try {
+                    Write-Host "[OK] Close Button geklickt" -ForegroundColor Green
                     $script:WindowReference.Close()
                 }
                 catch {
@@ -585,12 +562,12 @@ function Show-ModernUI {
         Write-Host "[OK] ModernUI v1.00.00 erfolgreich gestartet" -ForegroundColor Green
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host "   * Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
-        Write-Host "   * Hover-Effekte aktiv (Close Button - Image Swap)" -ForegroundColor Green
+        Write-Host "   * Hover-Effekte aktiv (Close Button - IsMouseOver Trigger)" -ForegroundColor Green
         Write-Host "   * Hintergrundbild angezeigt" -ForegroundColor Green
         Write-Host "   * Config-driven Images" -ForegroundColor Green
         Write-Host "   * Rahmenloses Fenster Design" -ForegroundColor Green
         Write-Host "   * Transparente Titelleiste" -ForegroundColor Green
-        Write-Host "   * CUSTOM ControlTemplate (kein Hover-Overlay!)" -ForegroundColor Green
+        Write-Host "   * XAML IsMouseOver Trigger (zuverlässig!)" -ForegroundColor Green
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host ""
         
