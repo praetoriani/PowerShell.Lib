@@ -12,12 +12,12 @@
 .VERSION
     1.00.00 (Stable Release - FINAL)
     - Fenster verschiebbar
-    - PNG Close Button (stabil, keine Hover-Effekte)
+    - PNG Close Button (STABIL - keine Hover-Effekte)
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
     - Rahmenloses Fenster Design
-    - **FINAL: PNG Close Button + Tooltip (Best Practice)**
-    - **PRAGMATIC: Fokus auf Stabilit\u00e4t**
+    - **FINAL: PNG Close Button stabil ohne Hover**
+    - **NO HOVER EFFECTS - CLEAN BUTTON**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -199,7 +199,7 @@ function Initialize-WindowResources {
 }
 
 # ============================================================================
-# XAML DEFINITION (SIMPLE & STABLE)
+# XAML DEFINITION (WITH NO HOVER STYLE)
 # ============================================================================
 
 $xamlString = @"
@@ -214,6 +214,27 @@ $xamlString = @"
     AllowsTransparency="True"
     Background="Transparent"
     x:Name="MainWindow">
+
+    <Window.Resources>
+        <!-- NO HOVER CLOSE BUTTON STYLE -->
+        <Style x:Key="NoHoverButtonStyle" TargetType="Button">
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border 
+                            Background="{TemplateBinding Background}"
+                            BorderThickness="0"
+                            Padding="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
     <Grid x:Name="RootGrid" Background="Transparent">
         <Grid.RowDefinitions>
@@ -234,7 +255,7 @@ $xamlString = @"
                 
                 <TextBlock x:Name="TitleText" Grid.Column="1" Text="ModernUI v1.00.00" VerticalAlignment="Center" Margin="40,0,0,0" FontSize="14" Foreground="#FFFFFF" FontWeight="SemiBold" />
                 
-                <Button x:Name="CloseButton" Grid.Column="2" Width="40" Height="40" Background="Transparent" BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <Button x:Name="CloseButton" Grid.Column="2" Style="{StaticResource NoHoverButtonStyle}" Width="40" Height="40" Cursor="Hand" Margin="0,0,8,0" VerticalAlignment="Center" />
             </Grid>
         </Border>
 
@@ -308,16 +329,26 @@ function Initialize-WPF {
         }
 
         # =====================================================================
-        # SET CLOSE BUTTON IMAGE
+        # SET CLOSE BUTTON IMAGE - AS BACKGROUND
         # =====================================================================
         if ($script:CloseButtonImage) {
             try {
-                $closeButton.Content = $script:CloseButtonImage
+                # Create Image control
+                $buttonImage = New-Object System.Windows.Controls.Image
+                $buttonImage.Source = $script:CloseButtonImage
+                $buttonImage.Stretch = [System.Windows.Media.Stretch]::Uniform
+                $buttonImage.Width = 32
+                $buttonImage.Height = 32
+                $buttonImage.RenderOptions.SetBitmapScalingMode($buttonImage, [System.Windows.Media.BitmapScalingMode]::HighQuality)
+                
+                $closeButton.Content = $buttonImage
+                $closeButton.Background = [System.Windows.Media.Brushes]::Transparent
                 $closeButton.Padding = New-Object System.Windows.Thickness(4)
-                Write-Host "[OK] Close Button Image gesetzt" -ForegroundColor Green
+                
+                Write-Host "[OK] Close Button Image gesetzt (PNG)" -ForegroundColor Green
             }
             catch {
-                Write-Warning "[WARN] Close button content error: $_"
+                Write-Warning "[WARN] Close button image error: $_"
             }
         }
 
@@ -338,7 +369,7 @@ function Initialize-WPF {
             Write-Warning "[WARN] Tooltip error: $_"
         }
 
-        Write-Host "[OK] Close Button ohne Hover-Effekte (stabil)" -ForegroundColor Green
+        Write-Host "[OK] Close Button - NO HOVER EFFECTS (stabil)" -ForegroundColor Green
 
         # =====================================================================
         # TITLE BAR DRAG
@@ -420,8 +451,9 @@ try {
     Write-Host "=================================================" -ForegroundColor Green
     Write-Host "   [OK] Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
     Write-Host "   [OK] Hintergrundbild angezeigt" -ForegroundColor Green
-    Write-Host "   [OK] PNG Close Button mit Tooltip" -ForegroundColor Green
-    Write-Host "   [OK] Cursor-Feedback (Hand)" -ForegroundColor Green
+    Write-Host "   [OK] PNG Close Button (OHNE HOVER-EFFEKTE)" -ForegroundColor Green
+    Write-Host "   [OK] Tooltip 'Programm beenden'" -ForegroundColor Green
+    Write-Host "   [OK] Hand-Cursor" -ForegroundColor Green
     Write-Host "   [OK] Config-driven Image Loading" -ForegroundColor Green
     Write-Host "   [OK] Rahmenloses Fenster Design" -ForegroundColor Green
     Write-Host "   [OK] FINAL STABLE RELIABLE VERSION" -ForegroundColor Green
