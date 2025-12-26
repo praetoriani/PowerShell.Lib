@@ -14,7 +14,7 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 - Window-Resize-Funktionalität an den Rändern
 - Mehrere Fenster-Layouts und Templates
 - Themensystem (Dark/Light Mode)
-- Animation und Übegänge
+- Animation und Übergänge
 - Erweiterte Konfigurationsoptionen
 - Logging-System
 - Unit-Tests
@@ -23,14 +23,41 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 
 ## [1.00.00] - 2025-12-26
 
+### Bugfixes (v1.00.00 Final)
+
+#### XAML Parser Issues
+- ✅ Entfernt x:Class="ModernUI.MainWindow" Direktive (PowerShell XamlReader Inkompatibilität)
+- ✅ Entfernt undefined event handlers (MouseLeftButtonDown="TitleBar_MouseLeftButtonDown", Click="CloseButton_Click")
+- ✅ Hinzugefügt x:Name="TitleBar" für PowerShell-Event-Binding
+- ✅ Event-Handler werden jetzt vollständig in PowerShell registriert
+
+#### ConvertTo-Hashtable Function
+- ✅ Behoben: Funktion gab PSObject statt Hashtable zurück
+- ✅ Verbesserte Rekursion mit process {}
+- ✅ Explizite PSCustomObject-Erkennung
+- ✅ Korrektes Handling von geschachtelten Objekten
+
+#### Event Registration
+- ✅ TitleBar.Add_MouseLeftButtonDown jetzt mit korrektem Binding
+- ✅ Close-Button Hover-Effekte verbessert
+- ✅ Parameter-Binding in Event-Handlern korrigiert
+- ✅ Null-Checks für alle UI-Elemente
+- ✅ Bessere Fehlerbehandlung bei fehlenden Bilddateien
+
+#### Image Loading
+- ✅ Absolute Pfad-Auflösung statt relativen Pfaden
+- ✅ PathType-Validierung vor BitmapImage-Erstellung
+- ✅ Warnungen statt Fehler für fehlende Grafiken
+- ✅ Tag-Speicherung für Close-Button Pfade
+
 ### Hinzugefügt
 
 #### Grundstruktur
-- 🟨 **ModernUI.ps1**: Hauptanwendungsskript mit vollständiger Framework-Orchestrierung
-- 🎯 **ModernUI.xaml**: WPF UI-Definition für rahmenloses Fenster (800x600)
-- 🗊 **config.json**: Zentrale Konfigurationsdatei für Anwendungseinstellungen
+- 🏗️ **ModernUI.ps1**: Hauptanwendungsskript mit vollständiger Framework-Orchestrierung
+- 🎨 **ModernUI.xaml**: WPF UI-Definition für rahmenloses Fenster (800x600)
+- ⚙️ **config.json**: Zentrale Konfigurationsdatei für Anwendungseinstellungen
 - 📖 **README.md**: Umfassende Projektdokumentation
-- 📄 **CHANGELOG.md**: Änderungsverfolgungsdokumentation
+- 📝 **CHANGELOG.md**: Änderungsverfolgungsdokumentation
 
 #### Core Features
 - 🎨 **Frameless Window**: Rahmenloses WPF-Fenster mit vollständiger Transparenz
@@ -40,21 +67,21 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
   - Anwendungstitel
   - Schließen-Button mit Hover-Effekten
 - 🖱️ **Window Dragging**: Fenster kann an der Titelleiste gezogen werden
-- 🐛 **Mouse Events**: Intelligente Event-Handling für Close-Button Hover-Effekte
+- 🎪 **Mouse Events**: Intelligente Event-Handling für Close-Button Hover-Effekte
 
 #### Architektur
-- 🔣 **Global Variables**: Zentralisierte Verwaltung von Anwendungszustand und Konfiguration
+- 🔧 **Global Variables**: Zentralisierte Verwaltung von Anwendungszustand und Konfiguration
   - `$Global:ModernUI_Config`: Konfigurationsdaten
   - `$Global:ModernUI_State`: Laufzeitzustand
   - `$Global:ModernUI_XAML`: XAML-Inhalt
   - `$Global:ScriptPath`: Skript-Verzeichnispfad
 
-- 🙩 **Orchestrierung**: Zentrale `Invoke-RunMainApp`-Funktion
+- 🎯 **Orchestrierung**: Zentrale `Invoke-RunMainApp`-Funktion
   - Koordiniert alle Initialisierungsschritte
   - Verwaltet Programmablauf
   - Hält logisch zusammenhängende Funktionalität gebunden
 
-- 🗭1 **Application Exit**: Zentrale `Invoke-AppExit`-Funktion
+- 🚪 **Application Exit**: Zentrale `Invoke-AppExit`-Funktion
   - Sauberes und fehlerfreies Beenden des Programms
   - Ressourcen-Bereinigung
   - Wird von Close-Button und Programmabbruch aufgerufen
@@ -70,15 +97,22 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
   - PSObject zu Hashtable-Konvertierung
   - Fehlerbehandlung und Validierung
 
+- **Konfiguration konvertieren** (`ConvertTo-Hashtable`)
+  - Rekursive PSObject zu Hashtable Konvertierung
+  - Unterstützung für verschachtelte Objekte
+  - Arrays korrekt verarbeitet
+
 - **XAML laden** (`Load-ModernUI-XAML`)
   - XAML-Datei-Parsing
   - Dynamisches Laden von PNG-Bildern
   - Bildpfad-Auflösung aus Konfiguration
+  - Umfassende Fehlerbehandlung
 
 - **Event-Handler registrieren** (`Register-EventHandlers`)
   - Mouse-Event-Handler für Fenster-Dragging
   - Close-Button-Funktionalität
   - Window-Lifecycle-Management
+  - Hover-Effekte für Close-Button
 
 #### UI Elements
 - 🎨 **Background Layer**: Vollscreeniges PNG-Hintergrund
@@ -86,19 +120,21 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
   - App Icon (BitmapImage aus PNG)
   - Title Text (weiß, Segoe UI)
   - Close Button mit dynamischen Bildern
-- 📄 **Content Area**: Placeholder-Bereich für zukünftige Inhalte
+- 📋 **Content Area**: Placeholder-Bereich für zukünftige Inhalte
 
 #### Fehlerbehandlung
 - Try-Catch-Blöcke in allen kritischen Funktionen
 - Aussagekräftige Fehlermeldungen mit [ModernUI]-Präfix
 - Umgebungsprüfung vor Programmstart
 - Graceful Fallbacks bei fehlenden Ressourcen
+- Warnungen für fehlende Grafiken statt Fehler
 
 #### Dokumentation
 - Ausführliche XML-Doc-Kommentare für alle Funktionen
 - Region-basierte Code-Organisation
 - Inline-Kommentare für komplexe Logik
 - README mit Quick-Start und Entwickler-Anleitung
+- CHANGELOG mit detaillierter Versionsverfolgung
 
 ### Technische Details
 
@@ -114,14 +150,14 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 - **Icons**: 24x24 Pixel
 - **Bilder**: PNG-Format mit Transparenz
 
-#### Browser
+#### Betriebssystem
 - Windows 10+
 - PowerShell ISE kompatibel
 - VS Code PowerShell Extension unterstützt
 
 ### Bekannte Einschränkungen
 - Fenster kann nicht maximiert werden (v1.00.00)
-- Keine Größenveränderung (Resize) möglich (v1.00.00)
+- Keine Größenänderung (Resize) möglich (v1.00.00)
 - Nur einfache Hovereffekte für Close-Button
 - Kein Theme-Switching (v1.00.00)
 
@@ -133,7 +169,7 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 ### Sicherheit
 - Keine externen Netzwerkverbindungen
 - Alle Pfade werden validiert
-- Keine Schörfungen in PowerShell-Sicherheit
+- Keine Einbußen in PowerShell-Sicherheit
 
 ---
 
@@ -190,13 +226,35 @@ Für die erste Inbetriebnahme notwendig:
    .\ModernUI.ps1
    ```
 
+### v1.00.00 Bugfixes - Implementierungsdetails
+
+#### XAML Kompatibilität
+PowerShell's XamlReader kann keine Code-Behind-Klassen (x:Class) laden.
+Die XAML wurde deshalb zu einem reinen Markup-Template vereinfacht.
+Alle Event-Handler werden jetzt in PowerShell registriert:
+
+```powershell
+# Statt in XAML: MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
+# Jetzt in PowerShell:
+$titleBar.Add_MouseLeftButtonDown({ ... })
+```
+
+#### ConvertTo-Hashtable Funktion
+Ursprüngliche Version gab PSCustomObject zurück.
+Neu: Rekursive Konvertierung mit `process {}`:
+
+```powershell
+$jsonContent | ConvertFrom-Json | ConvertTo-Hashtable
+# Gibt jetzt echte Hashtable zurück, nicht PSCustomObject
+```
+
 ### Testing
 
 Empfohlen für v1.00.00:
-- 💧 Fenster-Dragging testen
-- 🔸 Close-Button Funktionalität prüfen
+- 🖱️ Fenster-Dragging testen
+- ✋ Close-Button Funktionalität prüfen
 - 🖼️ Background-Rendering verifizieren
-- 🔎 Fehlerbehandlung unter fehlenden Dateien testen
+- 🔍 Fehlerbehandlung unter fehlenden Dateien testen
 
 ---
 
