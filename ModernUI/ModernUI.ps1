@@ -65,6 +65,50 @@ function Test-ModernUIEnvironment {
 #endregion Environment Checks
 
 #region Configuration Loading
+function ConvertTo-Hashtable {
+    <#
+    .SYNOPSIS
+        Converts a PSObject to a Hashtable recursively.
+        
+    .DESCRIPTION
+        Recursively converts PSCustomObject to hashtable.
+        Handles arrays and nested objects.
+    #>
+    
+    param(
+        [Parameter(ValueFromPipeline = $true)]
+        $InputObject
+    )
+    
+    process {
+        if ($null -eq $InputObject) {
+            return $null
+        }
+        
+        if ($InputObject -is [System.Collections.IDictionary]) {
+            return $InputObject
+        }
+        
+        if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [string]) {
+            $collection = @()
+            foreach ($object in $InputObject) {
+                $collection += ConvertTo-Hashtable -InputObject $object
+            }
+            return $collection
+        }
+        
+        if ($InputObject -is [object] -and $InputObject.GetType().Name -eq 'PSCustomObject') {
+            $hash = @{}
+            foreach ($property in $InputObject.PSObject.Properties) {
+                $hash[$property.Name] = ConvertTo-Hashtable -InputObject $property.Value
+            }
+            return $hash
+        }
+        
+        return $InputObject
+    }
+}
+
 function Load-ModernUIConfig {
     <#
     .SYNOPSIS
@@ -75,7 +119,7 @@ function Load-ModernUIConfig {
         Sets Global:ModernUI_Config for application-wide access.
         
     .OUTPUTS
-        Boolean. Returns $true if successful, $false otherwise.
+        Boolean. Returns true if successful, false otherwise.
     #>
     
     Write-Host "[ModernUI] Configuration is loading..." -ForegroundColor Cyan
@@ -89,7 +133,7 @@ function Load-ModernUIConfig {
     
     try {
         $jsonContent = Get-Content $configPath -Raw | ConvertFrom-Json
-        $Global:ModernUI_Config = ConvertTo-Hashtable $jsonContent
+        $Global:ModernUI_Config = ConvertTo-Hashtable -InputObject $jsonContent
         
         Write-Host "[ModernUI] OK - Configuration loaded successfully" -ForegroundColor Green
         Write-Host "  - App Name: $($Global:ModernUI_Config['appname'])"
@@ -103,39 +147,6 @@ function Load-ModernUIConfig {
         return $false
     }
 }
-
-function ConvertTo-Hashtable {
-    <#
-    .SYNOPSIS
-        Converts a PSObject to a Hashtable recursively.
-    #>
-    
-    param(
-        [Parameter(ValueFromPipeline = $true)]
-        $InputObject
-    )
-    
-    if ($null -eq $InputObject) { return $null }
-    
-    if ($InputObject -is [System.Collections.IDictionary]) {
-        return $InputObject
-    }
-    
-    if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [string]) {
-        $collection = @()
-        foreach ($object in $InputObject) {
-            $collection += ConvertTo-Hashtable $object
-        }
-        return $collection
-    }
-    
-    $hash = @{}
-    foreach ($property in $InputObject.PSObject.Properties) {
-        $hash[$property.Name] = ConvertTo-Hashtable $property.Value
-    }
-    
-    return $hash
-}
 #endregion Configuration Loading
 
 #region XAML Loading
@@ -146,7 +157,7 @@ function Load-ModernUIXAML {
         
     .DESCRIPTION
         Reads ModernUI.xaml and resolves image paths from config.
-        Initializes the WPF window and sets up event handlers.
+        Initializes the WPF window and sets up image sources.
         
     .OUTPUTS
         System.Windows.Window. Returns the loaded window object.
@@ -168,41 +179,52 @@ function Load-ModernUIXAML {
         $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
         $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
         
-        # Load images from config
-        $windowPath = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.window
-        $iconPath = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.appicon
-        $closeNormalPath = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.appclose.normal
-        $closeHoverPath = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.appclose.hover
+        if ($null -eq $window) {
+            Write-Error "[ModernUI] Failed to load XAML - window is null"
+            return $null
+        }
+        
+        # Load images from config - resolve absolute paths
+        $windowBg = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.window
+        $appIcon = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.appicon
+        $closeNormal = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.appclose.normal
+        $closeHover = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.appclose.hover
         
         # Set Background Image
-        if (Test-Path $windowPath) {
+        if (Test-Path $windowBg -PathType Leaf) {
             $bgImage = $window.FindName("BackgroundImage")
             if ($null -ne $bgImage) {
-                $bgImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$windowPath)
+                $bgImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$windowBg)
             }
+        } else {
+            Write-Warning "[ModernUI] Background image not found: $windowBg"
         }
         
         # Set App Icon
-        if (Test-Path $iconPath) {
-            $appIcon = $window.FindName("AppIcon")
-            if ($null -ne $appIcon) {
-                $appIcon.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$iconPath)
+        if (Test-Path $appIcon -PathType Leaf) {
+            $appIconControl = $window.FindName("AppIcon")
+            if ($null -ne $appIconControl) {
+                $appIconControl.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$appIcon)
             }
+        } else {
+            Write-Warning "[ModernUI] App icon not found: $appIcon"
         }
         
-        # Set Close Button Images
-        if (Test-Path $closeNormalPath) {
+        # Set Close Button Image
+        if (Test-Path $closeNormal -PathType Leaf) {
             $closeButton = $window.FindName("CloseButton")
             $closeButtonImage = $window.FindName("CloseButtonImage")
-            if ($null -ne $closeButtonImage) {
-                $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closeNormalPath)
+            if ($null -ne $closeButtonImage -and $null -ne $closeButton) {
+                $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closeNormal)
                 
-                # Store hover path for later use
+                # Store paths in button tag for later hover effects
                 $closeButton.Tag = @{
-                    NormalPath = $closeNormalPath
-                    HoverPath = $closeHoverPath
+                    NormalPath = $closeNormal
+                    HoverPath = $closeHover
                 }
             }
+        } else {
+            Write-Warning "[ModernUI] Close button normal image not found: $closeNormal"
         }
         
         Write-Host "[ModernUI] OK - XAML loaded successfully" -ForegroundColor Green
@@ -233,15 +255,12 @@ function Register-EventHandlers {
     
     Write-Host "[ModernUI] Event handlers are being registered..." -ForegroundColor Cyan
     
-    # Window Drag Handler - find border element for mouse events
-    $xamlContent = Get-Content (Join-Path $Global:ScriptPath "ModernUI.xaml") -Raw
-    
-    # Get the window's main grid
-    $mainGrid = $Window.Content
-    if ($mainGrid -is [System.Windows.Controls.DockPanel]) {
-        $titleBarBorder = $mainGrid.Children[0]
-        if ($titleBarBorder -is [System.Windows.Controls.Border]) {
-            $titleBarBorder.Add_MouseLeftButtonDown({
+    try {
+        # Window Drag Handler - find TitleBar border element
+        $titleBar = $Window.FindName("TitleBar")
+        if ($null -ne $titleBar) {
+            $titleBar.Add_MouseLeftButtonDown({
+                param($sender, $e)
                 try {
                     $Window.DragMove()
                 }
@@ -249,46 +268,63 @@ function Register-EventHandlers {
                     Write-Verbose "[ModernUI] DragMove failed: $_"
                 }
             })
+            Write-Host "  - TitleBar drag enabled" -ForegroundColor Green
+        } else {
+            Write-Warning "[ModernUI] TitleBar element not found in XAML"
         }
-    }
-    
-    # Close Button Handler
-    $closeButton = $Window.FindName("CloseButton")
-    if ($null -ne $closeButton) {
-        $closeButton.Add_Click({
-            Invoke-AppExit
+        
+        # Close Button Handler
+        $closeButton = $Window.FindName("CloseButton")
+        if ($null -ne $closeButton) {
+            $closeButton.Add_Click({
+                param($sender, $e)
+                Invoke-AppExit
+            })
+            Write-Host "  - Close button click handler enabled" -ForegroundColor Green
+            
+            # Hover effects for close button image
+            $closeButtonImage = $Window.FindName("CloseButtonImage")
+            if ($null -ne $closeButtonImage -and $closeButton.Tag) {
+                $closeButton.Add_MouseEnter({
+                    param($sender, $e)
+                    try {
+                        if (Test-Path $sender.Tag.HoverPath -PathType Leaf) {
+                            $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$sender.Tag.HoverPath)
+                        }
+                    }
+                    catch {
+                        Write-Verbose "[ModernUI] Error setting hover image: $_"
+                    }
+                })
+                
+                $closeButton.Add_MouseLeave({
+                    param($sender, $e)
+                    try {
+                        if (Test-Path $sender.Tag.NormalPath -PathType Leaf) {
+                            $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$sender.Tag.NormalPath)
+                        }
+                    }
+                    catch {
+                        Write-Verbose "[ModernUI] Error setting normal image: $_"
+                    }
+                })
+                Write-Host "  - Close button hover effects enabled" -ForegroundColor Green
+            }
+        } else {
+            Write-Warning "[ModernUI] CloseButton element not found in XAML"
+        }
+        
+        # Window Closed Event
+        $Window.Add_Closed({
+            $Global:ModernUI_State.IsRunning = $false
+            Write-Host "[ModernUI] Window closed" -ForegroundColor Yellow
         })
         
-        # Hover effects for close button
-        $closeButtonImage = $Window.FindName("CloseButtonImage")
-        if ($null -ne $closeButtonImage -and $closeButton.Tag) {
-            $closeButton.Add_MouseEnter({
-                try {
-                    $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closeButton.Tag.HoverPath)
-                }
-                catch {
-                    Write-Verbose "[ModernUI] Error setting hover image: $_"
-                }
-            })
-            
-            $closeButton.Add_MouseLeave({
-                try {
-                    $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closeButton.Tag.NormalPath)
-                }
-                catch {
-                    Write-Verbose "[ModernUI] Error setting normal image: $_"
-                }
-            })
-        }
+        Write-Host "[ModernUI] OK - Event handlers registered" -ForegroundColor Green
     }
-    
-    # Window Closed Event
-    $Window.Add_Closed({
-        $Global:ModernUI_State.IsRunning = $false
-        Write-Host "[ModernUI] Window closed" -ForegroundColor Yellow
-    })
-    
-    Write-Host "[ModernUI] OK - Event handlers registered" -ForegroundColor Green
+    catch {
+        Write-Error "[ModernUI] Error registering event handlers: $_"
+    }
 }
 #endregion Event Handlers
 
