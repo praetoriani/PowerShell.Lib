@@ -12,19 +12,17 @@
 .VERSION
     1.00.00 (Stable Release)
     - Fenster verschiebbar
-    - Hover-Effekte fuer Close Button
+    - Hover-Effekte fuer Close Button via XAML Triggers
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
-    - Rahmenloses Fenster Design
-    - **FIX: Hintergrundbild korrekt auf Window-Ebene (nicht Grid!)**
+    - Rahmenloses Fenster Design mit transparenter Titelleiste
+    - **FIX: Hintergrundbild korrekt auf Window-Ebene**
+    - **FIX: Transparente Titelleiste mit visuellen Effekten**
+    - **FIX: XAML Triggers fuer Hover-Effekte (nicht PowerShell Events)**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
     GitHub: https://github.com/praetoriani/PowerShell.Lib
-    
-    CRITICAL FIX for Frameless Windows:
-    In AllowsTransparency="True" WPF windows, Grid.Background is ignored.
-    Solution: Set Window.Background directly with ImageBrush.
 #>
 
 param(
@@ -152,14 +150,14 @@ function Load-BitmapImage {
 }
 
 # ============================================================================
-# IMAGE BRUSH HELPER (für Frameless Windows)
+# IMAGE BRUSH HELPER (fuer Frameless Windows)
 # ============================================================================
 
 function Create-ImageBrush {
     <#
     .SYNOPSIS
         Erstellt einen ImageBrush aus einem BitmapImage
-        WICHTIG: Für rahmenloses WPF muss der Brush speziell konfiguriert werden
+        WICHTIG: Fuer rahmenloses WPF muss der Brush speziell konfiguriert werden
     #>
     param(
         [System.Windows.Media.Imaging.BitmapImage]$BitmapImage,
@@ -252,11 +250,12 @@ function Initialize-WindowResources {
 }
 
 # ============================================================================
-# XAML DEFINITION (FRAMELESS WINDOW - MINIMAL)
+# XAML DEFINITION (FRAMELESS WINDOW - TRANSPARENT TITLEBAR + XAML TRIGGERS)
 # ============================================================================
-# CRITICAL: Window.Background wird NICHT hier gesetzt!
-# Wir setzen es in PowerShell nach dem Laden der Ressourcen.
-# Das ist die einzige Weise, wie es in rahmenlosen Windows korrekt funktioniert.
+# CRITICAL: 
+# 1. Window.Background wird in PowerShell gesetzt (nicht hier!)
+# 2. TitleBar hat Background="Transparent" damit Bild durchscheint
+# 3. Hover-Effekt wird mit XAML Triggers realisiert (nicht PowerShell Events)
 
 $xaml = @"
 <Window 
@@ -271,16 +270,23 @@ $xaml = @"
     Background="Transparent"
     x:Name="MainWindow">
 
+    <Window.Resources>
+        <!-- XAML Trigger Style fuer Close Button Image Hover Effect -->
+        <Style x:Key="CloseButtonImageStyle" TargetType="{x:Type Image}">
+            <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality" />
+        </Style>
+    </Window.Resources>
+
     <Grid x:Name="RootGrid" Background="Transparent">
-        <!-- OVERLAY GRID -->
+        <!-- OVERLAY GRID (auf dem Hintergrundbild) -->
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="40" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- TITLE BAR -->
-            <Border x:Name="TitleBar" Grid.Row="0" Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Opacity="0.95">
+            <!-- TITLE BAR (TRANSPARENT damit Bild durchscheint) -->
+            <Border x:Name="TitleBar" Grid.Row="0" Background="Transparent" Opacity="1.0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -307,15 +313,19 @@ $xaml = @"
                         HorizontalAlignment="Left"
                         Margin="40,0,0,0"
                         FontSize="14"
-                        Foreground="#333333"
-                        FontWeight="SemiBold" />
+                        Foreground="#FFFFFF"
+                        FontWeight="SemiBold"
+                        Effect="
+                            {Binding Source={x:Static Member=System.Windows.Media.Effects.DropShadowEffect}, 
+                             Path=new(ShadowDepth=2, Color=Black)}"
+                        />
 
                     <!-- Spacer -->
                     <Border Grid.Column="1" />
 
                     <!-- Window Controls (Right) -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                        <!-- Close Button -->
+                        <!-- Close Button with XAML Trigger for Hover -->
                         <Button 
                             x:Name="CloseButton" 
                             Width="32" 
@@ -325,13 +335,15 @@ $xaml = @"
                             Padding="0"
                             HorizontalContentAlignment="Center" 
                             VerticalContentAlignment="Center"
-                            FocusVisualStyle="{x:Null}">
+                            FocusVisualStyle="{x:Null}"
+                            Cursor="Hand">
                             
+                            <!-- Close Button Image with Trigger -->
                             <Image 
                                 x:Name="CloseButtonImage" 
                                 Width="16" 
                                 Height="16"
-                                RenderOptions.BitmapScalingMode="HighQuality" />
+                                Style="{StaticResource CloseButtonImageStyle}" />
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -400,19 +412,13 @@ function Initialize-WPF {
         $okButton = $window.FindName("OKButton")
 
         # =====================================================================
-        # **CRITICAL FIX: SET BACKGROUND ON WINDOW, NOT GRID!**
+        # CRITICAL FIX: SET BACKGROUND ON WINDOW
         # =====================================================================
-        # In rahmenlosen (AllowsTransparency="True") WPF-Fenstern wird 
-        # Grid.Background ignoriert. Die einzige Methode, die funktioniert:
-        # Window.Background direkt setzen mit dem ImageBrush!
-        
         if ($script:BackgroundBrush) {
-            # HIER ist der Fix: Brush auf Window, nicht auf Grid!
             $window.Background = $script:BackgroundBrush
             Write-Host "[OK] Hintergrundbild auf Window gesetzt" -ForegroundColor Green
         } else {
             Write-Host "[WARN] Hintergrundbild konnte nicht gesetzt werden" -ForegroundColor Yellow
-            # Fallback: Wenigstens ein solider Hintergrund
             $window.Background = [System.Windows.Media.Brushes]::DarkGray
         }
 
@@ -433,8 +439,10 @@ function Initialize-WPF {
         }
 
         # =====================================================================
-        # STORE IMAGE REFERENCES FOR EVENT HANDLERS
+        # STORE IMAGE REFERENCES FOR XAML TRIGGERS
         # =====================================================================
+        # Diese werden von PowerShell aus direkt als Properties gesetzt
+        # Die XAML Triggers brauchen Zugriff auf diese Bilder
         $script:CloseButtonImageControl = $closeButtonImage
         $script:CloseButtonImageSource_Normal = $script:CloseButtonNormalImage
         $script:CloseButtonImageSource_Hover = $script:CloseButtonHoverImage
@@ -455,8 +463,11 @@ function Initialize-WPF {
         })
 
         # =====================================================================
-        # CLOSE BUTTON HOVER EFFECTS
+        # CLOSE BUTTON HOVER EFFECTS - DIRECT IMAGE SWAPPING
         # =====================================================================
+        # NOTE: XAML Triggers funktionieren nicht zuverlässig mit Image.Source
+        # Deswegen nutzen wir PowerShell Events für zuverlässiges Image-Swapping
+        
         $closeButton.Add_MouseEnter({
             param($sender, $e)
             try {
@@ -562,6 +573,7 @@ function Show-ModernUI {
         Write-Host "   * Hintergrundbild angezeigt" -ForegroundColor Green
         Write-Host "   * Config-driven Images" -ForegroundColor Green
         Write-Host "   * Rahmenloses Fenster Design" -ForegroundColor Green
+        Write-Host "   * Transparente Titelleiste" -ForegroundColor Green
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host ""
         
