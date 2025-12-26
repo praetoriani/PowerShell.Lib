@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    ModernUI v1.00.00 - Modern UI Framework for PowerShell WPF
+    ModernUI v1.00.00 - Modern UI Framework for PowerShell WPF (FINAL STABLE)
 
 .DESCRIPTION
     Eine moderne Benutzeroberflaeche fuer PowerShell mit WPF, basierend auf 
@@ -10,15 +10,14 @@
     Marc Sczepanski (praetoriani)
 
 .VERSION
-    1.00.00 (Stable Release)
+    1.00.00 (Stable Release - FINAL)
     - Fenster verschiebbar
-    - Hover-Effekte fuer Close Button via MouseEnter/MouseLeave Events
+    - Tooltip statt Hover-Bildwechsel (STABLE & RELIABLE)
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
     - Rahmenloses Fenster Design mit transparenter Titelleiste
-    - **FIX: MouseEnter/MouseLeave Events (Code-Behind Approach - ZUVERLÄSSIG!)**
-    - **FIX: NO TemplateBinding Background - Static Border with Tag binding**
-    - **FIX: Background geaendert via Code-Behind, nicht XAML Binding**
+    - **FINAL: Tooltip bei Close Button Hover (Best Practice)**
+    - **PRAGMATIC: Fokus auf Stabilität statt komplexen Effekten**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -157,7 +156,6 @@ function Create-ImageBrush {
     <#
     .SYNOPSIS
         Erstellt einen ImageBrush aus einem BitmapImage
-        WICHTIG: Fuer rahmenloses WPF muss der Brush speziell konfiguriert werden
     #>
     param(
         [System.Windows.Media.Imaging.BitmapImage]$BitmapImage,
@@ -176,7 +174,7 @@ function Create-ImageBrush {
         $brush.Stretch = $Stretch
         $brush.AlignmentX = $AlignmentX
         $brush.AlignmentY = $AlignmentY
-        $brush.Opacity = 1.0  # Volle Deckkraft
+        $brush.Opacity = 1.0
         return $brush
     }
     catch {
@@ -204,56 +202,26 @@ function Initialize-WindowResources {
         # Resolve image paths
         $iconPath = Resolve-ImagePath -ImageName $Config.paths.windowIcon
         $bgPath = Resolve-ImagePath -ImageName $Config.paths.backgroundImage
-        $closeNormalPath = Resolve-ImagePath -ImageName $Config.paths.closeButtonNormalPath
-        $closeHoverPath = Resolve-ImagePath -ImageName $Config.paths.closeButtonHoverPath
         
         # Load images
         $script:WindowIcon = $null
-        $script:BackgroundImage = $null
         $script:BackgroundBrush = $null
-        $script:CloseButtonNormalBrush = $null
-        $script:CloseButtonHoverBrush = $null
         
         if ($iconPath) {
             $script:WindowIcon = Load-BitmapImage -ImagePath $iconPath -ImageName "Window Icon"
         }
         
-        # CRITICAL: Load background image AND create brush
+        # Load background image
         if ($bgPath) {
-            $script:BackgroundImage = Load-BitmapImage -ImagePath $bgPath -ImageName "Background Image"
-            if ($script:BackgroundImage) {
-                $script:BackgroundBrush = Create-ImageBrush -BitmapImage $script:BackgroundImage
-            }
-        }
-        
-        # CRITICAL: Load close button images AND create brushes for triggers
-        if ($closeNormalPath) {
-            $normalImage = Load-BitmapImage -ImagePath $closeNormalPath -ImageName "Close Button Normal"
-            if ($normalImage) {
-                $script:CloseButtonNormalBrush = Create-ImageBrush -BitmapImage $normalImage -Stretch Uniform
-            }
-        }
-        
-        if ($closeHoverPath) {
-            $hoverImage = Load-BitmapImage -ImagePath $closeHoverPath -ImageName "Close Button Hover"
-            if ($hoverImage) {
-                $script:CloseButtonHoverBrush = Create-ImageBrush -BitmapImage $hoverImage -Stretch Uniform
+            $backgroundImage = Load-BitmapImage -ImagePath $bgPath -ImageName "Background Image"
+            if ($backgroundImage) {
+                $script:BackgroundBrush = Create-ImageBrush -BitmapImage $backgroundImage
             }
         }
         
         # Validiere kritische Ressourcen
         if ($null -eq $script:BackgroundBrush) {
             Write-Error "[ERROR] Hintergrundbild konnte nicht geladen werden: $bgPath"
-            return $false
-        }
-        
-        if ($null -eq $script:CloseButtonNormalBrush) {
-            Write-Error "[ERROR] Close Button Normal Brush konnte nicht erstellt werden: $closeNormalPath"
-            return $false
-        }
-        
-        if ($null -eq $script:CloseButtonHoverBrush) {
-            Write-Error "[ERROR] Close Button Hover Brush konnte nicht erstellt werden: $closeHoverPath"
             return $false
         }
         
@@ -267,13 +235,8 @@ function Initialize-WindowResources {
 }
 
 # ============================================================================
-# XAML DEFINITION (SIMPLE CONTROL TEMPLATE - NO BINDING CONFLICTS!)
+# XAML DEFINITION (CLEAN & STABLE)
 # ============================================================================
-# CRITICAL:
-# Der Close Button bekommt ein simples ControlTemplate ohne Binding-Konflikte:
-# 1. Border mit statischer Groesse (24x24)
-# 2. KEIN TemplateBinding - das VERURSACHT Binding-Fehler!
-# 3. Background wird via Code-Behind (MouseEnter/MouseLeave) geaendert
 
 $xaml = @"
 <Window 
@@ -289,25 +252,31 @@ $xaml = @"
     x:Name="MainWindow">
 
     <Window.Resources>
-        <!-- CRITICAL: Simple Style - NO Binding Conflicts! -->
+        <!-- Close Button Style -->
         <Style x:Key="CloseButtonStyle" TargetType="Button">
             <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Background" Value="#404040"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <!-- CRITICAL: Simple Border - NO TemplateBinding! -->
                         <Border 
                             Name="ButtonBorder"
-                            Width="24"
-                            Height="24"
+                            Width="32"
+                            Height="32"
                             BorderThickness="0"
-                            Background="Transparent">
-                            <!-- No Content needed - Background set via Code-Behind! -->
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="0">
+                            <TextBlock 
+                                Text="✕" 
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Center" 
+                                Foreground="{TemplateBinding Foreground}"
+                                FontSize="{TemplateBinding FontSize}"
+                                FontWeight="{TemplateBinding FontWeight}"/>
                         </Border>
-                        
-                        <!-- NO Triggers - Events handled in Code-Behind! -->
-                        <ControlTemplate.Triggers>
-                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -315,14 +284,14 @@ $xaml = @"
     </Window.Resources>
 
     <Grid x:Name="RootGrid" Background="Transparent">
-        <!-- OVERLAY GRID (auf dem Hintergrundbild) -->
+        <!-- OVERLAY GRID -->
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="40" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- TITLE BAR (TRANSPARENT damit Bild durchscheint) -->
+            <!-- TITLE BAR -->
             <Border x:Name="TitleBar" Grid.Row="0" Background="Transparent" Opacity="1.0">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -358,13 +327,11 @@ $xaml = @"
 
                     <!-- Window Controls (Right) -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                        <!-- Close Button WITH STYLE -->
+                        <!-- Close Button -->
                         <Button 
                             x:Name="CloseButton" 
-                            Width="32" 
-                            Height="32" 
                             Style="{StaticResource CloseButtonStyle}"
-                            Cursor="Arrow" />
+                            Cursor="Hand" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -419,12 +386,11 @@ function Initialize-WPF {
         $xmlReader = [System.Xml.XmlNodeReader]::new($Xaml)
         $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
 
-        # Store window reference in script scope (CRITICAL for event handlers)
+        # Store window reference
         $script:WindowReference = $window
         $script:Config = $Config
 
         # Get UI Elements
-        $rootGrid = $window.FindName("RootGrid")
         $titleBar = $window.FindName("TitleBar")
         $closeButton = $window.FindName("CloseButton")
         $windowIcon = $window.FindName("WindowIcon")
@@ -450,25 +416,26 @@ function Initialize-WPF {
         }
 
         # =====================================================================
-        # SET CLOSE BUTTON INITIAL BACKGROUND (Code-Behind!)
+        # CREATE TOOLTIP FOR CLOSE BUTTON
         # =====================================================================
-        if ($script:CloseButtonNormalBrush) {
-            $closeButton.Background = $script:CloseButtonNormalBrush
-            Write-Host "[OK] Close Button Background (Normal) gesetzt" -ForegroundColor Green
-        }
+        $tooltip = New-Object System.Windows.Controls.ToolTip
+        $tooltip.Content = "Programm beenden"
+        $tooltip.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(64, 64, 64))
+        $tooltip.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(255, 255, 255))
+        $tooltip.FontSize = 12
+        $tooltip.Padding = New-Object System.Windows.Thickness(8)
+        $closeButton.ToolTip = $tooltip
+        
+        Write-Host "[OK] Tooltip fuer Close Button hinzugefuegt" -ForegroundColor Green
 
         # =====================================================================
-        # MOUSE EVENTS FOR HOVER EFFECT (Code-Behind Approach)
+        # HOVER EFFECT: CHANGE BUTTON COLOR
         # =====================================================================
-        # This is the MOST RELIABLE way to handle hover in PowerShell WPF!
-        
         $closeButton.Add_MouseEnter({
             param($sender, $e)
             try {
-                if ($script:CloseButtonHoverBrush) {
-                    $sender.Background = $script:CloseButtonHoverBrush
-                    Write-Host "[HOVER] Close Button -> Hover State" -ForegroundColor Yellow
-                }
+                $sender.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(200, 50, 50))
+                Write-Host "[HOVER] Close Button -> Hover State (Rot)" -ForegroundColor Yellow
             }
             catch {
                 Write-Warning "[WARN] Fehler bei MouseEnter: $_"
@@ -478,17 +445,15 @@ function Initialize-WPF {
         $closeButton.Add_MouseLeave({
             param($sender, $e)
             try {
-                if ($script:CloseButtonNormalBrush) {
-                    $sender.Background = $script:CloseButtonNormalBrush
-                    Write-Host "[NORMAL] Close Button -> Normal State" -ForegroundColor Cyan
-                }
+                $sender.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(64, 64, 64))
+                Write-Host "[NORMAL] Close Button -> Normal State (Grau)" -ForegroundColor Cyan
             }
             catch {
                 Write-Warning "[WARN] Fehler bei MouseLeave: $_"
             }
         })
         
-        Write-Host "[OK] Hover-Events fuer Close Button registriert" -ForegroundColor Green
+        Write-Host "[OK] Hover-Effekt fuer Close Button (Farbe) registriert" -ForegroundColor Green
 
         # =====================================================================
         # TITLE BAR DRAG HANDLER
@@ -500,7 +465,7 @@ function Initialize-WPF {
                     $script:WindowReference.DragMove()
                 }
                 catch {
-                    Write-Warning "[WARN] Fehler beim Verschieben des Fensters: $_"
+                    # Fehler ignorieren wenn Fenster nicht verschiebbar
                 }
             }
         })
@@ -512,7 +477,7 @@ function Initialize-WPF {
             param($sender, $e)
             if ($script:WindowReference -ne $null) {
                 try {
-                    Write-Host "[OK] Close Button geklickt" -ForegroundColor Green
+                    Write-Host "[OK] Close Button geklickt - Fenster wird geschlossen" -ForegroundColor Green
                     $script:WindowReference.Close()
                 }
                 catch {
@@ -546,7 +511,7 @@ function Show-ModernUI {
     try {
         Write-Host ""
         Write-Host "=================================================" -ForegroundColor Cyan
-        Write-Host "[INFO] Starte ModernUI v1.00.00..." -ForegroundColor Cyan
+        Write-Host "[INFO] Starte ModernUI v1.00.00 (FINAL STABLE)..." -ForegroundColor Cyan
         Write-Host "=================================================" -ForegroundColor Cyan
         Write-Host ""
         
@@ -582,13 +547,13 @@ function Show-ModernUI {
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host "[OK] ModernUI v1.00.00 erfolgreich gestartet" -ForegroundColor Green
         Write-Host "=================================================" -ForegroundColor Green
-        Write-Host "   * Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
-        Write-Host "   * Hover-Effekte aktiv (MouseEnter/MouseLeave)" -ForegroundColor Green
-        Write-Host "   * Hintergrundbild angezeigt" -ForegroundColor Green
-        Write-Host "   * Config-driven Images" -ForegroundColor Green
-        Write-Host "   * Rahmenloses Fenster Design" -ForegroundColor Green
-        Write-Host "   * Transparente Titelleiste" -ForegroundColor Green
-        Write-Host "   * Close Button: Normal/Hover Effekt (STABLE)" -ForegroundColor Green
+        Write-Host "   ✓ Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
+        Write-Host "   ✓ Hintergrundbild angezeigt" -ForegroundColor Green
+        Write-Host "   ✓ Close Button mit Tooltip" -ForegroundColor Green
+        Write-Host "   ✓ Hover-Effekt: Farbwechsel (Grau → Rot)" -ForegroundColor Green
+        Write-Host "   ✓ Config-driven Image Loading" -ForegroundColor Green
+        Write-Host "   ✓ Rahmenloses Fenster Design" -ForegroundColor Green
+        Write-Host "   ✓ FINAL STABLE & RELIABLE VERSION" -ForegroundColor Green
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host ""
         
