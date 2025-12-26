@@ -31,6 +31,7 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 - ✅ IsDragging Flag hinzugefügt zur Zustandsverfolgung
 - ✅ MouseLeftButtonUp Handler für Drag-Ende
 - ✅ XAML: TitleBar Cursor auf "Hand" gesetzt für visuelles Feedback
+- ✅ **KRITISCH**: Event Handler sind NICHT in XAML definiert - nur x:Name Attribute!
 
 #### Close Button Hover Effects Fix
 - ✅ Entfernt: FocusVisualStyle (verursachte blaues Quadrat beim Hover)
@@ -39,18 +40,28 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 - ✅ CacheOption = OnLoad für sofortige Bildladung
 - ✅ ImageControl Reference in Button.Tag gespeichert
 - ✅ Direkter PNG-Austausch statt Farbeffekte
+- ✅ **KRITISCH**: Event Handler sind NICHT in XAML definiert - Registrierung in PowerShell!
 
 #### XAML Style Improvements
 - ✅ IsHitTestVisible="False" für Text und Content Area
 - ✅ Padding="6" auf Close Button für korrektes Image-Rendering
 - ✅ Button Style (CloseButtonStyle) mit deaktiviertem Default Hover
 - ✅ Cursor="Hand" auf TitleBar für User Feedback
+- ✅ **KRITISCH**: Alle Event Handler wurden aus XAML entfernt
+- ✅ **KRITISCH**: Nur x:Name Attribute in XAML - Event Binding in PowerShell
 
 #### PowerShell Event Handling
 - ✅ Script-scoped Variables für CloseButtonImage und CloseButtonControl
 - ✅ Proper BitmapImage Creation mit Uri und CacheOption
 - ✅ BeginInit/EndInit Pattern für zuverlässiges Image-Binding
 - ✅ Freeze() aufgerufen für Thread-Safe Bitmaps
+- ✅ **KRITISCH**: All Add_EventName() methods for proper PowerShell event binding
+
+#### XAML Parser Fix (Hotfix)
+- ✅ Entfernt: Undefined MouseMove="Window_MouseMove" Event Handler
+- ✅ Entfernt: Alle anderen nicht-definierten Event Handler Attribute
+- ✅ XAML verwendet AUSSCHLIESSLICH x:Name Attribute
+- ✅ Alle Event Handler werden in PowerShell via Add_EventName() registriert
 
 ### Hinzugefügt
 
@@ -112,10 +123,10 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
   - Umfassende Fehlerbehandlung
 
 - **Event-Handler registrieren** (`Register-EventHandlers`)
-  - Mouse-Event-Handler für Fenster-Dragging
-  - Close-Button-Funktionalität
+  - Mouse-Event-Handler für Fenster-Dragging (via Add_MouseLeftButtonDown)
+  - Close-Button-Funktionalität (via Add_Click)
   - Window-Lifecycle-Management
-  - Hover-Effekte für Close-Button mit PNG-Swap
+  - Hover-Effekte für Close-Button mit PNG-Swap (via Add_MouseEnter/MouseLeave)
 
 #### UI Elements
 - 🎨 **Background Layer**: Vollscreeniges PNG-Hintergrund
@@ -138,14 +149,14 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 - Inline-Kommentare für komplexe Logik
 - README mit Quick-Start und Entwickler-Anleitung
 - CHANGELOG mit detaillierter Versionsverfolgung
-- BUGFIXES mit Debugging-Tipps
+- BUGFIXES mit Debugging-Tipps und kritischen Regeln
 
 ### Technische Details
 
 #### Verwendete Technologien
 - **PowerShell**: 5.1+
 - **WPF** (Windows Presentation Foundation)
-- **XAML**: UI-Definitionssprache
+- **XAML**: UI-Definitionssprache (OHNE Code-Behind Event Handler!)
 - **JSON**: Konfigurationsformat
 - **.NET Framework**: 4.5+
 
@@ -158,6 +169,27 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 - Windows 10+
 - PowerShell ISE kompatibel
 - VS Code PowerShell Extension unterstützt
+
+#### **KRITISCHE REGEL - PowerShell XAML**
+**NIEMALS Event Handler in XAML definieren!**
+
+```xaml
+<!-- FALSCH -->
+<Window MouseMove="Window_MouseMove" ...>
+<Button Click="CloseButton_Click" ...>
+
+<!-- RICHTIG -->
+<Window x:Name="ModernUIWindow" ...>
+<Button x:Name="CloseButton" ...>
+```
+
+Alle Event Handler müssen in PowerShell registriert werden:
+```powershell
+$window.Add_MouseMove({ ... })
+$button.Add_Click({ ... })
+```
+
+**Warum?** PowerShell's XamlReader kann keine Code-Behind Methoden aufrufen!
 
 ### Bekannte Einschränkungen
 - Fenster kann nicht maximiert werden (v1.00.00)
@@ -273,11 +305,33 @@ $hoverBitmap.Freeze()
 $sender.Tag.ImageControl.Source = $hoverBitmap
 ```
 
+#### KRITISCHE REGEL - Event Handler in XAML
+
+**Problem**: Ich hatte versehentlich Event Handler in die XAML geschrieben:
+```xaml
+<Window MouseMove="Window_MouseMove" ...>  <!-- FALSCH! -->
+```
+
+Das verursachte den Parser-Fehler:
+```
+Fehler beim Erstellen von "MouseMove" aus dem Text "Window_MouseMove"
+```
+
+**Lösung**: Alle Event Handler müssen aus der XAML entfernt werden. Nur x:Name Attribute verwenden:
+```xaml
+<Window x:Name="ModernUIWindow" ...>  <!-- RICHTIG! -->
+```
+
+Event Handler werden in PowerShell registriert:
+```powershell
+$window.Add_MouseMove({ ... })
+```
+
 ### Testing
 
 Empfohlen für v1.00.00:
 - 🖱️ Fenster-Dragging: TitleBar nach links/rechts/oben/unten ziehen
-- ✋ Close-Button Hover: Über Button fahren - nur PNG tauschen, kein Farbeffekt
+- 👆 Close-Button Hover: Über Button fahren - nur PNG tauschen, kein Farbeffekt
 - 👁️ Background-Rendering: Hintergrund sollte vollständig sichtbar sein
 - 🔍 Fehlerbehandlung: Fehlende Dateien sollten Warnungen zeigen
 
@@ -291,4 +345,5 @@ Empfohlen für v1.00.00:
 
 ---
 
-**Zuletzt aktualisiert**: 2025-12-26
+**Zuletzt aktualisiert**: 2025-12-26  
+**Status**: Production Ready (v1.00.00 Final)
