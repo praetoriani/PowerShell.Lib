@@ -50,7 +50,7 @@ catch {
 function Load-Configuration {
     <#
     .SYNOPSIS
-        Laedt die Konfiguration aus config.json
+        Laedt die Konfiguration aus config.json und expandiert Variablen
     #>
     param([string]$Path)
 
@@ -60,8 +60,19 @@ function Load-Configuration {
     }
 
     try {
-        $config = Get-Content $Path -Raw | ConvertFrom-Json
+        # Lese config.json
+        $configJson = Get-Content $Path -Raw
+        
+        # Expandiere $PSScriptRoot Variable in der Config
+        $configJson = $configJson -replace '\$PSScriptRoot', $PSScriptRoot
+        
+        # Parse als JSON
+        $config = $configJson | ConvertFrom-Json
+        
         Write-Host "[OK] Config geladen" -ForegroundColor Green
+        Write-Host "   - Pfad: $Path" -ForegroundColor Gray
+        Write-Host "   - Icon: $($config.windowIcon)" -ForegroundColor Gray
+        
         return $config
     }
     catch {
@@ -80,24 +91,35 @@ function Load-BitmapImage {
         Laedt ein Bild mit korrektem URI Format
     #>
     param(
-        [string]$ImagePath
+        [string]$ImagePath,
+        [string]$ImageName = "Unknown"
     )
     
-    if ([string]::IsNullOrEmpty($ImagePath) -or -not (Test-Path $ImagePath)) {
+    if ([string]::IsNullOrEmpty($ImagePath)) {
+        Write-Warning "[WARN] Bildpfad ist leer fuer $ImageName"
+        return $null
+    }
+    
+    if (-not (Test-Path $ImagePath)) {
+        Write-Warning "[WARN] Bilddatei nicht gefunden: $ImagePath"
         return $null
     }
     
     try {
+        Write-Host "[INFO] Lade Bild: $ImageName von $ImagePath" -ForegroundColor Gray
+        
         $bitmapImage = New-Object System.Windows.Media.Imaging.BitmapImage
         $bitmapImage.BeginInit()
         $bitmapImage.UriSource = New-Object System.Uri($ImagePath)
         $bitmapImage.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
         $bitmapImage.EndInit()
         $bitmapImage.Freeze()  # Freeze fuer Cross-Thread Zugriff
+        
+        Write-Host "[OK] Bild geladen: $ImageName" -ForegroundColor Green
         return $bitmapImage
     }
     catch {
-        Write-Warning "[WARN] Fehler beim Laden des Bildes $ImagePath : $_"
+        Write-Warning "[WARN] Fehler beim Laden des Bildes $ImageName : $_"
         return $null
     }
 }
@@ -222,6 +244,8 @@ function Initialize-WPF {
     )
 
     try {
+        Write-Host "[INFO] Initialisiere WPF-UI..." -ForegroundColor Cyan
+        
         # Create XamlReader
         $xmlReader = [System.Xml.XmlNodeReader]::new($Xaml)
         $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
@@ -237,30 +261,33 @@ function Initialize-WPF {
         $windowIcon = $window.FindName("WindowIcon")
         $okButton = $window.FindName("OKButton")
 
-        # Load Images from Config
-        if ($Config.WindowIcon -and (Test-Path $Config.WindowIcon)) {
-            $iconBitmap = Load-BitmapImage -ImagePath $Config.WindowIcon
+        # Load Window Icon
+        Write-Host "[INFO] Lade Fenster-Icon..." -ForegroundColor Cyan
+        if ($Config.windowIcon) {
+            $iconBitmap = Load-BitmapImage -ImagePath $Config.windowIcon -ImageName "Window Icon"
             if ($iconBitmap) {
                 $windowIcon.Source = $iconBitmap
             }
         }
 
-        # Close Button - Normal and Hover States
+        # Load Close Button Images
+        Write-Host "[INFO] Lade Close Button Grafiken..." -ForegroundColor Cyan
         $script:NormalButtonImage = $null
         $script:HoverButtonImage = $null
         
-        if ($Config.CloseButton.NormalPath -and (Test-Path $Config.CloseButton.NormalPath)) {
-            $script:NormalButtonImage = Load-BitmapImage -ImagePath $Config.CloseButton.NormalPath
+        if ($Config.closeButton.normalPath) {
+            $script:NormalButtonImage = Load-BitmapImage -ImagePath $Config.closeButton.normalPath -ImageName "Close Button Normal"
             if ($script:NormalButtonImage) {
                 $closeButtonImage.Source = $script:NormalButtonImage
             }
         }
 
-        if ($Config.CloseButton.HoverPath -and (Test-Path $Config.CloseButton.HoverPath)) {
-            $script:HoverButtonImage = Load-BitmapImage -ImagePath $Config.CloseButton.HoverPath
+        if ($Config.closeButton.hoverPath) {
+            $script:HoverButtonImage = Load-BitmapImage -ImagePath $Config.closeButton.hoverPath -ImageName "Close Button Hover"
         }
 
         # Hover Effect Handler
+        Write-Host "[INFO] Registriere Hover-Events..." -ForegroundColor Cyan
         $closeButton.Add_MouseEnter({
             param($sender, $e)
             if ($script:HoverButtonImage -ne $null) {
@@ -306,6 +333,7 @@ function Initialize-WPF {
             Write-Host "[OK] OK Button geklickt" -ForegroundColor Green
         })
 
+        Write-Host "[OK] WPF-UI erfolgreich initialisiert" -ForegroundColor Green
         return $window
     }
     catch {
@@ -321,7 +349,11 @@ function Initialize-WPF {
 
 function Show-ModernUI {
     try {
+        Write-Host ""
+        Write-Host "=================================================" -ForegroundColor Cyan
         Write-Host "[INFO] Starte ModernUI v1.00.00..." -ForegroundColor Cyan
+        Write-Host "=================================================" -ForegroundColor Cyan
+        Write-Host ""
         
         # Load Config
         $config = Load-Configuration -Path $ConfigPath
@@ -330,6 +362,8 @@ function Show-ModernUI {
             return
         }
 
+        Write-Host ""
+        
         # Convert XAML String to XML
         $xamlXml = [xml]$xaml
 
@@ -341,11 +375,15 @@ function Show-ModernUI {
             return
         }
         
+        Write-Host ""
+        Write-Host "=================================================" -ForegroundColor Green
         Write-Host "[OK] ModernUI v1.00.00 erfolgreich gestartet" -ForegroundColor Green
-        Write-Host "   - Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
-        Write-Host "   - Hover-Effekte aktiv (Close Button)" -ForegroundColor Green
-        Write-Host "   - Config-driven Images" -ForegroundColor Green
-        Write-Host "   - Rahmenloses Fenster Design" -ForegroundColor Green
+        Write-Host "=================================================" -ForegroundColor Green
+        Write-Host "   * Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
+        Write-Host "   * Hover-Effekte aktiv (Close Button)" -ForegroundColor Green
+        Write-Host "   * Config-driven Images" -ForegroundColor Green
+        Write-Host "   * Rahmenloses Fenster Design" -ForegroundColor Green
+        Write-Host "=================================================" -ForegroundColor Green
         Write-Host ""
         
         $window.ShowDialog() | Out-Null
