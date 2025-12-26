@@ -9,25 +9,34 @@
         WindowStartupLocation="CenterScreen"
         Width="800"
         Height="600"
-        x:Name="ModernUIWindow">
+        x:Name="ModernUIWindow"
+        MouseMove="Window_MouseMove">
 
     <Window.Resources>
+        <!-- Close Button Style - No default hover effects -->
         <Style x:Key="CloseButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}">
-                            <Image x:Name="ButtonImage" 
-                                   Source="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Tag}" 
-                                   Width="24" 
-                                   Height="24" 
-                                   Stretch="UniformToFill"/>
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <!-- Remove default hover effect -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="Transparent"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="Transparent"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -47,7 +56,8 @@
             <Border x:Name="TitleBar"
                     DockPanel.Dock="Top" 
                     Height="36" 
-                    Background="#00000000">
+                    Background="#00000000"
+                    Cursor="Hand">
                 <Grid>
                     <!-- Icon -->
                     <Image x:Name="AppIcon" 
@@ -66,10 +76,12 @@
                                FontFamily="Segoe UI" 
                                FontSize="14" 
                                Foreground="#FFFFFF" 
-                               FontWeight="Normal"/>
+                               FontWeight="Normal"
+                               IsHitTestVisible="False"/>
 
                     <!-- Close Button -->
                     <Button x:Name="CloseButton" 
+                            Style="{StaticResource CloseButtonStyle}"
                             HorizontalAlignment="Right" 
                             VerticalAlignment="Center" 
                             Width="36" 
@@ -77,17 +89,19 @@
                             Margin="0,0,0,0" 
                             Background="Transparent" 
                             BorderThickness="0" 
-                            Cursor="Hand">
+                            Cursor="Hand"
+                            Padding="6">
                         <Image x:Name="CloseButtonImage" 
                                Width="24" 
                                Height="24" 
-                               Stretch="UniformToFill"/>
+                               Stretch="UniformToFill"
+                               IsHitTestVisible="False"/>
                     </Button>
                 </Grid>
             </Border>
 
             <!-- Content Area -->
-            <Border DockPanel.Dock="Top" Background="Transparent">
+            <Border DockPanel.Dock="Top" Background="Transparent" IsHitTestVisible="False">
                 <StackPanel VerticalAlignment="Center" 
                             HorizontalAlignment="Center" 
                             Margin="20">
