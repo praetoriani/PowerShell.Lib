@@ -18,6 +18,7 @@
     - Rahmenloses Fenster Design
     - **FINAL: PNG Close Button stabil ohne Hover**
     - **NO HOVER EFFECTS - CLEAN BUTTON**
+    - **24x24 Button für perfekte PNG-Anzeige**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -135,7 +136,7 @@ function Create-ImageBrush {
     try {
         $brush = New-Object System.Windows.Media.ImageBrush
         $brush.ImageSource = $BitmapImage
-        $brush.Stretch = [System.Windows.Media.Stretch]::UniformToFill
+        $brush.Stretch = [System.Windows.Media.Stretch]::Uniform
         $brush.AlignmentX = [System.Windows.Media.AlignmentX]::Center
         $brush.AlignmentY = [System.Windows.Media.AlignmentY]::Center
         return $brush
@@ -172,6 +173,7 @@ function Initialize-WindowResources {
             $backgroundImage = Load-BitmapImage -ImagePath $bgPath -ImageName "Background Image"
             if ($backgroundImage) {
                 $script:BackgroundBrush = Create-ImageBrush -BitmapImage $backgroundImage
+                $script:BackgroundBrush.Stretch = [System.Windows.Media.Stretch]::UniformToFill
             }
         }
         
@@ -258,7 +260,7 @@ $xamlString = @"
                 
                 <TextBlock x:Name="TitleText" Grid.Column="1" Text="ModernUI v1.00.00" VerticalAlignment="Center" Margin="40,0,0,0" FontSize="14" Foreground="#FFFFFF" FontWeight="SemiBold" />
                 
-                <Button x:Name="CloseButton" Grid.Column="2" Style="{StaticResource NoHoverButtonStyle}" Width="40" Height="40" Cursor="Hand" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <Button x:Name="CloseButton" Grid.Column="2" Style="{StaticResource NoHoverButtonStyle}" Width="24" Height="24" Cursor="Hand" Margin="0,0,8,0" VerticalAlignment="Center" />
             </Grid>
         </Border>
 
@@ -337,7 +339,7 @@ function Initialize-WPF {
         if ($script:CloseButtonBrush) {
             try {
                 $closeButton.Background = $script:CloseButtonBrush
-                Write-Host "[OK] Close Button Image gesetzt (ImageBrush)" -ForegroundColor Green
+                Write-Host "[OK] Close Button Image gesetzt (24x24 Uniform)" -ForegroundColor Green
             }
             catch {
                 Write-Warning "[WARN] Close button background error: $_"
@@ -443,7 +445,7 @@ try {
     Write-Host "=================================================" -ForegroundColor Green
     Write-Host "   [OK] Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
     Write-Host "   [OK] Hintergrundbild angezeigt" -ForegroundColor Green
-    Write-Host "   [OK] PNG Close Button (OHNE HOVER-EFFEKTE)" -ForegroundColor Green
+    Write-Host "   [OK] PNG Close Button 24x24 (PERFEKT)" -ForegroundColor Green
     Write-Host "   [OK] Tooltip 'Programm beenden'" -ForegroundColor Green
     Write-Host "   [OK] Hand-Cursor" -ForegroundColor Green
     Write-Host "   [OK] Config-driven Image Loading" -ForegroundColor Green
