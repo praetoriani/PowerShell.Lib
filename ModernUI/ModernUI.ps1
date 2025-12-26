@@ -19,6 +19,7 @@
     - **FINAL: PNG Close Button stabil ohne Hover**
     - **NO HOVER EFFECTS - CLEAN BUTTON**
     - **24x24 Button für perfekte PNG-Anzeige**
+    - **Neue UI: Ohne OK-Button, mit Info-Text**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -204,7 +205,7 @@ function Initialize-WindowResources {
 }
 
 # ============================================================================
-# XAML DEFINITION (WITH NO HOVER STYLE)
+# XAML DEFINITION (WITH NO HOVER STYLE - NEW UI)
 # ============================================================================
 
 $xamlString = @"
@@ -266,10 +267,20 @@ $xamlString = @"
 
         <!-- MAIN CONTENT -->
         <Grid Grid.Row="1" Background="Transparent">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="40">
                 <TextBlock Text="ModernUI v1.00.00" FontSize="32" FontWeight="Bold" Foreground="#FFFFFF" TextAlignment="Center" Margin="0,0,0,16" />
-                <TextBlock Text="Modern UI Framework fuer PowerShell WPF" FontSize="16" Foreground="#E0E0E0" TextAlignment="Center" Margin="0,0,0,32" />
-                <Button x:Name="OKButton" Content="OK" Width="120" Height="40" Background="#007ACC" Foreground="White" FontSize="14" HorizontalAlignment="Center" />
+                <TextBlock Text="Modern UI Framework fuer PowerShell WPF" FontSize="16" Foreground="#E0E0E0" TextAlignment="Center" Margin="0,0,0,48" />
+                
+                <Border Background="#2a2a2a" CornerRadius="8" Padding="24" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="✓ Rahmenloses Fenster Design" FontSize="13" Foreground="#90CAF9" Margin="0,0,0,8" />
+                        <TextBlock Text="✓ Config-gesteuerte Ressourcen" FontSize="13" Foreground="#90CAF9" Margin="0,0,0,8" />
+                        <TextBlock Text="✓ Fenster verschiebbar" FontSize="13" Foreground="#90CAF9" Margin="0,0,0,8" />
+                        <TextBlock Text="✓ PNG-basierte UI-Elemente" FontSize="13" Foreground="#90CAF9" Margin="0,0,0,0" />
+                    </StackPanel>
+                </Border>
+                
+                <TextBlock Text="Eine moderne Benutzeroberflaeche für PowerShell WPF, basierend auf Windows 11 Design Principles. Production-ready und vollständig dokumentiert." FontSize="12" Foreground="#B0BEC5" TextAlignment="Center" TextWrapping="Wrap" />
             </StackPanel>
         </Grid>
     </Grid>
@@ -305,7 +316,6 @@ function Initialize-WPF {
         $titleBar = $window.FindName("TitleBar")
         $closeButton = $window.FindName("CloseButton")
         $windowIconImg = $window.FindName("WindowIconImage")
-        $okButton = $window.FindName("OKButton")
 
         if ($null -eq $closeButton) {
             Write-Error "[ERROR] CloseButton element not found in XAML"
@@ -389,13 +399,6 @@ function Initialize-WPF {
             }
         })
 
-        # =====================================================================
-        # OK BUTTON CLICK
-        # =====================================================================
-        $okButton.Add_Click({
-            Write-Host "[OK] OK Button geklickt" -ForegroundColor Green
-        })
-
         Write-Host "[OK] WPF-UI erfolgreich initialisiert" -ForegroundColor Green
         return $window
     }
@@ -450,6 +453,7 @@ try {
     Write-Host "   [OK] Hand-Cursor" -ForegroundColor Green
     Write-Host "   [OK] Config-driven Image Loading" -ForegroundColor Green
     Write-Host "   [OK] Rahmenloses Fenster Design" -ForegroundColor Green
+    Write-Host "   [OK] Info-Text statt OK-Button" -ForegroundColor Green
     Write-Host "   [OK] FINAL STABLE RELIABLE VERSION" -ForegroundColor Green
     Write-Host "=================================================" -ForegroundColor Green
     Write-Host ""
