@@ -270,7 +270,7 @@ $xaml = @"
                             Background="{TemplateBinding Background}"
                             CornerRadius="0">
                             <TextBlock 
-                                Text="✕" 
+                                Text="×" 
                                 HorizontalAlignment="Center" 
                                 VerticalAlignment="Center" 
                                 Foreground="{TemplateBinding Foreground}"
@@ -547,13 +547,13 @@ function Show-ModernUI {
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host "[OK] ModernUI v1.00.00 erfolgreich gestartet" -ForegroundColor Green
         Write-Host "=================================================" -ForegroundColor Green
-        Write-Host "   ✓ Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
-        Write-Host "   ✓ Hintergrundbild angezeigt" -ForegroundColor Green
-        Write-Host "   ✓ Close Button mit Tooltip" -ForegroundColor Green
-        Write-Host "   ✓ Hover-Effekt: Farbwechsel (Grau → Rot)" -ForegroundColor Green
-        Write-Host "   ✓ Config-driven Image Loading" -ForegroundColor Green
-        Write-Host "   ✓ Rahmenloses Fenster Design" -ForegroundColor Green
-        Write-Host "   ✓ FINAL STABLE & RELIABLE VERSION" -ForegroundColor Green
+        Write-Host "   [OK] Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
+        Write-Host "   [OK] Hintergrundbild angezeigt" -ForegroundColor Green
+        Write-Host "   [OK] Close Button mit Tooltip" -ForegroundColor Green
+        Write-Host "   [OK] Hover-Effekt: Farbwechsel (Grau zu Rot)" -ForegroundColor Green
+        Write-Host "   [OK] Config-driven Image Loading" -ForegroundColor Green
+        Write-Host "   [OK] Rahmenloses Fenster Design" -ForegroundColor Green
+        Write-Host "   [OK] FINAL STABLE RELIABLE VERSION" -ForegroundColor Green
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host ""
         
