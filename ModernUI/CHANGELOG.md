@@ -23,45 +23,59 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 
 ## [1.00.00] - 2025-12-26
 
-### Bugfixes Final (v1.00.00 Production)
+### Bugfixes Final (v1.00.00 Production) - HOTFIX
 
-#### Window Dragging Fix
-- ✅ DragMove() funktioniert jetzt korrekt (vorher: Fenster konnte nicht verschoben werden)
-- ✅ Try-Finally Block für sichere Drag-State Management
-- ✅ IsDragging Flag hinzugefügt zur Zustandsverfolgung
-- ✅ MouseLeftButtonUp Handler für Drag-Ende
-- ✅ XAML: TitleBar Cursor auf "Hand" gesetzt für visuelles Feedback
-- ✅ **KRITISCH**: Event Handler sind NICHT in XAML definiert - nur x:Name Attribute!
+#### Window Dragging Fix - FINAL
+- ✅ DragMove() funktioniert jetzt ENDLICH korrekt (Root Cause: Variable Scoping)
+- ✅ `$script:WindowReference` Variable speichert Fenster-Referenz
+- ✅ Fenster lässt sich smooth über TitleBar verschieben
+- ✅ Null-Check verhindert Fehler bei State-Änderungen
+- ✅ Try-Catch für sichere Error-Behandlung
 
-#### Close Button Hover Effects Fix
-- ✅ Entfernt: FocusVisualStyle (verursachte blaues Quadrat beim Hover)
-- ✅ Button Template: Hover/Press Triggers mit transparent Background
+#### Close Button Hover Effects Fix - FINAL
+- ✅ PNG-Swap funktioniert jetzt ENDLICH (korrekte Tag-Nutzung)
+- ✅ Hover-Effekt tauscht PNG zwischen normal und hover
 - ✅ Proper BitmapImage initialization mit BeginInit/EndInit/Freeze
 - ✅ CacheOption = OnLoad für sofortige Bildladung
-- ✅ ImageControl Reference in Button.Tag gespeichert
-- ✅ Direkter PNG-Austausch statt Farbeffekte
-- ✅ **KRITISCH**: Event Handler sind NICHT in XAML definiert - Registrierung in PowerShell!
+- ✅ $sender.Tag Property nutzt gespeicherte Referenzen
 
-#### XAML Style Improvements
-- ✅ IsHitTestVisible="False" für Text und Content Area
-- ✅ Padding="6" auf Close Button für korrektes Image-Rendering
-- ✅ Button Style (CloseButtonStyle) mit deaktiviertem Default Hover
-- ✅ Cursor="Hand" auf TitleBar für User Feedback
-- ✅ **KRITISCH**: Alle Event Handler wurden aus XAML entfernt
-- ✅ **KRITISCH**: Nur x:Name Attribute in XAML - Event Binding in PowerShell
+#### Cursor Styling - FINAL
+- ✅ Entfernt: Cursor="Hand" Attribute aus XAML
+- ✅ Standard-Cursor wird überall angezeigt
+- ✅ Konsistent mit Windows 11 UI-Verhalten
+- ✅ Keine visuellen Feedback-Probleme mehr
 
-#### PowerShell Event Handling
-- ✅ Script-scoped Variables für CloseButtonImage und CloseButtonControl
-- ✅ Proper BitmapImage Creation mit Uri und CacheOption
-- ✅ BeginInit/EndInit Pattern für zuverlässiges Image-Binding
-- ✅ Freeze() aufgerufen für Thread-Safe Bitmaps
-- ✅ **KRITISCH**: All Add_EventName() methods for proper PowerShell event binding
+#### Root Cause Analysis - CRITICAL LEARNING
 
-#### XAML Parser Fix (Hotfix)
-- ✅ Entfernt: Undefined MouseMove="Window_MouseMove" Event Handler
-- ✅ Entfernt: Alle anderen nicht-definierten Event Handler Attribute
-- ✅ XAML verwendet AUSSCHLIESSLICH x:Name Attribute
-- ✅ Alle Event Handler werden in PowerShell via Add_EventName() registriert
+**Problem**: Event Handler Scopes sind ISOLIERT von Function Scopes!
+
+Das versteckte Problem in v1.00.00-initial:
+```powershell
+# FALSCH - $Window ist im Event Handler $null!
+function Register-EventHandlers {
+    param($Window)  # Local variable
+    
+    $titleBar.Add_MouseLeftButtonDown({
+        $Window.DragMove()  # ERROR: $Window is $null in this scope!
+    })
+}
+```
+
+Die Lösung - Script-Scoped Variable:
+```powershell
+# RICHTIG - $script:WindowReference ist IMMER verfügbar
+function Register-EventHandlers {
+    param($Window)
+    
+    $script:WindowReference = $Window  # Store in script scope
+    
+    $titleBar.Add_MouseLeftButtonDown({
+        if ($script:WindowReference -ne $null) {
+            $script:WindowReference.DragMove()  # Works!
+        }
+    })
+}
+```
 
 ### Hinzugefügt
 
@@ -76,7 +90,7 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
 #### Core Features
 - 🎨 **Frameless Window**: Rahmenloses WPF-Fenster mit vollständiger Transparenz
 - 🖼️ **PNG Background**: Unterstützung für PNG-Hintergrundbilder als Fenster-Overlay
-- 🏷️ **ActionBar / TitleBar**:
+- 🎛️ **ActionBar / TitleBar**:
   - Fenster-Icon (24x24 Pixel)
   - Anwendungstitel
   - Schließen-Button mit Hover-Effekten
@@ -89,6 +103,7 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
   - `$Global:ModernUI_State`: Laufzeitzustand mit IsDragging Flag
   - `$Global:ModernUI_XAML`: XAML-Inhalt
   - `$Global:ScriptPath`: Skript-Verzeichnispfad
+  - `$script:WindowReference`: Fenster-Referenz für Event Handlers
 
 - 🎯 **Orchestrierung**: Zentrale `Invoke-RunMainApp`-Funktion
   - Koordiniert alle Initialisierungsschritte
@@ -121,16 +136,19 @@ und dieses Projekt entspricht [Semantic Versioning](https://semver.org/).
   - Dynamisches Laden von PNG-Bildern
   - Bildpfad-Auflösung aus Konfiguration
   - Umfassende Fehlerbehandlung
+  - **Button.Tag Property wird mit Pfaden und Referenzen gefüllt**
 
 - **Event-Handler registrieren** (`Register-EventHandlers`)
   - Mouse-Event-Handler für Fenster-Dragging (via Add_MouseLeftButtonDown)
+  - **$script:WindowReference für DragMove() Zugriff**
   - Close-Button-Funktionalität (via Add_Click)
   - Window-Lifecycle-Management
   - Hover-Effekte für Close-Button mit PNG-Swap (via Add_MouseEnter/MouseLeave)
+  - **$sender.Tag Property wird für Image-Pfade genutzt**
 
 #### UI Elements
 - 🎨 **Background Layer**: Vollscreeniges PNG-Hintergrund
-- 🏷️ **ActionBar**:
+- 🎛️ **ActionBar**:
   - App Icon (BitmapImage aus PNG)
   - Title Text (weiß, Segoe UI)
   - Close Button mit dynamischen Bildern
@@ -189,7 +207,40 @@ $window.Add_MouseMove({ ... })
 $button.Add_Click({ ... })
 ```
 
-**Warum?** PowerShell's XamlReader kann keine Code-Behind Methoden aufrufen!
+#### **KRITISCHE REGEL - Variable Scoping in Event Handlers**
+
+Event Handler Scopes sind ISOLIERT:
+```powershell
+# FALSCH - Local variables sind NOT verfügbar
+function Register-Events {
+    param($Window)
+    $button.Add_Click({
+        $Window.SomeMethod()  # ERROR: $Window is $null
+    })
+}
+
+# RICHTIG - script: scope IST verfügbar
+function Register-Events {
+    param($Window)
+    $script:WindowRef = $Window
+    $button.Add_Click({
+        $script:WindowRef.SomeMethod()  # OK
+    })
+}
+```
+
+#### **KRITISCHE REGEL - Cursor Styling**
+
+Keine Hand-Cursor in PowerShell WPF Apps:
+```xaml
+<!-- FALSCH -->
+<Border Cursor="Hand" .../>
+<Button Cursor="Hand" .../>
+
+<!-- RICHTIG - Cursor attribute nicht setzen -->
+<Border .../>
+<Button .../>
+```
 
 ### Bekannte Einschränkungen
 - Fenster kann nicht maximiert werden (v1.00.00)
@@ -266,74 +317,61 @@ Für die erste Inbetriebnahme notwendig:
 ### v1.00.00 Bugfixes - Implementierungsdetails
 
 #### Window Dragging
-Das Problem war die Kombination von `WindowStyle="None"` + `AllowsTransparency="True"`.
-Die Lösung:
+Das kritische Problem war die Variable Scoping in Event Handlern:
 
 ```powershell
+# Store window reference in script scope
+$script:WindowReference = $Window
+
+# Event handler can now access it
 $titleBar.Add_MouseLeftButtonDown({
     param($sender, $e)
-    try {
-        $Global:ModernUI_State.IsDragging = $true
-        $Window.DragMove()
-    }
-    finally {
-        $Global:ModernUI_State.IsDragging = $false
+    if ($script:WindowReference -ne $null) {
+        $script:WindowReference.DragMove()
     }
 })
 ```
 
 #### Close Button Hover Image Swap
-Das Problem war der Default-Hover-Style des Buttons.
-Die Lösung: FocusVisualStyle entfernen + Button Style mit transparentem Hover:
-
-```xaml
-<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-<Trigger Property="IsMouseOver" Value="True">
-    <Setter Property="Background" Value="Transparent"/>
-</Trigger>
-```
-
-Und im PowerShell Code:
+Das Problem war der unzureichende Zugriff auf Image-Pfade. Die Lösung nutzt Button.Tag:
 
 ```powershell
-$hoverBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
-$hoverBitmap.BeginInit()
-$hoverBitmap.UriSource = [uri]$sender.Tag.HoverPath
-$hoverBitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
-$hoverBitmap.EndInit()
-$hoverBitmap.Freeze()
-$sender.Tag.ImageControl.Source = $hoverBitmap
+# Store paths in button tag during XAML loading
+$closeButton.Tag = @{
+    NormalPath = $closeNormal
+    HoverPath = $closeHover
+    ImageControl = $closeButtonImage
+}
+
+# Event handler accesses via $sender.Tag
+$closeButton.Add_MouseEnter({
+    param($sender, $e)
+    $hoverPath = $sender.Tag.HoverPath
+    # ... create and swap bitmap
+})
 ```
 
-#### KRITISCHE REGEL - Event Handler in XAML
+#### Cursor Styling
+Entfernen von Hand-Cursor für Windows 11 Konsistenz:
 
-**Problem**: Ich hatte versehentlich Event Handler in die XAML geschrieben:
 ```xaml
-<Window MouseMove="Window_MouseMove" ...>  <!-- FALSCH! -->
-```
+<!-- BEFORE -->
+<Border Cursor="Hand" ...>
+<Button Cursor="Hand" ...>
 
-Das verursachte den Parser-Fehler:
-```
-Fehler beim Erstellen von "MouseMove" aus dem Text "Window_MouseMove"
-```
-
-**Lösung**: Alle Event Handler müssen aus der XAML entfernt werden. Nur x:Name Attribute verwenden:
-```xaml
-<Window x:Name="ModernUIWindow" ...>  <!-- RICHTIG! -->
-```
-
-Event Handler werden in PowerShell registriert:
-```powershell
-$window.Add_MouseMove({ ... })
+<!-- AFTER - No Cursor attributes -->
+<Border ...>
+<Button ...>
 ```
 
 ### Testing
 
 Empfohlen für v1.00.00:
 - 🖱️ Fenster-Dragging: TitleBar nach links/rechts/oben/unten ziehen
-- 👆 Close-Button Hover: Über Button fahren - nur PNG tauschen, kein Farbeffekt
-- 👁️ Background-Rendering: Hintergrund sollte vollständig sichtbar sein
+- ☝️ Close-Button Hover: Über Button fahren - PNG tauscht automatisch
+- 👀 Background-Rendering: Hintergrund sollte vollständig sichtbar sein
 - 🔍 Fehlerbehandlung: Fehlende Dateien sollten Warnungen zeigen
+- ✨ Standard-Cursor: Kein Hand-Cursor sollte angezeigt werden
 
 ---
 
@@ -346,4 +384,4 @@ Empfohlen für v1.00.00:
 ---
 
 **Zuletzt aktualisiert**: 2025-12-26  
-**Status**: Production Ready (v1.00.00 Final)
+**Status**: Production Ready (v1.00.00 Final - ALL FIXES IMPLEMENTED)
