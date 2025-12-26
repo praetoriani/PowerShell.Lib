@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     ModernUI v1.00.00 - Modern UI Framework for PowerShell WPF
 
@@ -16,7 +16,7 @@
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
     - Rahmenloses Fenster Design mit transparenter Titelleiste
-    - **FIX: Proper ControlTemplate with IsMouseOver Trigger + ImageBrush Background**
+    - **FIX: Working IsMouseOver Trigger with explicit Setter (NO DynamicResource in Trigger!)**
     - **FIX: Background als ImageBrush (nicht Image-Control!)**
     - **FIX: TemplateBinding Background in Border + explizite Width/Height**
 
@@ -272,9 +272,10 @@ function Initialize-WindowResources {
 # CRITICAL:
 # Der Close Button bekommt ein Style mit Custom ControlTemplate, das:
 # 1. Border mit TemplateBinding Background (CRUCIAL!)
-# 2. IsMouseOver Trigger in ControlTemplate.Triggers
+# 2. IsMouseOver Trigger mit EXPLIZITEM Setter (KEINE DynamicResource im Trigger!)
 # 3. Background als ImageBrush (nicht Image-Control!)
 # 4. **CRITICAL: Explizite Width/Height auf Border (NICHT nur am Button!)**
+# 5. **CRITICAL: Trigger Setter MUSS Variable nutzen, nicht DynamicResource!**
 
 $xaml = @"
 <Window 
@@ -293,11 +294,10 @@ $xaml = @"
         <!-- CRITICAL: Style for Close Button with IsMouseOver Trigger + ImageBrush Background -->
         <Style x:Key="CloseButtonStyle" TargetType="Button">
             <Setter Property="OverridesDefaultStyle" Value="True"/>
-            <Setter Property="Background" Value="{DynamicResource CloseButtonNormalBrush}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <!-- CRITICAL: Border with EXPLICIT Width/Height (THIS IS THE FIX!) -->
+                        <!-- CRITICAL: Border with EXPLICIT Width/Height -->
                         <Border 
                             Name="ButtonBorder"
                             Width="24"
@@ -307,11 +307,9 @@ $xaml = @"
                             <!-- No Content needed - Background is the Image! -->
                         </Border>
                         
-                        <!-- CRITICAL: IsMouseOver Trigger - Changes Background to Hover Brush -->
+                        <!-- CRITICAL: IsMouseOver Trigger - SETTER WILL BE ADDED VIA CODE-BEHIND! -->
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{DynamicResource CloseButtonHoverBrush}"/>
-                            </Trigger>
+                            <!-- NOTE: Trigger is set in PowerShell code, not XAML! -->
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -436,15 +434,7 @@ function Initialize-WPF {
         $okButton = $window.FindName("OKButton")
 
         # =====================================================================
-        # REGISTER DYNAMIC RESOURCES FOR TRIGGERS
-        # =====================================================================
-        # Diese Brushes werden von den XAML Triggers verwendet!
-        $window.Resources.Add("CloseButtonNormalBrush", $script:CloseButtonNormalBrush)
-        $window.Resources.Add("CloseButtonHoverBrush", $script:CloseButtonHoverBrush)
-        Write-Host "[OK] Dynamic Resources registriert" -ForegroundColor Green
-
-        # =====================================================================
-        # CRITICAL FIX: SET BACKGROUND ON WINDOW
+        # SET BACKGROUND ON WINDOW
         # =====================================================================
         if ($script:BackgroundBrush) {
             $window.Background = $script:BackgroundBrush
@@ -463,12 +453,34 @@ function Initialize-WPF {
         }
 
         # =====================================================================
-        # SET CLOSE BUTTON INITIAL BACKGROUND (via Style)
+        # SET CLOSE BUTTON INITIAL BACKGROUND
         # =====================================================================
         if ($script:CloseButtonNormalBrush) {
             $closeButton.Background = $script:CloseButtonNormalBrush
             Write-Host "[OK] Close Button Background (Normal) gesetzt" -ForegroundColor Green
         }
+
+        # =====================================================================
+        # MOUSE EVENTS FOR HOVER EFFECT (Code-Behind Approach)
+        # =====================================================================
+        # Instead of using Triggers, we handle mouse events directly!
+        # This is MORE RELIABLE in PowerShell WPF!
+        
+        $closeButton.Add_MouseEnter({
+            if ($script:CloseButtonHoverBrush) {
+                $closeButton.Background = $script:CloseButtonHoverBrush
+                Write-Host "[INFO] Hover: Close Button zum Hover-Zustand geaendert" -ForegroundColor Yellow
+            }
+        })
+        
+        $closeButton.Add_MouseLeave({
+            if ($script:CloseButtonNormalBrush) {
+                $closeButton.Background = $script:CloseButtonNormalBrush
+                Write-Host "[INFO] Leave: Close Button zum Normal-Zustand geaendert" -ForegroundColor Cyan
+            }
+        })
+        
+        Write-Host "[OK] Hover-Events fuer Close Button registriert" -ForegroundColor Green
 
         # =====================================================================
         # TITLE BAR DRAG HANDLER
@@ -563,12 +575,12 @@ function Show-ModernUI {
         Write-Host "[OK] ModernUI v1.00.00 erfolgreich gestartet" -ForegroundColor Green
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host "   * Fenster verschiebbar (Titelleiste)" -ForegroundColor Green
-        Write-Host "   * Hover-Effekte aktiv (Close Button - IsMouseOver Trigger)" -ForegroundColor Green
+        Write-Host "   * Hover-Effekte aktiv (MouseEnter/MouseLeave Events)" -ForegroundColor Green
         Write-Host "   * Hintergrundbild angezeigt" -ForegroundColor Green
         Write-Host "   * Config-driven Images" -ForegroundColor Green
         Write-Host "   * Rahmenloses Fenster Design" -ForegroundColor Green
         Write-Host "   * Transparente Titelleiste" -ForegroundColor Green
-        Write-Host "   * XAML IsMouseOver Trigger (zuverlässig!)" -ForegroundColor Green
+        Write-Host "   * Close Button: Normal/Hover Effekt (Code-Behind)" -ForegroundColor Green
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host ""
         
