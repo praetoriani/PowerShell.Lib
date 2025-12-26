@@ -9,25 +9,13 @@
     "title": "ModernUI v1.00.00",
     "width": 800,
     "height": 600,
-    "startupLocation": "CenterScreen",
-    "resizable": true
+    "startupLocation": "CenterScreen"
   },
-  "windowIcon": "$PSScriptRoot/Images/ModernUI-Icon.png",
-  "closeButton": {
-    "normalPath": "$PSScriptRoot/Images/axn-winclose-normal.png",
-    "hoverPath": "$PSScriptRoot/Images/axn-winclose-hover.png"
-  },
-  "theme": {
-    "primaryColor": "#007ACC",
-    "backgroundColor": "#F5F5F5",
-    "surfaceColor": "#FAFAFA",
-    "textColor": "#333333",
-    "textSecondaryColor": "#666666",
-    "borderColor": "#E0E0E0"
-  },
-  "features": {
-    "titleBarDragging": true,
-    "hoverEffects": true,
-    "imageTriggersEnabled": true
+  "paths": {
+    "baseImagePath": "./PNG",
+    "windowIcon": "appicon.png",
+    "backgroundImage": "ModernUI-WinBG.png",
+    "closeButtonNormalPath": "axn-winclose-normal.png",
+    "closeButtonHoverPath": "axn-winclose-hover.png"
   }
 }
