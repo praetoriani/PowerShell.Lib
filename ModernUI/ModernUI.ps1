@@ -1,473 +1,315 @@
-#region Header
 <#
 .SYNOPSIS
-    ModernUI - Modern GUI Framework for PowerShell
-    
+    ModernUI v1.00.00 - Modern UI Framework for PowerShell WPF
+
 .DESCRIPTION
-    Frameless WPF-based GUI framework with PNG background overlay support.
-    Provides a modern user interface experience with draggable windows and smooth controls.
-    
+    Eine moderne Benutzeroberfläche für PowerShell mit WPF, basierend auf 
+    Microsoft Windows 11 Modern UI Design Principles.
+
+.AUTHOR
+    Marc Sczepanski (praetoriani)
+
+.VERSION
+    1.00.00 (Stable Release)
+    - Fenster verschiebbar
+    - Hover-Effekte für Close Button (XAML Triggers)
+    - Korrekte Titelleisten-Positionierung
+    - Config-driven Image Loading
+
 .NOTES
-    Author:     Praetoriani
-    Version:    1.00.00
-    Date:       2025-12-26
-    Website:    https://github.com/praetoriani
-    
-.EXAMPLE
-    .\ModernUI.ps1
+    Requires: PowerShell 7.0+, .NET Framework 4.8+
+    GitHub: https://github.com/praetoriani/PowerShell.Lib
 #>
-#endregion Header
 
-#region Global Variables
-[System.Reflection.Assembly]::LoadWithPartialName('PresentationCore') | Out-Null
-[System.Reflection.Assembly]::LoadWithPartialName('PresentationFramework') | Out-Null
-[System.Reflection.Assembly]::LoadWithPartialName('WindowsBase') | Out-Null
+param(
+    [string]$ConfigPath = "$PSScriptRoot\config.json"
+)
 
-# Global Configuration Variable
-[hashtable]$Global:ModernUI_Config = @{}
+# ============================================================================
+# CONFIGURATION LOADING
+# ============================================================================
 
-# Global Application State
-[hashtable]$Global:ModernUI_State = @{
-    IsRunning = $false
-    Window = $null
-    LastMousePos = @{X = 0; Y = 0}
-    IsDragging = $false
-}
-
-# Global XAML Variable
-[string]$Global:ModernUI_XAML = $null
-
-# Script Path for relative file references
-[string]$Global:ScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
-
-#endregion Global Variables
-
-#region Environment Checks
-function Test-ModernUIEnvironment {
+function Load-Configuration {
     <#
     .SYNOPSIS
-        Validates that all required directories and prerequisites exist.
-        
-    .DESCRIPTION
-        Checks for required directories and verifies that essential files can be found.
+        Lädt die Konfiguration aus config.json
     #>
-    
-    Write-Host "[ModernUI] Environment check in progress..." -ForegroundColor Cyan
-    
-    $pngPath = Join-Path $Global:ScriptPath "PNG"
-    if (-not (Test-Path $pngPath -PathType Container)) {
-        Write-Warning "[ModernUI] PNG directory not found: $pngPath"
-        return $false
-    }
-    
-    Write-Host "[ModernUI] OK - Environment is correct" -ForegroundColor Green
-    return $true
-}
-#endregion Environment Checks
+    param([string]$Path)
 
-#region Configuration Loading
-function ConvertTo-Hashtable {
-    <#
-    .SYNOPSIS
-        Converts a PSObject to a Hashtable recursively.
-        
-    .DESCRIPTION
-        Recursively converts PSCustomObject to hashtable.
-        Handles arrays and nested objects.
-    #>
-    
-    param(
-        [Parameter(ValueFromPipeline = $true)]
-        $InputObject
-    )
-    
-    process {
-        if ($null -eq $InputObject) {
-            return $null
-        }
-        
-        if ($InputObject -is [System.Collections.IDictionary]) {
-            return $InputObject
-        }
-        
-        if ($InputObject -is [System.Collections.IEnumerable] -and $InputObject -isnot [string]) {
-            $collection = @()
-            foreach ($object in $InputObject) {
-                $collection += ConvertTo-Hashtable -InputObject $object
-            }
-            return $collection
-        }
-        
-        if ($InputObject -is [object] -and $InputObject.GetType().Name -eq 'PSCustomObject') {
-            $hash = @{}
-            foreach ($property in $InputObject.PSObject.Properties) {
-                $hash[$property.Name] = ConvertTo-Hashtable -InputObject $property.Value
-            }
-            return $hash
-        }
-        
-        return $InputObject
-    }
-}
-
-function Load-ModernUIConfig {
-    <#
-    .SYNOPSIS
-        Loads the config.json file into the global configuration variable.
-        
-    .DESCRIPTION
-        Reads config.json and parses JSON content into hashtable.
-        Sets Global:ModernUI_Config for application-wide access.
-        
-    .OUTPUTS
-        Boolean. Returns true if successful, false otherwise.
-    #>
-    
-    Write-Host "[ModernUI] Configuration is loading..." -ForegroundColor Cyan
-    
-    $configPath = Join-Path $Global:ScriptPath "config.json"
-    
-    if (-not (Test-Path $configPath -PathType Leaf)) {
-        Write-Error "[ModernUI] config.json not found: $configPath"
-        return $false
-    }
-    
-    try {
-        $jsonContent = Get-Content $configPath -Raw | ConvertFrom-Json
-        $Global:ModernUI_Config = ConvertTo-Hashtable -InputObject $jsonContent
-        
-        Write-Host "[ModernUI] OK - Configuration loaded successfully" -ForegroundColor Green
-        Write-Host "  - App Name: $($Global:ModernUI_Config['appname'])"
-        Write-Host "  - Version: $($Global:ModernUI_Config['appver'])"
-        Write-Host "  - Developer: $($Global:ModernUI_Config['devname'])"
-        
-        return $true
-    }
-    catch {
-        Write-Error "[ModernUI] Error loading config.json: $_"
-        return $false
-    }
-}
-#endregion Configuration Loading
-
-#region XAML Loading
-function Load-ModernUIXAML {
-    <#
-    .SYNOPSIS
-        Loads and processes the XAML file with configuration data.
-        
-    .DESCRIPTION
-        Reads ModernUI.xaml and resolves image paths from config.
-        Initializes the WPF window and sets up image sources.
-        
-    .OUTPUTS
-        System.Windows.Window. Returns the loaded window object.
-    #>
-    
-    Write-Host "[ModernUI] XAML is loading..." -ForegroundColor Cyan
-    
-    $xamlPath = Join-Path $Global:ScriptPath "ModernUI.xaml"
-    
-    if (-not (Test-Path $xamlPath -PathType Leaf)) {
-        Write-Error "[ModernUI] ModernUI.xaml not found: $xamlPath"
+    if (-not (Test-Path $Path)) {
+        Write-Warning "Config nicht gefunden: $Path"
         return $null
     }
-    
+
     try {
-        $xamlContent = Get-Content $xamlPath -Raw
-        $Global:ModernUI_XAML = $xamlContent
-        
-        $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
-        $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
-        
-        if ($null -eq $window) {
-            Write-Error "[ModernUI] Failed to load XAML - window is null"
-            return $null
-        }
-        
-        # Load images from config - resolve absolute paths
-        $windowBg = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.window
-        $appIcon = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.appicon
-        $closeNormal = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.appclose.normal
-        $closeHover = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.appclose.hover
-        
-        # Set Background Image
-        if (Test-Path $windowBg -PathType Leaf) {
-            $bgImage = $window.FindName("BackgroundImage")
-            if ($null -ne $bgImage) {
-                $bgImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$windowBg)
-            }
-        } else {
-            Write-Warning "[ModernUI] Background image not found: $windowBg"
-        }
-        
-        # Set App Icon
-        if (Test-Path $appIcon -PathType Leaf) {
-            $appIconControl = $window.FindName("AppIcon")
-            if ($null -ne $appIconControl) {
-                $appIconControl.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$appIcon)
-            }
-        } else {
-            Write-Warning "[ModernUI] App icon not found: $appIcon"
-        }
-        
-        # Set Close Button Image
-        if (Test-Path $closeNormal -PathType Leaf) {
-            $closeButton = $window.FindName("CloseButton")
-            $closeButtonImage = $window.FindName("CloseButtonImage")
-            if ($null -ne $closeButtonImage -and $null -ne $closeButton) {
-                $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closeNormal)
-                
-                # Store paths in button tag for later hover effects
-                $closeButton.Tag = @{
-                    NormalPath = $closeNormal
-                    HoverPath = $closeHover
-                    ImageControl = $closeButtonImage
-                }
-            }
-        } else {
-            Write-Warning "[ModernUI] Close button normal image not found: $closeNormal"
-        }
-        
-        Write-Host "[ModernUI] OK - XAML loaded successfully" -ForegroundColor Green
-        
-        return $window
+        $config = Get-Content $Path -Raw | ConvertFrom-Json
+        Write-Host "✅ Config geladen" -ForegroundColor Green
+        return $config
     }
     catch {
-        Write-Error "[ModernUI] Error loading ModernUI.xaml: $_"
+        Write-Error "❌ Fehler beim Laden der Config: $_"
         return $null
     }
 }
-#endregion XAML Loading
 
-#region Event Handlers
-function Register-EventHandlers {
+# ============================================================================
+# XAML DEFINITION
+# ============================================================================
+
+$xaml = @"
+<Window 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="ModernUI v1.00.00"
+    Height="600"
+    Width="800"
+    Background="#F5F5F5"
+    WindowStartupLocation="CenterScreen"
+    ResizeMode="CanResizeWithGrip"
+    x:Name="MainWindow">
+
+    <Grid Background="#FAFAFA">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- TITLE BAR -->
+        <Border x:Name="TitleBar" Grid.Row="0" Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Window Icon (Left) -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0">
+                    <Image 
+                        x:Name="WindowIcon" 
+                        Width="24" 
+                        Height="24" 
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <!-- Window Title (Next to Icon) -->
+                <TextBlock 
+                    x:Name="TitleText"
+                    Text="ModernUI v1.00.00"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Left"
+                    Margin="40,0,0,0"
+                    FontSize="14"
+                    Foreground="#333333"
+                    FontWeight="SemiBold" />
+
+                <!-- Spacer -->
+                <Border Grid.Column="1" />
+
+                <!-- Window Controls (Right) -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+                    <!-- Close Button with Image Hover Trigger -->
+                    <Button 
+                        x:Name="CloseButton" 
+                        Width="32" 
+                        Height="32" 
+                        Background="Transparent" 
+                        BorderThickness="0"
+                        Cursor="Arrow"
+                        HorizontalContentAlignment="Center" 
+                        VerticalContentAlignment="Center">
+                        <Image 
+                            x:Name="CloseButtonImage" 
+                            Width="16" 
+                            Height="16">
+                            <Image.Style>
+                                <Style TargetType="Image">
+                                    <!-- Standard State: Normal Image -->
+                                    <Setter Property="Source" Value="" />
+                                    
+                                    <!-- Hover State: Hover Image -->
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Source" Value="" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Image.Style>
+                        </Image>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- MAIN CONTENT AREA -->
+        <Grid Grid.Row="1" Background="#FAFAFA">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock 
+                    Text="ModernUI v1.00.00" 
+                    FontSize="32" 
+                    FontWeight="Bold" 
+                    Foreground="#333333"
+                    TextAlignment="Center"
+                    Margin="0,0,0,16" />
+                <TextBlock 
+                    Text="Modern UI Framework für PowerShell WPF"
+                    FontSize="16"
+                    Foreground="#666666"
+                    TextAlignment="Center"
+                    Margin="0,0,0,32" />
+                <Button 
+                    x:Name="OKButton"
+                    Content="OK"
+                    Width="120"
+                    Height="40"
+                    Background="#007ACC"
+                    Foreground="White"
+                    FontSize="14"
+                    HorizontalAlignment="Center" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
+"@
+
+# ============================================================================
+# WPF UI INITIALIZATION
+# ============================================================================
+
+function Initialize-WPF {
     <#
     .SYNOPSIS
-        Registers all event handlers for the application window.
-        
-    .DESCRIPTION
-        Sets up event handlers for window dragging, close button, and lifecycle events.
+        Initialisiert die WPF-UI und registriert Event Handler
     #>
-    
     param(
-        [Parameter(Mandatory = $true)]
-        [System.Windows.Window]$Window
+        [xml]$Xaml,
+        [pscustomobject]$Config
     )
+
+    # Create XamlReader
+    $xmlReader = [System.Xml.XmlNodeReader]::new($Xaml)
+    $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
+
+    # Store window reference globally for event handlers
+    $script:WindowReference = $window
+    $script:Config = $Config
+
+    # Get UI Elements
+    $titleBar = $window.FindName("TitleBar")
+    $closeButton = $window.FindName("CloseButton")
+    $closeButtonImage = $window.FindName("CloseButtonImage")
+    $windowIcon = $window.FindName("WindowIcon")
+    $okButton = $window.FindName("OKButton")
+
+    # ========================================================================
+    # LOAD IMAGES FROM CONFIG
+    # ========================================================================
     
-    Write-Host "[ModernUI] Event handlers are being registered..." -ForegroundColor Cyan
-    
-    try {
-        # Store window reference in script scope for use in event handlers
-        $script:WindowReference = $Window
-        
-        # Store close button references for hover effects
-        $script:CloseButtonImage = $Window.FindName("CloseButtonImage")
-        $script:CloseButtonControl = $Window.FindName("CloseButton")
-        
-        # Window Drag Handler - find TitleBar border element
-        $titleBar = $Window.FindName("TitleBar")
-        if ($null -ne $titleBar) {
-            $titleBar.Add_MouseLeftButtonDown({
-                param($sender, $e)
-                try {
-                    if ($script:WindowReference -ne $null) {
-                        $script:WindowReference.DragMove()
-                    }
-                }
-                catch {
-                    Write-Verbose "[ModernUI] DragMove error: $_"
-                }
-            })
-            
-            Write-Host "  - TitleBar drag enabled" -ForegroundColor Green
-        } else {
-            Write-Warning "[ModernUI] TitleBar element not found in XAML"
-        }
-        
-        # Close Button Handler
-        $closeButton = $Window.FindName("CloseButton")
-        if ($null -ne $closeButton) {
-            $closeButton.Add_Click({
-                param($sender, $e)
-                Invoke-AppExit
-            })
-            Write-Host "  - Close button click handler enabled" -ForegroundColor Green
-            
-            # Hover effects for close button image - using direct image swap
-            if ($null -ne $script:CloseButtonImage -and $closeButton.Tag) {
-                # Mouse Enter - swap to hover image
-                $closeButton.Add_MouseEnter({
-                    param($sender, $e)
-                    try {
-                        if ($sender.Tag.HoverPath -and (Test-Path $sender.Tag.HoverPath -PathType Leaf)) {
-                            $hoverBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
-                            $hoverBitmap.BeginInit()
-                            $hoverBitmap.UriSource = [uri]$sender.Tag.HoverPath
-                            $hoverBitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
-                            $hoverBitmap.EndInit()
-                            $hoverBitmap.Freeze()
-                            $sender.Tag.ImageControl.Source = $hoverBitmap
+    if ($Config.WindowIcon -and (Test-Path $Config.WindowIcon)) {
+        $windowIcon.Source = $Config.WindowIcon
+    }
+
+    # Close Button Images - Loaded into Image.Style Triggers
+    if ($Config.CloseButton.NormalPath -and (Test-Path $Config.CloseButton.NormalPath)) {
+        $closeButtonImage.Source = $Config.CloseButton.NormalPath
+    }
+
+    # The Hover image is automatically handled by XAML Trigger!
+    # When IsMouseOver = True, the Trigger changes the Source property
+    if ($Config.CloseButton.HoverPath -and (Test-Path $Config.CloseButton.HoverPath)) {
+        # Update the Trigger setter in the Style to use the hover image
+        $style = $closeButtonImage.Style
+        if ($style -and $style.Triggers) {
+            foreach ($trigger in $style.Triggers) {
+                if ($trigger -is [System.Windows.Trigger] -and $trigger.Property.Name -eq "IsMouseOver") {
+                    foreach ($setter in $trigger.Setters) {
+                        if ($setter.Property.Name -eq "Source") {
+                            $setter.Value = $Config.CloseButton.HoverPath
                         }
                     }
-                    catch {
-                        Write-Verbose "[ModernUI] Error setting hover image: $_"
-                    }
-                })
-                
-                # Mouse Leave - swap back to normal image
-                $closeButton.Add_MouseLeave({
-                    param($sender, $e)
-                    try {
-                        if ($sender.Tag.NormalPath -and (Test-Path $sender.Tag.NormalPath -PathType Leaf)) {
-                            $normalBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
-                            $normalBitmap.BeginInit()
-                            $normalBitmap.UriSource = [uri]$sender.Tag.NormalPath
-                            $normalBitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
-                            $normalBitmap.EndInit()
-                            $normalBitmap.Freeze()
-                            $sender.Tag.ImageControl.Source = $normalBitmap
-                        }
-                    }
-                    catch {
-                        Write-Verbose "[ModernUI] Error setting normal image: $_"
-                    }
-                })
-                Write-Host "  - Close button hover effects enabled" -ForegroundColor Green
+                }
             }
-        } else {
-            Write-Warning "[ModernUI] CloseButton element not found in XAML"
-        }
-        
-        # Window Closed Event
-        $Window.Add_Closed({
-            $Global:ModernUI_State.IsRunning = $false
-            Write-Host "[ModernUI] Window closed" -ForegroundColor Yellow
-        })
-        
-        Write-Host "[ModernUI] OK - Event handlers registered" -ForegroundColor Green
-    }
-    catch {
-        Write-Error "[ModernUI] Error registering event handlers: $_"
-    }
-}
-#endregion Event Handlers
-
-#region Application Control
-function Invoke-AppExit {
-    <#
-    .SYNOPSIS
-        Cleanly exits the application.
-        
-    .DESCRIPTION
-        Centralized exit function ensuring proper cleanup and resource disposal.
-        Called by Close button or application termination.
-    #>
-    
-    Write-Host "[ModernUI] Application is shutting down..." -ForegroundColor Yellow
-    
-    if ($null -ne $Global:ModernUI_State.Window) {
-        try {
-            $Global:ModernUI_State.Window.Close()
-        }
-        catch {
-            Write-Warning "[ModernUI] Error closing window: $_"
         }
     }
-    
-    $Global:ModernUI_State.IsRunning = $false
-    
-    # Cleanup
-    [System.GC]::Collect()
-    [System.GC]::WaitForPendingFinalizers()
-    
-    Write-Host "[ModernUI] OK - Application terminated" -ForegroundColor Green
-    exit 0
+
+    # ========================================================================
+    # EVENT HANDLER REGISTRATION
+    # ========================================================================
+
+    # Window Dragging (Title Bar)
+    $titleBar.Add_MouseLeftButtonDown({
+        param($sender, $e)
+        if ($script:WindowReference -ne $null) {
+            try {
+                $script:WindowReference.DragMove()
+            }
+            catch {
+                Write-Warning "Fehler beim Verschieben des Fensters: $_"
+            }
+        }
+    })
+
+    # Close Button Click
+    $closeButton.Add_Click({
+        param($sender, $e)
+        if ($script:WindowReference -ne $null) {
+            try {
+                $script:WindowReference.Close()
+            }
+            catch {
+                Write-Warning "Fehler beim Schließen des Fensters: $_"
+            }
+        }
+    })
+
+    # OK Button Click
+    $okButton.Add_Click({
+        Write-Host "✅ OK Button geklickt" -ForegroundColor Green
+    })
+
+    return $window
 }
 
-function Initialize-ModernUI {
-    <#
-    .SYNOPSIS
-        Initializes the ModernUI framework.
-        
-    .DESCRIPTION
-        Sets up configuration, XAML, and event handlers.
-        Prepares application for execution.
-    #>
-    
-    Write-Host "`n[ModernUI] Framework initialization...`n" -ForegroundColor Magenta
-    
-    # Load Configuration
-    if (-not (Load-ModernUIConfig)) {
-        Write-Error "[ModernUI] Configuration could not be loaded"
-        return $false
-    }
-    
-    # Load XAML
-    $window = Load-ModernUIXAML
-    if ($null -eq $window) {
-        Write-Error "[ModernUI] XAML could not be loaded"
-        return $false
-    }
-    
-    $Global:ModernUI_State.Window = $window
-    
-    # Register Event Handlers
-    Register-EventHandlers -Window $window
-    
-    Write-Host "[ModernUI] OK - Framework initialized`n" -ForegroundColor Green
-    
-    return $true
-}
-#endregion Application Control
+# ============================================================================
+# MAIN EXECUTION
+# ============================================================================
 
-#region Main Orchestration
-function Invoke-RunMainApp {
+function Show-ModernUI {
     <#
     .SYNOPSIS
-        Main application orchestration function.
-        
-    .DESCRIPTION
-        Central entry point that coordinates all application initialization and execution.
+        Zeigt die ModernUI an
     #>
-    
-    Write-Host "`n" + ("="*60) -ForegroundColor Cyan
-    Write-Host "ModernUI Framework - Frameless WPF Application" -ForegroundColor Cyan
-    Write-Host ("="*60) + "`n" -ForegroundColor Cyan
-    
-    # Environment Check
-    if (-not (Test-ModernUIEnvironment)) {
-        Write-Error "[ModernUI] Environment check failed"
-        return
-    }
-    
-    # Initialize Framework
-    if (-not (Initialize-ModernUI)) {
-        Write-Error "[ModernUI] Initialization failed"
-        return
-    }
-    
-    # Show Window
-    $Global:ModernUI_State.IsRunning = $true
-    Write-Host "[ModernUI] Window is being displayed...`n" -ForegroundColor Cyan
-    
     try {
-        $null = $Global:ModernUI_State.Window.ShowDialog()
+        # Load Config
+        $config = Load-Configuration -Path $ConfigPath
+        if ($null -eq $config) {
+            Write-Error "❌ Konfiguration konnte nicht geladen werden"
+            return
+        }
+
+        # Convert XAML String to XML
+        $xamlXml = [xml]$xaml
+
+        # Initialize WPF and show Window
+        $window = Initialize-WPF -Xaml $xamlXml -Config $config
+        
+        Write-Host "✅ ModernUI v1.00.00 started successfully" -ForegroundColor Green
+        Write-Host "   - Fenster verschiebbar" -ForegroundColor Green
+        Write-Host "   - Hover-Effekte aktiv" -ForegroundColor Green
+        Write-Host "   - Config-driven Images" -ForegroundColor Green
+        
+        $window.ShowDialog() | Out-Null
     }
     catch {
-        Write-Error "[ModernUI] Error displaying window: $_"
-    }
-    finally {
-        Invoke-AppExit
+        Write-Error "❌ Fehler beim Starten der ModernUI: $_"
+        Write-Error $_.ScriptStackTrace
     }
 }
-#endregion Main Orchestration
 
-#region Script Execution
-if (-not (Test-ModernUIEnvironment)) {
-    Write-Error "[ModernUI] Environment check failed. Exiting..."
-    exit 1
-}
+# ============================================================================
+# ENTRY POINT
+# ============================================================================
 
-Invoke-RunMainApp
-#endregion Script Execution
+Show-ModernUI
