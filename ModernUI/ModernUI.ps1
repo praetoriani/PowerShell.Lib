@@ -14,7 +14,7 @@
     Website:    https://github.com/praetoriani
     
 .EXAMPLE
-    .\ ModernUI.ps1
+    .\ModernUI.ps1
 #>
 #endregion Header
 
@@ -48,20 +48,18 @@ function Test-ModernUIEnvironment {
         Validates that all required directories and prerequisites exist.
         
     .DESCRIPTION
-        Checks for required directories (ModernUI, ModernUI\PNG) and
-        verifies that essential files can be found.
+        Checks for required directories and verifies that essential files can be found.
     #>
     
-    Write-Host "[ModernUI] Umgebungsprüfung wird durchgeführt..." -ForegroundColor Cyan
+    Write-Host "[ModernUI] Environment check in progress..." -ForegroundColor Cyan
     
-    # Check for PNG directory
     $pngPath = Join-Path $Global:ScriptPath "PNG"
     if (-not (Test-Path $pngPath -PathType Container)) {
-        Write-Warning "[ModernUI] PNG-Verzeichnis nicht gefunden: $pngPath"
+        Write-Warning "[ModernUI] PNG directory not found: $pngPath"
         return $false
     }
     
-    Write-Host "[ModernUI] ✓ Umgebung ist korrekt" -ForegroundColor Green
+    Write-Host "[ModernUI] OK - Environment is correct" -ForegroundColor Green
     return $true
 }
 #endregion Environment Checks
@@ -80,30 +78,28 @@ function Load-ModernUIConfig {
         Boolean. Returns $true if successful, $false otherwise.
     #>
     
-    Write-Host "[ModernUI] Konfiguration wird geladen..." -ForegroundColor Cyan
+    Write-Host "[ModernUI] Configuration is loading..." -ForegroundColor Cyan
     
     $configPath = Join-Path $Global:ScriptPath "config.json"
     
     if (-not (Test-Path $configPath -PathType Leaf)) {
-        Write-Error "[ModernUI] config.json nicht gefunden: $configPath"
+        Write-Error "[ModernUI] config.json not found: $configPath"
         return $false
     }
     
     try {
         $jsonContent = Get-Content $configPath -Raw | ConvertFrom-Json
-        
-        # Convert PSObject to Hashtable for easier manipulation
         $Global:ModernUI_Config = ConvertTo-Hashtable $jsonContent
         
-        Write-Host "[ModernUI] ✓ Konfiguration erfolgreich geladen" -ForegroundColor Green
+        Write-Host "[ModernUI] OK - Configuration loaded successfully" -ForegroundColor Green
         Write-Host "  - App Name: $($Global:ModernUI_Config['appname'])"
         Write-Host "  - Version: $($Global:ModernUI_Config['appver'])"
         Write-Host "  - Developer: $($Global:ModernUI_Config['devname'])"
         
         return $true
-    } 
+    }
     catch {
-        Write-Error "[ModernUI] Fehler beim Laden von config.json: $_"
+        Write-Error "[ModernUI] Error loading config.json: $_"
         return $false
     }
 }
@@ -156,12 +152,12 @@ function Load-ModernUIXAML {
         System.Windows.Window. Returns the loaded window object.
     #>
     
-    Write-Host "[ModernUI] XAML wird geladen..." -ForegroundColor Cyan
+    Write-Host "[ModernUI] XAML is loading..." -ForegroundColor Cyan
     
     $xamlPath = Join-Path $Global:ScriptPath "ModernUI.xaml"
     
     if (-not (Test-Path $xamlPath -PathType Leaf)) {
-        Write-Error "[ModernUI] ModernUI.xaml nicht gefunden: $xamlPath"
+        Write-Error "[ModernUI] ModernUI.xaml not found: $xamlPath"
         return $null
     }
     
@@ -169,7 +165,6 @@ function Load-ModernUIXAML {
         $xamlContent = Get-Content $xamlPath -Raw
         $Global:ModernUI_XAML = $xamlContent
         
-        # Create XmlNamespaceManager for XAML parsing
         $xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
         $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
         
@@ -202,27 +197,20 @@ function Load-ModernUIXAML {
             if ($null -ne $closeButtonImage) {
                 $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closeNormalPath)
                 
-                # Add Hover/Leave event handlers for close button
-                $closeButton.Add_MouseEnter({
-                    if (Test-Path $closeHoverPath) {
-                        $_.Source.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closeHoverPath)
-                    }
-                })
-                
-                $closeButton.Add_MouseLeave({
-                    if (Test-Path $closeNormalPath) {
-                        $_.Source.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closeNormalPath)
-                    }
-                })
+                # Store hover path for later use
+                $closeButton.Tag = @{
+                    NormalPath = $closeNormalPath
+                    HoverPath = $closeHoverPath
+                }
             }
         }
         
-        Write-Host "[ModernUI] ✓ XAML erfolgreich geladen" -ForegroundColor Green
+        Write-Host "[ModernUI] OK - XAML loaded successfully" -ForegroundColor Green
         
         return $window
     }
     catch {
-        Write-Error "[ModernUI] Fehler beim Laden von ModernUI.xaml: $_"
+        Write-Error "[ModernUI] Error loading ModernUI.xaml: $_"
         return $null
     }
 }
@@ -235,10 +223,7 @@ function Register-EventHandlers {
         Registers all event handlers for the application window.
         
     .DESCRIPTION
-        Sets up event handlers for:
-        - Window dragging (MouseLeftButtonDown on TitleBar)
-        - Close button functionality
-        - Window lifecycle events
+        Sets up event handlers for window dragging, close button, and lifecycle events.
     #>
     
     param(
@@ -246,22 +231,25 @@ function Register-EventHandlers {
         [System.Windows.Window]$Window
     )
     
-    Write-Host "[ModernUI] Event-Handler werden registriert..." -ForegroundColor Cyan
+    Write-Host "[ModernUI] Event handlers are being registered..." -ForegroundColor Cyan
     
-    # Window Drag Handler
-    $titleBar = $Window.FindName("TitleBar")
-    if ($null -ne $titleBar) {
-        $titleBar.Add_MouseLeftButtonDown({
-            if ($Window.WindowState -eq [System.Windows.WindowState]::Maximized) {
-                return
-            }
-            try {
-                $Window.DragMove()
-            }
-            catch {
-                Write-Verbose "[ModernUI] DragMove fehlgeschlagen: $_"
-            }
-        })
+    # Window Drag Handler - find border element for mouse events
+    $xamlContent = Get-Content (Join-Path $Global:ScriptPath "ModernUI.xaml") -Raw
+    
+    # Get the window's main grid
+    $mainGrid = $Window.Content
+    if ($mainGrid -is [System.Windows.Controls.DockPanel]) {
+        $titleBarBorder = $mainGrid.Children[0]
+        if ($titleBarBorder -is [System.Windows.Controls.Border]) {
+            $titleBarBorder.Add_MouseLeftButtonDown({
+                try {
+                    $Window.DragMove()
+                }
+                catch {
+                    Write-Verbose "[ModernUI] DragMove failed: $_"
+                }
+            })
+        }
     }
     
     # Close Button Handler
@@ -270,15 +258,37 @@ function Register-EventHandlers {
         $closeButton.Add_Click({
             Invoke-AppExit
         })
+        
+        # Hover effects for close button
+        $closeButtonImage = $Window.FindName("CloseButtonImage")
+        if ($null -ne $closeButtonImage -and $closeButton.Tag) {
+            $closeButton.Add_MouseEnter({
+                try {
+                    $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closeButton.Tag.HoverPath)
+                }
+                catch {
+                    Write-Verbose "[ModernUI] Error setting hover image: $_"
+                }
+            })
+            
+            $closeButton.Add_MouseLeave({
+                try {
+                    $closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closeButton.Tag.NormalPath)
+                }
+                catch {
+                    Write-Verbose "[ModernUI] Error setting normal image: $_"
+                }
+            })
+        }
     }
     
     # Window Closed Event
     $Window.Add_Closed({
         $Global:ModernUI_State.IsRunning = $false
-        Write-Host "[ModernUI] Fenster wurde geschlossen" -ForegroundColor Yellow
+        Write-Host "[ModernUI] Window closed" -ForegroundColor Yellow
     })
     
-    Write-Host "[ModernUI] ✓ Event-Handler registriert" -ForegroundColor Green
+    Write-Host "[ModernUI] OK - Event handlers registered" -ForegroundColor Green
 }
 #endregion Event Handlers
 
@@ -289,18 +299,18 @@ function Invoke-AppExit {
         Cleanly exits the application.
         
     .DESCRIPTION
-        Centralised exit function ensuring proper cleanup and resource disposal.
+        Centralized exit function ensuring proper cleanup and resource disposal.
         Called by Close button or application termination.
     #>
     
-    Write-Host "[ModernUI] Anwendung wird beendet..." -ForegroundColor Yellow
+    Write-Host "[ModernUI] Application is shutting down..." -ForegroundColor Yellow
     
     if ($null -ne $Global:ModernUI_State.Window) {
         try {
             $Global:ModernUI_State.Window.Close()
         }
         catch {
-            Write-Warning "[ModernUI] Fehler beim Schließen des Fensters: $_"
+            Write-Warning "[ModernUI] Error closing window: $_"
         }
     }
     
@@ -310,7 +320,7 @@ function Invoke-AppExit {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
     
-    Write-Host "[ModernUI] ✓ Anwendung beendet" -ForegroundColor Green
+    Write-Host "[ModernUI] OK - Application terminated" -ForegroundColor Green
     exit 0
 }
 
@@ -324,18 +334,18 @@ function Initialize-ModernUI {
         Prepares application for execution.
     #>
     
-    Write-Host ""`n[ModernUI] Framework wird initialisiert...`n" -ForegroundColor Magenta
+    Write-Host "`n[ModernUI] Framework initialization...`n" -ForegroundColor Magenta
     
     # Load Configuration
     if (-not (Load-ModernUIConfig)) {
-        Write-Error "[ModernUI] Konfiguration konnte nicht geladen werden"
+        Write-Error "[ModernUI] Configuration could not be loaded"
         return $false
     }
     
     # Load XAML
     $window = Load-ModernUIXAML
     if ($null -eq $window) {
-        Write-Error "[ModernUI] XAML konnte nicht geladen werden"
+        Write-Error "[ModernUI] XAML could not be loaded"
         return $false
     }
     
@@ -344,7 +354,7 @@ function Initialize-ModernUI {
     # Register Event Handlers
     Register-EventHandlers -Window $window
     
-    Write-Host "[ModernUI] ✓ Framework initialisiert`n" -ForegroundColor Green
+    Write-Host "[ModernUI] OK - Framework initialized`n" -ForegroundColor Green
     
     return $true
 }
@@ -357,8 +367,7 @@ function Invoke-RunMainApp {
         Main application orchestration function.
         
     .DESCRIPTION
-        Central entry point that coordinates all application initialization
-        and execution.
+        Central entry point that coordinates all application initialization and execution.
     #>
     
     Write-Host "`n" + ("="*60) -ForegroundColor Cyan
@@ -367,25 +376,25 @@ function Invoke-RunMainApp {
     
     # Environment Check
     if (-not (Test-ModernUIEnvironment)) {
-        Write-Error "[ModernUI] Umgebungsprüfung fehlgeschlagen"
+        Write-Error "[ModernUI] Environment check failed"
         return
     }
     
     # Initialize Framework
     if (-not (Initialize-ModernUI)) {
-        Write-Error "[ModernUI] Initialisierung fehlgeschlagen"
+        Write-Error "[ModernUI] Initialization failed"
         return
     }
     
     # Show Window
     $Global:ModernUI_State.IsRunning = $true
-    Write-Host "[ModernUI] Fenster wird angezeigt...\n" -ForegroundColor Cyan
+    Write-Host "[ModernUI] Window is being displayed...`n" -ForegroundColor Cyan
     
     try {
         $null = $Global:ModernUI_State.Window.ShowDialog()
     }
     catch {
-        Write-Error "[ModernUI] Fehler beim Anzeigen des Fensters: $_"
+        Write-Error "[ModernUI] Error displaying window: $_"
     }
     finally {
         Invoke-AppExit
@@ -395,7 +404,7 @@ function Invoke-RunMainApp {
 
 #region Script Execution
 if (-not (Test-ModernUIEnvironment)) {
-    Write-Error "[ModernUI] Umgebungsprüfung fehlgeschlagen. Beende..."
+    Write-Error "[ModernUI] Environment check failed. Exiting..."
     exit 1
 }
 
