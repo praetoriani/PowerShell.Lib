@@ -17,7 +17,7 @@
     - Config-driven Image Loading
     - Rahmenloses Fenster Design mit transparenter Titelleiste
     - **FINAL: PNG Close Button + Tooltip (Best Practice)**
-    - **PRAGMATIC: Fokus auf Stabilit\u00e4t statt komplexen Effekten**
+    - **PRAGMATIC: Fokus auf Stabilität statt komplexen Effekten**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -263,32 +263,6 @@ $xaml = @"
     Background="Transparent"
     x:Name="MainWindow">
 
-    <Window.Resources>
-        <!-- Close Button Style -->
-        <Style x:Key="CloseButtonStyle" TargetType="Button">
-            <Setter Property="OverridesDefaultStyle" Value="True"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border 
-                            Name="ButtonBorder"
-                            Width="40"
-                            Height="40"
-                            BorderThickness="0"
-                            Background="{TemplateBinding Background}"
-                            Padding="8">
-                            <Image 
-                                x:Name="CloseButtonImg"
-                                Stretch="UniformToFill"
-                                RenderOptions.BitmapScalingMode="HighQuality"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
-
     <Grid x:Name="RootGrid" Background="Transparent">
         <!-- OVERLAY GRID -->
         <Grid>
@@ -336,8 +310,12 @@ $xaml = @"
                         <!-- Close Button -->
                         <Button 
                             x:Name="CloseButton" 
-                            Style="{StaticResource CloseButtonStyle}"
-                            Cursor="Hand" />
+                            Width="40"
+                            Height="40"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Padding="6" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -425,8 +403,6 @@ function Initialize-WPF {
         # SET CLOSE BUTTON IMAGE
         # =====================================================================
         if ($script:CloseButtonImage) {
-            $closeButton.Content = $null
-            
             # Create Image control for the button
             $buttonImage = New-Object System.Windows.Controls.Image
             $buttonImage.Source = $script:CloseButtonImage
