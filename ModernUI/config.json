@@ -1,0 +1,15 @@
+{
+  "appname": "ModernUI",
+  "appdesc": "ModernUI for PowerShell",
+  "appver": "v1.00.00",
+  "devname": "Praetoriani",
+  "website": "https://github.com/praetoriani",
+  "modernui": {
+    "window": "PNG\\ModernUI-WinBG.png",
+    "appicon": "PNG\\appicon.png",
+    "appclose": {
+      "normal": "PNG\\axn-winclose-normal.png",
+      "hover": "PNG\\axn-winclose-hover.png"
+    }
+  }
+}
