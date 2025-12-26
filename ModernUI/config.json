@@ -1,15 +1,33 @@
 {
-  "appname": "ModernUI",
-  "appdesc": "ModernUI for PowerShell",
-  "appver": "v1.00.00",
-  "devname": "Praetoriani",
-  "website": "https://github.com/praetoriani",
-  "modernui": {
-    "window": "PNG\\ModernUI-WinBG.png",
-    "appicon": "PNG\\appicon.png",
-    "appclose": {
-      "normal": "PNG\\axn-winclose-normal.png",
-      "hover": "PNG\\axn-winclose-hover.png"
-    }
+  "version": "1.00.00",
+  "application": {
+    "name": "ModernUI",
+    "description": "Modern UI Framework for PowerShell WPF",
+    "author": "Marc Sczepanski (praetoriani)"
+  },
+  "window": {
+    "title": "ModernUI v1.00.00",
+    "width": 800,
+    "height": 600,
+    "startupLocation": "CenterScreen",
+    "resizable": true
+  },
+  "windowIcon": "$PSScriptRoot\\Images\\ModernUI-Icon.png",
+  "closeButton": {
+    "normalPath": "$PSScriptRoot\\Images\\axn-winclose-normal.png",
+    "hoverPath": "$PSScriptRoot\\Images\\axn-winclose-hover.png"
+  },
+  "theme": {
+    "primaryColor": "#007ACC",
+    "backgroundColor": "#F5F5F5",
+    "surfaceColor": "#FAFAFA",
+    "textColor": "#333333",
+    "textSecondaryColor": "#666666",
+    "borderColor": "#E0E0E0"
+  },
+  "features": {
+    "titleBarDragging": true,
+    "hoverEffects": true,
+    "imageTriggersEnabled": true
   }
 }
