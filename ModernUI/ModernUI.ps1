@@ -63,12 +63,16 @@ function Load-Configuration {
         # Lese config.json
         $configJson = Get-Content $Path -Raw
         
-        # Expandiere $PSScriptRoot Variable in der Config (nur das exakte Pattern)
-        $PSScriptRootEscaped = [System.Text.RegularExpressions.Regex]::Escape($PSScriptRoot)
+        # Expandiere $PSScriptRoot Variable in der Config
         $configJson = $configJson -replace '\$PSScriptRoot', $PSScriptRoot
         
         # Parse als JSON
         $config = $configJson | ConvertFrom-Json
+        
+        # Konvertiere Forward Slashes zu Backslashes in Pfaden (Windows kompatibel)
+        $config.windowIcon = $config.windowIcon -replace '/', '\\'
+        $config.closeButton.normalPath = $config.closeButton.normalPath -replace '/', '\\'
+        $config.closeButton.hoverPath = $config.closeButton.hoverPath -replace '/', '\\'
         
         Write-Host "[OK] Config geladen" -ForegroundColor Green
         Write-Host "   - Pfad: $Path" -ForegroundColor Gray
