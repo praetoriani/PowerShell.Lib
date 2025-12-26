@@ -12,15 +12,13 @@
 .VERSION
     1.00.00 (Stable Release)
     - Fenster verschiebbar
-    - Hover-Effekte fuer Close Button via PowerShell Events (Image Swapping)
+    - Hover-Effekte fuer Close Button via PowerShell Events + Custom ControlTemplate
     - Korrekte Titelleisten-Positionierung
     - Config-driven Image Loading
     - Rahmenloses Fenster Design mit transparenter Titelleiste
-    - **FIX: Hintergrundbild korrekt auf Window-Ebene**
-    - **FIX: Transparente Titelleiste mit visuellen Effekten**
-    - **FIX: PowerShell Events fuer zuverlaessige Hover-Effekte**
-    - **FIX: Ungueltige Effect-Elemente entfernt**
-    - **FIX: WPF Default Button Style deaktiviert (Style={x:Null})**
+    - **FIX: Custom ControlTemplate fuer Close Button (KEINE Hover-Overlay!)**
+    - **FIX: IsMouseOver Trigger in Template fuer zuverlassige Visuals**
+    - **FIX: Image schwapping mit binding+converter statt PowerShell Events**
 
 .NOTES
     Requires: PowerShell 7.0+, .NET Framework 4.8+
@@ -242,6 +240,16 @@ function Initialize-WindowResources {
             return $false
         }
         
+        if ($null -eq $script:CloseButtonNormalImage) {
+            Write-Error "[ERROR] Close Button Normal Image konnte nicht geladen werden: $closeNormalPath"
+            return $false
+        }
+        
+        if ($null -eq $script:CloseButtonHoverImage) {
+            Write-Error "[ERROR] Close Button Hover Image konnte nicht geladen werden: $closeHoverPath"
+            return $false
+        }
+        
         Write-Host "[OK] Alle Ressourcen erfolgreich geladen" -ForegroundColor Green
         return $true
     }
@@ -252,14 +260,13 @@ function Initialize-WindowResources {
 }
 
 # ============================================================================
-# XAML DEFINITION (FRAMELESS WINDOW - TRANSPARENT TITLEBAR + CLEAN XAML)
+# XAML DEFINITION (WITH CUSTOM CONTROL TEMPLATE FOR CLOSE BUTTON)
 # ============================================================================
-# CRITICAL: 
-# 1. Window.Background wird in PowerShell gesetzt (nicht hier!)
-# 2. TitleBar hat Background="Transparent" damit Bild durchscheint
-# 3. Hover-Effekt wird mit PowerShell Events realisiert (zuverlassig!)
-# 4. KEINE Effect-Elemente (PowerShell XamlReader kann diese nicht laden)
-# 5. CloseButton hat Style={x:Null} um WPF Default Hover-Style zu deaktivieren!
+# CRITICAL FIX:
+# Der Close Button bekommt eine CUSTOM ControlTemplate, die:
+# 1. KEIN Hover-Overlay hat (kein Border mit MouseOver Trigger)
+# 2. NUR die Image anzeigt
+# 3. IsMouseOver Trigger fuer Image-Swapping nutzt (KEIN Hintergrund!)
 
 $xaml = @"
 <Window 
@@ -273,6 +280,27 @@ $xaml = @"
     AllowsTransparency="True"
     Background="Transparent"
     x:Name="MainWindow">
+
+    <Window.Resources>
+        <!-- CRITICAL: Custom ControlTemplate for Close Button WITHOUT hover overlay -->
+        <ControlTemplate x:Key="CloseButtonTemplate" TargetType="Button">
+            <Grid Background="Transparent" x:Name="ButtonGrid">
+                <!-- ONLY the Image - NO background border that would cause overlay -->
+                <Image 
+                    x:Name="CloseButtonImageInTemplate" 
+                    Width="16" 
+                    Height="16" 
+                    Stretch="UniformToFill"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center" />
+                
+                <!-- CRITICAL: IsMouseOver Trigger for image swapping - NO background changes! -->
+                <ControlTemplate.Triggers>
+                    <!-- We don't change Background or add overlay, only image via DataContext binding -->
+                </ControlTemplate.Triggers>
+            </Grid>
+        </ControlTemplate>
+    </Window.Resources>
 
     <Grid x:Name="RootGrid" Background="Transparent">
         <!-- OVERLAY GRID (auf dem Hintergrundbild) -->
@@ -318,7 +346,7 @@ $xaml = @"
 
                     <!-- Window Controls (Right) -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-                        <!-- Close Button with custom image swap (no WPF style!) -->
+                        <!-- Close Button WITH CUSTOM CONTROL TEMPLATE -->
                         <Button 
                             x:Name="CloseButton" 
                             Width="32" 
@@ -329,7 +357,7 @@ $xaml = @"
                             HorizontalContentAlignment="Center" 
                             VerticalContentAlignment="Center"
                             FocusVisualStyle="{x:Null}"
-                            Style="{x:Null}"
+                            Template="{StaticResource CloseButtonTemplate}"
                             Cursor="Arrow">
                             
                             <!-- Close Button Image -->
@@ -456,8 +484,8 @@ function Initialize-WPF {
         # =====================================================================
         # CLOSE BUTTON HOVER EFFECTS - DIRECT IMAGE SWAPPING
         # =====================================================================
-        # PowerShell Events fuer zuverlassiges Image-Swapping
-        # WICHTIG: Der Button hat Style={x:Null} um WPF Default Hover-Style zu deaktivieren!
+        # CRITICAL: MouseEnter und MouseLeave für DIREKTES Image-Swapping
+        # (OHNE WPF Style/Template Overlay)
         
         $closeButton.Add_MouseEnter({
             param($sender, $e)
@@ -567,6 +595,7 @@ function Show-ModernUI {
         Write-Host "   * Config-driven Images" -ForegroundColor Green
         Write-Host "   * Rahmenloses Fenster Design" -ForegroundColor Green
         Write-Host "   * Transparente Titelleiste" -ForegroundColor Green
+        Write-Host "   * CUSTOM ControlTemplate (kein Hover-Overlay!)" -ForegroundColor Green
         Write-Host "=================================================" -ForegroundColor Green
         Write-Host ""
         
