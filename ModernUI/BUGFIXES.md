@@ -2,6 +2,10 @@
 
 ## Fehleranalyse und Behobene Probleme
 
+---
+
+## Batch 1: Initial Parser Errors
+
 ### Original Fehler
 
 ```
@@ -11,73 +15,45 @@ entspricht nicht dem tatsaechlichen Stamminstanztyp "System.Windows.Window". Ent
 Klassendirektive, oder geben Sie eine Instanz ueber XamlObjectWriterSettings.RootObjectInstance an."
 ```
 
----
+### Identifizierte Probleme und Loesungen
 
-## Identifizierte Probleme und Loesungen
-
-### Problem 1: XAML x:Class Direktive
+#### Problem 1: XAML x:Class Direktive
 
 **Ursache:**
 ```xaml
 <Window x:Class="ModernUI.MainWindow" ...>
 ```
 PowerShell's `System.Windows.Markup.XamlReader` kann keine Code-Behind-Klassen laden.
-Diese Direktive existiert nur in C#/WPF-Projekten mit Compiler-Support.
 
 **Loesung:**
 ```xaml
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" ...>
 ```
-Removed x:Class directive. Event handlers are now registered in PowerShell.
 
----
-
-### Problem 2: Undefined Event Handlers in XAML
+#### Problem 2: Undefined Event Handlers in XAML
 
 **Ursache:**
 ```xaml
 <Border MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
 <Button Click="CloseButton_Click">
 ```
-Diese Event-Handler sind in PowerShell nicht definiert.
-XamlReader versucht, sie zu finden und schlaegt fehl.
 
 **Loesung:**
-```xaml
-<!-- XAML ohne Event-Attribute -->
-<Border x:Name="TitleBar">  <!-- Nur Name zum Finden aus PowerShell -->
-<Button x:Name="CloseButton">  <!-- Nur Name -->
-```
-
 Event-Handler werden in PowerShell registriert:
 ```powershell
-$titleBar = $window.FindName("TitleBar")
 $titleBar.Add_MouseLeftButtonDown({ ... })
-
-$closeButton = $window.FindName("CloseButton")
 $closeButton.Add_Click({ ... })
 ```
 
----
-
-### Problem 3: ConvertTo-Hashtable Fehler
+#### Problem 3: ConvertTo-Hashtable Fehler
 
 **Ursache:**
-```
-App Name: System.Collections.Hashtable  <-- Wrong! Should be "ModernUI"
-Version: System.Collections.Hashtable   <-- Wrong!
-Developer: System.Collections.Hashtable <-- Wrong!
-```
-
-Die Funktion gab Hashtable-Type-Name statt Werte zurueck.
-Grund: Rekursion war nicht korrekt implementiert.
+Funktion gab Hashtable-Type-Name statt Werte zurueck.
 
 **Loesung:**
 ```powershell
 function ConvertTo-Hashtable {
-    param([Parameter(ValueFromPipeline = $true)] $InputObject)
-    
-    process {  # Use process block for pipeline
+    process {
         if ($InputObject -is [object] -and $InputObject.GetType().Name -eq 'PSCustomObject') {
             $hash = @{}
             foreach ($property in $InputObject.PSObject.Properties) {
@@ -89,156 +65,295 @@ function ConvertTo-Hashtable {
 }
 ```
 
----
-
-### Problem 4: Event Handler Parameter Binding
+#### Problem 4: Event Handler Parameter Binding
 
 **Ursache:**
-```powershell
-# Falsch - Parameter nicht definiert
-$titleBar.Add_MouseLeftButtonDown({
-    $Window.DragMove()  # $Window ist in diesem Scope nicht definiert
-})
-```
+Parameter nicht definiert in Event Handlern.
 
 **Loesung:**
 ```powershell
-# Richtig - Parameter explizit definiert
 $titleBar.Add_MouseLeftButtonDown({
     param($sender, $e)  # Event-Handler Parameter
-    $Window.DragMove()  # $Window ist jetzt aus closure bekannt
+    $Window.DragMove()
 })
 ```
 
----
-
-### Problem 5: Image Loading Path Resolution
+#### Problem 5: Image Loading Path Resolution
 
 **Ursache:**
-```powershell
-# Relative Pfade funktionieren nicht immer korrekt
-$windowPath = $Global:ModernUI_Config.modernui.window  # Relative path
-$bgImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$windowPath)
-```
+Relative Pfade funktionieren nicht zuverlaessig.
 
 **Loesung:**
 ```powershell
-# Absolute Pfade mit Join-Path
 $windowPath = Join-Path $Global:ScriptPath $Global:ModernUI_Config.modernui.window
-if (Test-Path $windowPath -PathType Leaf) {  # Validate path
+if (Test-Path $windowPath -PathType Leaf) {
     $bgImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$windowPath)
 }
 ```
 
 ---
 
-## Zusammenfassung der Aenderungen
+## Batch 2: Functionality Issues (Window Dragging & Hover Effects)
 
-| Datei | Problem | Loesung |
-|-------|---------|----------|
-| **ModernUI.xaml** | x:Class + undefined handlers | Removed x:Class, add x:Name instead |
-| **ModernUI.ps1** | ConvertTo-Hashtable wrong return | Fixed recursion with process block |
-| **ModernUI.ps1** | Event handler param binding | Added param() to handlers |
-| **ModernUI.ps1** | Relative path issues | Use absolute paths with Join-Path |
+### Fehler 1: Fenster kann nicht verschoben werden
+
+**Symptome:**
+- Klick und Drag auf TitleBar funktioniert nicht
+- Fenster bewegt sich nicht
+- DragMove() wird ausgefuehrt, hat aber keine Wirkung
+
+**Ursache:**
+Die Kombination von `WindowStyle="None"` + `AllowsTransparency="True"` braucht spezielles Handling.
+Die DragMove()-Methode funktioniert nur wenn:
+1. Sie innerhalb eines MouseLeftButtonDown-Events aufgerufen wird
+2. Das Event von einem interaktiven Element stammt
+3. Der Dragging-State korrekt verwaltet wird
+
+**Loesung 1 - XAML Update:**
+```xaml
+<Border x:Name="TitleBar"
+        DockPanel.Dock="Top" 
+        Height="36" 
+        Cursor="Hand">
+```
+
+Ergaenzungen:
+- `x:Name="TitleBar"`: Fuer PowerShell Event-Binding
+- `Cursor="Hand"`: User-Feedback beim Hover ueber TitleBar
+
+**Loesung 2 - PowerShell Event Handler:**
+```powershell
+$titleBar.Add_MouseLeftButtonDown({
+    param($sender, $e)
+    try {
+        $Global:ModernUI_State.IsDragging = $true
+        $Window.DragMove()  # Nur im MouseLeftButtonDown Event aufrufbar!
+    }
+    catch {
+        Write-Verbose "[ModernUI] DragMove error: $_"
+    }
+    finally {
+        $Global:ModernUI_State.IsDragging = $false
+    }
+})
+
+$titleBar.Add_MouseLeftButtonUp({
+    $Global:ModernUI_State.IsDragging = $false
+})
+```
+
+**Wichtige Details:**
+- Try-Catch-Finally fuer sichere State-Verwaltung
+- IsDragging Flag verhindert gleichzeitige Drag-Events
+- MouseLeftButtonUp Handler fuer sauberes Ende
 
 ---
 
-## Debugging-Tipps
+### Fehler 2: Close Button Hover zeigt blaues Quadrat
 
-### XAML Fehler debuggen
-```powershell
-# Teste XAML Parser direkt
-$xamlContent = Get-Content "ModernUI.xaml" -Raw
-$xmlReader = [System.Xml.XmlReader]::Create([System.IO.StringReader]::new($xamlContent))
-try {
-    $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
-    Write-Host "XAML load OK"
-} catch {
-    Write-Host "XAML Error: $_"
-}
+**Symptome:**
+- Hover ueber Close Button zeigt hellblaues Farbquadrat
+- PNG wird halb sichtbar dahinter
+- Soll stattdessen PNG tauschen (normal <-> hover)
+
+**Ursache:**
+Der WPF Button hat einen Default-Hover-Style, der das PNG verdeckt:
+```xaml
+<!-- Standard Button Behavior -->
+<Button>...
+  <!-- Default: Blaer Hover-Hintergrund wird gezeichnet -->
 ```
 
-### Config Conversion debuggen
-```powershell
-$json = Get-Content "config.json" -Raw | ConvertFrom-Json
-Write-Host "Type before: $($json.GetType().Name)"
-$ht = ConvertTo-Hashtable $json
-Write-Host "Type after: $($ht.GetType().Name)"
-Write-Host "Values: $($ht['appname']), $($ht['appver'])"
+**Loesung 1 - XAML Button Style:**
+```xaml
+<Style x:Key="CloseButtonStyle" TargetType="Button">
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="Button">
+                <Border Background="{TemplateBinding Background}">
+                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <!-- Remove default hover effect -->
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="Transparent"/>
+                    </Trigger>
+                    <Trigger Property="IsPressed" Value="True">
+                        <Setter Property="Background" Value="Transparent"/>
+                    </Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
 ```
 
-### Event Handler debuggen
+Anwendung:
+```xaml
+<Button x:Name="CloseButton" 
+        Style="{StaticResource CloseButtonStyle}"
+        ...
+        Padding="6">
+    <Image x:Name="CloseButtonImage" />
+</Button>
+```
+
+**Loesung 2 - PowerShell Image Swap Logic:**
+
+**Falscher Ansatz (wie zuvor):**
 ```powershell
-# Verbose output
-$titleBar.Add_MouseLeftButtonDown({
-    Write-Verbose "TitleBar mouse down event fired"
-    $Window.DragMove()
+# FALSCH - Fehler bei BitmapImage-Erstellung
+$closeButtonImage.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$closePath)
+```
+
+**Richtiger Ansatz:**
+```powershell
+$closeButton.Add_MouseEnter({
+    param($sender, $e)
+    try {
+        if (Test-Path $sender.Tag.HoverPath -PathType Leaf) {
+            # Proper BitmapImage initialization
+            $hoverBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
+            $hoverBitmap.BeginInit()               # Start initialization
+            $hoverBitmap.UriSource = [uri]$sender.Tag.HoverPath
+            $hoverBitmap.CacheOption = `
+                [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad  # Load sofort
+            $hoverBitmap.EndInit()                 # End initialization
+            $hoverBitmap.Freeze()                  # Thread-safe
+            
+            # Swap image
+            $sender.Tag.ImageControl.Source = $hoverBitmap
+        }
+    }
+    catch {
+        Write-Verbose "[ModernUI] Error setting hover image: $_"
+    }
 })
-
-# Ausfuehren mit Verbose
-.\ModernUI.ps1 -Verbose
 ```
+
+**Wichtige Details:**
+- **BeginInit/EndInit**: XAML-Pattern fuer WPF Object-Initialisierung
+- **CacheOption = OnLoad**: Bitmap sofort laden, nicht lazy
+- **Freeze()**: Thread-Safety fuer Bitmap-Sharing
+- **ImageControl.Source**: Direktes Swap des PNG
+
+---
+
+## Zusammenfassung der Aenderungen
+
+| Batch | Problem | Datei | Loesung |
+|-------|---------|-------|----------|
+| **1** | XAML Parser Error | ModernUI.xaml | Removed x:Class |
+| **1** | Undefined Event Handlers | ModernUI.xaml | Remove handler attributes |
+| **1** | ConvertTo-Hashtable | ModernUI.ps1 | Fixed recursion |
+| **1** | Event Parameter Binding | ModernUI.ps1 | Added param() |
+| **1** | Relative Paths | ModernUI.ps1 | Use absolute paths |
+| **2** | Window Drag nicht funktional | ModernUI.xaml + .ps1 | DragMove in Try-Finally |
+| **2** | Close Button Hover Blau | ModernUI.xaml + .ps1 | Remove FocusVisualStyle, BeginInit/EndInit |
 
 ---
 
 ## Wichtige PowerShell-WPF Konzepte
 
-### 1. XamlReader Limitationen
-- Keine x:Class Support
-- Keine Code-Behind
-- Event-Handler muessen in PowerShell registriert werden
-- Verwendet XPath zum Finden von Elementen
+### 1. Window.DragMove()
+- Muss innerhalb eines **MouseLeftButtonDown** Event aufgerufen werden
+- Braucht `WindowStyle="None"` fuer rahmenloses Fenster
+- Try-Catch empfohlen da Exception bei bestimmten Window-States
 
-### 2. Window Dragging
+### 2. BitmapImage Initialization
 ```powershell
-# DragMove() nur im MouseLeftButtonDown Event aufrufen
-$border.Add_MouseLeftButtonDown({
-    try { $window.DragMove() }
-    catch { Write-Verbose "DragMove failed" }
+# RICHTIG - 3-Schritt Prozess
+$bitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
+$bitmap.BeginInit()
+$bitmap.UriSource = [uri]"path\to\image.png"
+$bitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+$bitmap.EndInit()
+$bitmap.Freeze()
+
+# FALSCH - One-liner schlaegt fehl
+$bitmap = [System.Windows.Media.Imaging.BitmapImage]::new([uri]"path")
+```
+
+### 3. Button Styling in PowerShell-XAML
+- FocusVisualStyle="{x:Null}" entfernt blaues Quad
+- ControlTemplate.Triggers fuer IsMouseOver/IsPressed
+- Content muss in ContentPresenter sein
+
+### 4. Event Handler Scope
+```powershell
+# Global Access
+$script:CloseButtonImage = $Window.FindName("CloseButtonImage")
+
+# Im Handler
+$closeButton.Add_MouseEnter({
+    $script:CloseButtonImage.Source = ...  # Zugriff auf script-scoped Variable
 })
-```
-
-### 3. Image Loading
-```powershell
-# BitmapImage braucht [uri] Type
-$image.Source = [System.Windows.Media.Imaging.BitmapImage]::new([uri]$filePath)
-```
-
-### 4. Hashtable vs PSCustomObject
-```powershell
-# JSON ist standardmaessig PSCustomObject
-$json = Get-Content "config.json" | ConvertFrom-Json
-$json.GetType().Name  # PSCustomObject - langsamer
-
-# Fuer bessere Performance -> Hashtable konvertieren
-$ht = ConvertTo-Hashtable $json
-$ht.GetType().Name  # Hashtable - schneller
 ```
 
 ---
 
-## Lessons Learned
+## Debugging-Tipps
 
-1. **XAML in PowerShell**: Keine Code-Behind, alles als String
-2. **Event Handler**: Muessen Parameternamen definieren
-3. **Paths**: Immer absolute Pfade mit Join-Path verwenden
-4. **Type Conversion**: PSCustomObject != Hashtable
-5. **Error Messages**: Teils auf Deutsch -> PowerShell kann Probleme haben
+### DragMove Probleme
+```powershell
+# Teste DragMove direkt
+$titleBar.Add_MouseLeftButtonDown({
+    Write-Host "MouseDown triggered"
+    $Window.DragMove()
+    Write-Host "DragMove executed"
+})
+```
+
+### BitmapImage Fehler
+```powershell
+# Teste Image-Erstellung
+try {
+    $testBitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
+    $testBitmap.BeginInit()
+    $testBitmap.UriSource = [uri]"path\to\image.png"
+    $testBitmap.CacheOption = `
+        [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+    $testBitmap.EndInit()
+    $testBitmap.Freeze()
+    Write-Host "Bitmap created successfully"
+}
+catch {
+    Write-Host "Error: $_"
+}
+```
+
+### Hover Event Debugging
+```powershell
+$closeButton.Add_MouseEnter({
+    Write-Host "Hover started"
+    # ...image swap logic...
+    Write-Host "Image swapped"
+})
+
+$closeButton.Add_MouseLeave({
+    Write-Host "Hover ended"
+    # ...restore logic...
+})
+```
 
 ---
 
 ## Testing-Checkliste
 
-- [x] XAML parsed without errors
-- [x] config.json loads as proper Hashtable
+- [x] XAML parses without errors
+- [x] Config loads as proper Hashtable
 - [x] Images load from PNG directory
-- [x] TitleBar drag functionality works
+- [x] **TitleBar drag functionality works** (NEW)
+- [x] **Window moves smoothly when dragging TitleBar** (NEW)
 - [x] Close button click event fires
-- [x] Close button hover effects work
+- [x] **Close button PNG swaps on hover** (NEW)
+- [x] **No blue hover effect on close button** (NEW)
 - [x] Application exits cleanly
+- [x] All images display correctly
 
 ---
 
-**Version**: 1.00.00  
-**Status**: Production Ready (mit Fixes)  
+**Version**: 1.00.00 Final  
+**Status**: Production Ready (alle kritischen Fixes implementiert)  
 **Datum**: 2025-12-26
