@@ -1,235 +1,79 @@
-# Changelog - ModernUI
+# ModernUI - CHANGELOG (v1.00.02)
 
-## Version 1.00.00 - Final Release (December 26, 2025)
-
-### ✅ Status: PRODUCTION READY
-
----
-
-## What's New
-
-### Major Features
-
-- 🎨 **Modern Dark UI** - Windows 11 design principles
-- 🔘 **Frameless Window** - Professional look without standard frames
-- 🖱️ **PNG-based UI Elements** - High-quality graphics
-- ⚙️ **Config-driven Architecture** - Easy JSON configuration
-- 🛡️ **Resource Validation** - Automatic path resolution
-- 📚 **Full Documentation** - Comprehensive guides
-
-### Bug Fixes (4 Critical Issues)
-
-#### 1. JSON Escape Sequence Error
-**Problem:** `\\` escaping caused JSON parsing errors  
-**Solution:** Use forward slashes `/` instead in config.json  
-**Status:** ✅ FIXED
-
-```diff
-- "windowIcon": "C:\\Users\\pendo\\...\\appicon.png"
-+ "windowIcon": "appicon.png"
-```
-
-#### 2. Incorrect Image Paths
-**Problem:** PNG images not found due to wrong relative paths  
-**Solution:** Implemented `Resolve-ImagePath` function for dynamic resolution  
-**Status:** ✅ FIXED
-
-```powershell
-function Resolve-ImagePath {
-    param([string]$ImageName, [string]$BasePath)
-    $fullPath = Join-Path $BasePath $ImageName
-    return (Resolve-Path $fullPath).Path
-}
-```
-
-#### 3. Background Image Not Loading
-**Problem:** ModernUI-WinBG.png not displayed  
-**Solution:** Added background image to XAML and config, proper ImageBrush creation  
-**Status:** ✅ FIXED
-
-```xaml
-<Window Background="{Binding BackgroundImage}" ...>
-    <!-- Background now properly bound -->
-</Window>
-```
-
-#### 4. Unnecessary Configuration Bloat
-**Problem:** Config contained unused settings (theme, features, resizable)  
-**Solution:** Removed 5 unnecessary entries, reduced from 862 to 545 bytes (-62%)  
-**Status:** ✅ CLEANED
-
-### Performance Improvements
-
-- ⚡ Optimized image loading with caching
-- ⚡ Faster startup time (~2 seconds)
-- ⚡ Reduced memory footprint (~80-120 MB)
-- ⚡ Improved error handling and logging
-
-### Code Quality
-
-- 📝 Enhanced function documentation
-- 📝 Better error messages
-- 📝 Proper error handling with try/catch
-- 📝 Code review and cleanup
-
-### Documentation
-
-- 📆 README.md (comprehensive guide)
-- 📆 QUICKSTART.md (5-minute intro)
-- 📆 CHANGELOG.md (version history)
-- 📆 BUGFIXES.md (technical details)
-- 📆 VERSION.md (release info)
+This changelog describes **ModernUI v1.00.02**. Older versions are not
+listed here.
 
 ---
 
-## Statistics
+## [1.00.02] - ModernUI Core Enhancements
 
-| Metric | Value |
-|--------|-------|
-| **Critical Bugs Fixed** | 4 |
-| **Optimization Improvements** | 3 |
-| **Config Size Reduction** | -62% |
-| **Documentation Files** | 5 |
-| **Test Coverage** | 100% |
-| **Startup Time** | ~2 seconds |
-| **Memory Usage** | ~80-120 MB |
+### Added
 
----
+- **Central configuration usage**
+  - `config.json` is now a first-class runtime component.
+  - Application metadata (`app`), debug behavior (`debug`), window
+    settings (`window`), image paths (`paths`) and XAML files (`screen`)
+    are actively used by the PowerShell script.
 
-## Technical Changes
+- **Logging system**
+  - New `Write-LogEntry` function for structured logging.
+  - Log entries follow the pattern:
+    - `DATETIME - SEVERITY - MESSAGE`
+    - Datetime format is defined by `debug.datetime`.
+    - Severity labels and icons are defined by `debug.severityLevel`.
+  - Log file name and activation are defined by `debug.file` and
+    `debug.enabled`.
 
-### ModernUI.ps1
+- **External XAML main window**
+  - Main window layout moved from inline XAML in `ModernUI.ps1` to
+    `ModernUI/WPF/ModernUI.xaml`.
+  - The script loads and parses XAML at runtime using the
+    `config.screen.mainwin` setting.
 
-**New Functions:**
-- `Load-Configuration` - Load and validate config.json
-- `Resolve-ImagePath` - Dynamic path resolution
-- `Load-BitmapImage` - PNG image loading
-- `Create-ImageBrush` - ImageBrush creation
-- `Initialize-WindowResources` - Resource validation
-- `Initialize-WPF` - WPF UI initialization
+- **Label-based close button with hover effect**
+  - Close button is now a `Label` with an `Image` child.
+  - Normal and hover icons are configured via
+    `paths.winaxnCloseImage` and `paths.winaxnCloseHover`.
+  - Hover behavior is implemented through `MouseEnter` and
+    `MouseLeave` events.
+  - Click behavior uses `PreviewMouseLeftButtonDown` and closes the
+    window reliably.
 
-**Improvements:**
-- Better error handling throughout
-- Meaningful error messages
-- Automatic resource validation
-- Improved logging
+- **Main window content redesign**
+  - Large centered title: `ModernUI`.
+  - Version text below the title using `config.app.version`.
+  - Central image area displaying `appscreen.png` from the `PNG` folder
+    (configured via `paths.appscreenImage`).
+  - Credits text:
+    - `Written by Praetoriani`
+    - `Now available on GitHub`
 
-### config.json
+### Changed
 
-**Before (862 bytes):**
-```json
-{
-  "windowIcon": "C:\\Users\\pendo\\Github\\...",
-  "theme": { "dark": true },
-  "features": { "themes": false },
-  "resizable": true
-}
-```
+- **Versioning**
+  - `VERSION` and `VERSION.md` updated to `1.00.02`.
+  - All ModernUI-specific references now consistently use `1.00.02`.
 
-**After (545 bytes):**
-```json
-{
-  "paths": {
-    "baseImagePath": "./PNG",
-    "windowIcon": "appicon.png",
-    "backgroundImage": "ModernUI-WinBG.png",
-    "closeButtonNormalPath": "axn-winclose-normal.png",
-    "closeButtonHoverPath": "axn-winclose-hover.png"
-  }
-}
-```
+- **Configuration**
+  - `app.version` set to `"1.00.02"`.
+  - `window.title` simplified to `"ModernUI"`.
+  - Added `paths.appscreenImage` for the main screen preview PNG.
 
-### ModernUI.xaml
+- **Documentation**
+  - `BUGFIXES.md`, `CHANGELOG.md`, `QUICKSTART.md` and `README.md` have
+    been rewritten in English for the ModernUI scope.
+  - `FIXES.md` has been removed to avoid duplication.
 
-**Key Updates:**
-- `WindowStyle="None"` - Frameless window
-- `AllowsTransparency="True"` - Transparency support
-- Background ImageBrush binding
-- Proper event handlers for drag and close
+### Removed
 
----
-
-## Known Issues
-
-None currently known. All critical issues have been resolved.
-
-For issues or bugs, please [create a GitHub issue](https://github.com/praetoriani/PowerShell.Lib/issues).
+- Inline XAML definition from `ModernUI.ps1`.
+- Legacy references to final or stable branding in favour of a clean
+  version-only naming.
 
 ---
 
-## Future Roadmap
+## Notes
 
-### v1.1.0 (Q1 2026)
-- [ ] Theme system (light/dark modes)
-- [ ] Customizable color schemes
-- [ ] Window size memory
-
-### v1.2.0 (Q2 2026)
-- [ ] Internationalization (i18n)
-- [ ] Multiple language support
-- [ ] RTL (Right-to-Left) support
-
-### v1.3.0 (Q3 2026)
-- [ ] Plugin system
-- [ ] Custom component library
-- [ ] Event system
-
-### v2.0.0 (Q4 2026)
-- [ ] .NET 6+ migration
-- [ ] MAUI support
-- [ ] Cross-platform (Windows/Linux/macOS)
-
----
-
-## Breaking Changes
-
-None. v1.00.00 is the first stable release.
-
----
-
-## Migration Guide
-
-No migration needed - this is the initial release.
-
----
-
-## Credits
-
-**Author:** Marc Sczepanski (praetoriani)  
-**Location:** Bavaria, Germany  
-**License:** MIT  
-
----
-
-## How to Update
-
-If you're running an older version, simply:
-
-1. Pull latest from GitHub
-   ```bash
-   git pull origin main
-   ```
-
-2. Replace old files with new ones
-
-3. Run ModernUI.ps1
-   ```powershell
-   .\ModernUI.ps1
-   ```
-
-No additional setup needed!
-
----
-
-## Support
-
-**Questions or issues?**
-
-1. Check [README.md](./README.md) FAQ
-2. Review [BUGFIXES.md](./BUGFIXES.md) for technical details
-3. [Create a GitHub Issue](https://github.com/praetoriani/PowerShell.Lib/issues)
-4. Email: marc.sczepanski@gmail.com
-
----
-
-**ModernUI v1.00.00 - Production Ready 🚀**
+- This version is intended as a solid baseline for further feature
+  extensions. All structural changes are focused on maintainability and
+  clarity rather than visual experimentation.
