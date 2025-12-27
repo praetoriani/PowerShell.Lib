@@ -80,8 +80,8 @@ jobs:
       - name: Create Job-Internal vars
         run: |
           echo "BUILD_STAMP=$(date +'%d.%m.%Y ; %H:%M:%S')" >> $GITHUB_ENV
-          echo "TIME_ZONE='Europe/Berlin'" >> $GITHUB_ENV
-          echo "APP_BUILD=$(date +'%y%m%d-%H%M%S')" >> $GITHUB_ENV
+          echo "TIME_ZONE=Europe/Berlin" >> $GITHUB_ENV
+          echo "APP_BUILD=$(date +'%y%m%d')" >> $GITHUB_ENV
       
       # STEP 2: Setup variables for different trigger types
       # Handle both automatic (tag push) and manual (workflow_dispatch) triggers
@@ -216,8 +216,9 @@ jobs:
             ## ⬇️ **File Download:**
             <br>
 
-            ${{ env.APP_NAME }} ${{ env.APP_VERS }} (Build: ${{ env.APP_BUILD }})
-            Released: ${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }})
+            **App Name**: ${{ env.APP_NAME }} ${{ env.APP_VERS }} (Build: ${{ env.APP_BUILD }})
+            **App Version**: ${{ env.APP_VERS }} (Build: ${{ env.APP_BUILD }})
+            **Release Date**: ${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }})
             
             **📦 [`${{ env.ZIP_FILENAME }}`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }})**
             <br>
