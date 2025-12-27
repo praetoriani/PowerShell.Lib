@@ -15,7 +15,13 @@
     "baseImagePath": "./PNG",
     "windowIcon": "appicon.png",
     "backgroundImage": "ModernUI-WinBG.png",
-    "closeButtonNormalPath": "axn-winclose-normal.png",
-    "closeButtonHoverPath": "axn-winclose-hover.png"
+    "winaxnCloseImage": "axn-winclose-normal.png",
+    "winaxnCloseHover": "axn-winclose-hover.png",
+    "winaxnMinImage": "axn-winmin-normal.png",
+    "winaxnMinHover": "axn-winmin-hover.png",
+    "winaxnMaxImage": "axn-winmax-normal.png",
+    "winaxnMaxHover": "axn-winmax-hover.png",
+    "winaxnHelpImage": "axn-winhelp-normal.png",
+    "winaxnHelpHover": "axn-winhelp-hover.png"
   }
 }

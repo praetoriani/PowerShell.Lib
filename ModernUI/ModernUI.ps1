@@ -160,7 +160,7 @@ function Initialize-WindowResources {
         
         $iconPath = Resolve-ImagePath -ImageName $Config.paths.windowIcon
         $bgPath = Resolve-ImagePath -ImageName $Config.paths.backgroundImage
-        $closeButtonPath = Resolve-ImagePath -ImageName $Config.paths.closeButtonNormalPath
+        $closeButtonPath = Resolve-ImagePath -ImageName $Config.paths.winaxnCloseImage
         
         $script:WindowIcon = $null
         $script:BackgroundBrush = $null
@@ -257,11 +257,11 @@ $xamlString = @"
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Image x:Name="WindowIconImage" Grid.Column="0" Width="24" Height="24" Margin="8,0,0,0" VerticalAlignment="Center" />
+                <Image x:Name="WindowIconImage" Grid.Column="0" Width="24" Height="24" Margin="10,0,0,4" VerticalAlignment="Center" />
                 
-                <TextBlock x:Name="TitleText" Grid.Column="1" Text="ModernUI v1.00.00" VerticalAlignment="Center" Margin="40,0,0,0" FontSize="14" Foreground="#FFFFFF" FontWeight="SemiBold" />
+                <TextBlock x:Name="TitleText" Grid.Column="1" Text="ModernUI v1.00.00" VerticalAlignment="Center" Margin="5,0,0,4" FontSize="14" Foreground="#FFFFFF" FontWeight="SemiBold" />
                 
-                <Button x:Name="CloseButton" Grid.Column="2" Style="{StaticResource NoHoverButtonStyle}" Width="24" Height="24" Cursor="Hand" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <Button x:Name="CloseButton" Grid.Column="3" Style="{StaticResource NoHoverButtonStyle}" Width="24" Height="24" Cursor="Hand" Margin="0,0,10,4" VerticalAlignment="Center" />
             </Grid>
         </Border>
 
