@@ -1,4 +1,14 @@
 # PowerShell.Lib Repository
+
+<strong><u>Minimum Requirements:</u></strong><br><br>
+![Windows OS](https://img.shields.io/badge/Win11%2023H2%20(Minimum)-cc2900?style=flat&label=%F0%9F%92%BB%20Windows%20OS&labelColor=545454)
+![.NET Framework](https://img.shields.io/badge/Version%204.8%20(Recommended)-0052cc?style=flat&label=%F0%9F%94%A7%20.NET%20Framework&labelColor=545454)
+[![PowerShell](https://img.shields.io/badge/Version%205.x%20(or%20higher)-6600cc?style=flat&label=%E2%9A%99%EF%B8%8F%20PowerShell&labelColor=545454)](https://docs.microsoft.com/en-us/powershell/)
+
+
+
+
+
 This repo is a collection of scripts and projects written in PowerShell. Some of the projects use XAML files to provide a functional and user-friendly interface. Some also use special fonts. All fonts are free, open-source fonts from Google.
 
 :globe_with_meridians: Google Fonts Website [https://fonts.google.com/](https://fonts.google.com/)
@@ -7,7 +17,6 @@ This repo is a collection of scripts and projects written in PowerShell. Some of
 <br><br>
 ## ModernUI
 
-[![PowerShell](https://img.shields.io/badge/%E2%9A%99%EF%B8%8FPowerShell%20Required%3A%20-Version%205.x%20(or%20higher)-BB0000?style=flat&logoSize=auto&labelColor=545454)](https://docs.microsoft.com/en-us/powershell/)
 ![Version](https://img.shields.io/badge/%F0%9F%93%8BVersion%3A%20-v1.00.10-00b300?style=flat&logoSize=auto&labelColor=545454)
 
 <br>
@@ -20,7 +29,6 @@ Please click on one of the badges below to visit the mentioned page:
 <br><br><br>
 ## Font Demos
 
-[![PowerShell](https://img.shields.io/badge/%E2%9A%99%EF%B8%8FPowerShell%20Required%3A%20-Version%205.x%20(or%20higher)-BB0000?style=flat&logoSize=auto&labelColor=545454)](https://docs.microsoft.com/en-us/powershell/)
 ![Version](https://img.shields.io/badge/%F0%9F%93%8BVersion%3A%20-v1.00.00-00b300?style=flat&logoSize=auto&labelColor=545454)
 
 <br>
@@ -33,7 +41,6 @@ Please click on one of the badges below to visit the mentioned page:
 <br><br><br>
 ## Context Menu Switcher
 
-[![PowerShell](https://img.shields.io/badge/%E2%9A%99%EF%B8%8FPowerShell%20Required%3A%20-Version%205.x%20(or%20higher)-BB0000?style=flat&logoSize=auto&labelColor=545454)](https://docs.microsoft.com/en-us/powershell/)
 ![Version](https://img.shields.io/badge/%F0%9F%93%8BVersion%3A%20-v1.00.01-01b300?style=flat&logoSize=auto&labelColor=545454)
 
 <br>
@@ -46,7 +53,6 @@ Please click on one of the badges below to visit the mentioned page:
 <br><br><br>
 ## Power.Ctrl.app
 
-[![PowerShell](https://img.shields.io/badge/%E2%9A%99%EF%B8%8FPowerShell%20Required%3A%20-Version%205.x%20(or%20higher)-BB0000?style=flat&logoSize=auto&labelColor=545454)](https://docs.microsoft.com/en-us/powershell/)
 ![Version](https://img.shields.io/badge/%F0%9F%93%8BVersion%3A%20-v1.00.10-01b300?style=flat&logoSize=auto&labelColor=545454)
 
 <br>
