@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     ModernUI v1.00.00 - Modern UI Framework for PowerShell WPF (FINAL STABLE)
 
