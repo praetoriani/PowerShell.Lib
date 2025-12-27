@@ -191,7 +191,7 @@ jobs:
           # RELEASE TITLE
           # Uses the tag name (e.g. "ModernUI muiapp-v1.00.10")
           # name: ${{ env.APP_NAME }} ${{ steps.setup.outputs.tag_name }}
-          name: ${{ env.APP_NAME }} ${{ env.APP_VERS }}
+          name: ${{ env.APP_NAME }} ${{ env.APP_VERS }} (Build ${{ env.APP_BUILD }})
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
