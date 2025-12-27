@@ -401,32 +401,33 @@ function Initialize-WPF {
 
         # =====================================================================
         # SETUP CLOSE BUTTON WITH HOVER EFFECT
-        # KEY: Attach hover events DIRECTLY to the Image element
-        # This bypasses WPF event routing and parent interference
+        # KEY: Use $sender parameter directly, NOT closure variables
         # =====================================================================
         
         if ($null -ne $closeButtonLabel -and $null -ne $closeButtonImg) {
             try {
-                # Store images in closure variables
+                # Store images in closure variables (only images, not elements)
                 $normalImg = $script:CloseButtonNormalImage
                 $hoverImg = $script:CloseButtonHoverImage
-                $imgElement = $closeButtonImg
                 
                 # Set initial image
-                $imgElement.Source = $normalImg
+                $closeButtonImg.Source = $normalImg
                 $closeButtonLabel.Cursor = [System.Windows.Input.Cursors]::Hand
                 
                 Write-LogEntry -Severity "DEBUG" -Message "Close button image set (normal)"
                 
                 # ============================================================
-                # CRITICAL: Register MouseEnter/MouseLeave on IMAGE element
-                # NOT on the Label - this avoids parent interference
+                # CRITICAL: Use $sender parameter directly in event handlers
+                # This is the correct way to reference the element that
+                # triggered the event in PowerShell WPF event handlers
                 # ============================================================
                 
                 # MouseEnter on IMAGE
                 $closeButtonImg.Add_MouseEnter({
+                    param($sender, $e)
                     try {
-                        $imgElement.Source = $hoverImg
+                        # $sender is the Image element that triggered this event
+                        $sender.Source = $hoverImg
                         Write-LogEntry -Severity "DEBUG" -Message "Close button hover state activated"
                     }
                     catch {
@@ -436,8 +437,10 @@ function Initialize-WPF {
                 
                 # MouseLeave on IMAGE
                 $closeButtonImg.Add_MouseLeave({
+                    param($sender, $e)
                     try {
-                        $imgElement.Source = $normalImg
+                        # $sender is the Image element that triggered this event
+                        $sender.Source = $normalImg
                         Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated"
                     }
                     catch {
