@@ -13,6 +13,7 @@ name: ModernUI Release
 # ZUGRIFF AUF DIE GLOBALEN VARIABLEN IM JOB-TEIL VIA ${{ env.VARIABLENNAME }}
 env:
    ZIP_FILENAME: "ModernUI.zip"       # Legt den Namen der ZIP-Datei fest
+   APP_DEV: "Praetoriani"             # Name des Entwicklers
    APP_NAME: "ModernUI"               # Das hier ist der eigentliche Programmname
    APP_VERS: "v1.00.00"               # Die aktuelle Programm-Version
    APPTAGID: "muiapp-"                # Globale Variable für den Tag-Namen bzw. Tag-ID
@@ -73,6 +74,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4  # Official GitHub Action for code download
         # After this step, all your repository files are available
+      
+      # STEP 2: Create some Job-Internal variables like Date/Time-Stamp for the current build or timezone
+      # These vars can be used like ${{ env.VARNAME }}
+      - name: Create Job-Internal vars
+        run: |
+          echo "BUILD_STAMP=$(date +'%d.%m.%Y ; %H:%M:%S')" >> $GITHUB_ENV
+          echo "TIME_ZONE='Europe/Berlin'" >> $GITHUB_ENV
+          echo "APP_BUILD=$(date +'%y%m%d-%H%M%S')" >> $GITHUB_ENV
       
       # STEP 2: Setup variables for different trigger types
       # Handle both automatic (tag push) and manual (workflow_dispatch) triggers
@@ -181,7 +190,8 @@ jobs:
           
           # RELEASE TITLE
           # Uses the tag name (e.g. "ModernUI muiapp-v1.00.10")
-          name: ${{ env.APP_NAME }} ${{ steps.setup.outputs.tag_name }}
+          # name: ${{ env.APP_NAME }} ${{ steps.setup.outputs.tag_name }}
+          name: ${{ env.APP_NAME }} ${{ env.APP_VERS }}
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
@@ -205,6 +215,9 @@ jobs:
 
             ## ⬇️ **File Download:**
             <br>
+
+            ${{ env.APP_NAME }} ${{ env.APP_VERS }} (Build: ${{ env.APP_BUILD }})
+            Released: ${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }})
             
             **📦 [`${{ env.ZIP_FILENAME }}`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }})**
             <br>
