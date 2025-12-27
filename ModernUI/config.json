@@ -1,5 +1,6 @@
 {
   "app": {
+    "_comment": "The app-Section includes general informations about the app itself",
     "version": "1.00.02",
     "name": "ModernUI",
     "description": "Modern UI Framework for PowerShell WPF",
@@ -7,6 +8,7 @@
     "website": "https://github.com/praetoriani/PowerShell.Lib"
   },
   "debug": {
+    "_comment": "The debug-Section is used to configure the internal debugger. With these settings the debugger",
     "file": "runtime.log",
     "enabled": "true",
     "datetime": "yyyy.MM.dd ; HH:mm:ss",
@@ -18,12 +20,14 @@
     }
   },
   "window": {
+    "_comment": "The window-Section includes data for the main app window",
     "title": "ModernUI",
     "width": 800,
     "height": 600,
     "startupLocation": "CenterScreen"
   },
   "paths": {
+    "_comment": "The paths-Section configures PNGs that are used to create the app's ui",
     "baseImagePath": "./PNG",
     "windowIcon": "appicon.png",
     "backgroundImage": "ModernUI-WinBG.png",
@@ -38,6 +42,7 @@
     "appscreenImage": "appscreen.png"
   },
   "screen": {
+    "_comment": "The screens-Section configures XAML files that include code to create the WPF-based application dialogues",
     "basePath": "./WPF",
     "mainwin":  "ModernUI.xaml",
     "helpwin":  "PopupHelp.xaml",
