@@ -202,8 +202,8 @@ jobs:
             <br>
 
             ## ⬇️ **File Download:**
-            <br>
-            **📦 [`${{ env.APP_NAME }}-release.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.APP_NAME }}-release.zip)**
+            
+            **📦 [`${{ env.ZIP_FILENAME }}`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }})**
             <br>
 
             ## 🚀 Installation:
