@@ -201,7 +201,8 @@ function Load-BitmapImage {
         $bitmapImage.UriSource = New-Object System.Uri($ImagePath, [System.UriKind]::Absolute)
         $bitmapImage.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
         $bitmapImage.EndInit()
-        $bitmapImage.Freeze()
+        # NOTE: Do NOT freeze the image - it prevents dynamic updates!
+        # $bitmapImage.Freeze()
         
         # Cache the image
         $script:ImageCache[$ImagePath] = $bitmapImage
@@ -401,12 +402,12 @@ function Initialize-WPF {
 
         # =====================================================================
         # SETUP CLOSE BUTTON WITH HOVER EFFECT
-        # KEY: Use $sender parameter directly, NOT closure variables
+        # KEY: Store references to images and use $sender in events
         # =====================================================================
         
         if ($null -ne $closeButtonLabel -and $null -ne $closeButtonImg) {
             try {
-                # Store images in closure variables (only images, not elements)
+                # Store images in closure variables (not frozen, so they can be updated)
                 $normalImg = $script:CloseButtonNormalImage
                 $hoverImg = $script:CloseButtonHoverImage
                 
@@ -417,16 +418,15 @@ function Initialize-WPF {
                 Write-LogEntry -Severity "DEBUG" -Message "Close button image set (normal)"
                 
                 # ============================================================
-                # CRITICAL: Use $sender parameter directly in event handlers
-                # This is the correct way to reference the element that
-                # triggered the event in PowerShell WPF event handlers
+                # HOVER EFFECT: Use $sender directly to avoid frozen image issues
+                # Store images in closure scope for the event handlers
                 # ============================================================
                 
                 # MouseEnter on IMAGE
                 $closeButtonImg.Add_MouseEnter({
                     param($sender, $e)
                     try {
-                        # $sender is the Image element that triggered this event
+                        # Use the freshly loaded hover image
                         $sender.Source = $hoverImg
                         Write-LogEntry -Severity "DEBUG" -Message "Close button hover state activated"
                     }
@@ -439,7 +439,7 @@ function Initialize-WPF {
                 $closeButtonImg.Add_MouseLeave({
                     param($sender, $e)
                     try {
-                        # $sender is the Image element that triggered this event
+                        # Restore the normal image
                         $sender.Source = $normalImg
                         Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated"
                     }
