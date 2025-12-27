@@ -1,5 +1,9 @@
 # ModernUI v1.00.02
 
+![ModernUI Poster](./ModernUI-Poster.png)
+
+---
+
 ModernUI is a modern WPF-based UI framework for PowerShell, designed to
 bring a clean, Windows 11 inspired experience to PowerShell
 applications.
@@ -55,11 +59,11 @@ ModernUI focuses on:
   - `enabled`: `"true"` or `"false"`.
   - `file`: log file name (e.g. `runtime.log`).
   - `datetime`: timestamp format for log entries.
-  - `severityLevel`: labels/icons for different severities.
+  - `severityLevel`: labels for different severities.
 - The `Write-LogEntry` function creates entries in the form:
 
   ```text
-  [yyyy.MM.dd ; HH:mm:ss] [ℹ️ INFO]  → Example message
+  [yyyy.MM.dd ; HH:mm:ss] [INFO]   -> Example message
   ```
 
 ### 2.4 Label-based close button with hover
