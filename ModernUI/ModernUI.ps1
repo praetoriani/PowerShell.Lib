@@ -229,7 +229,7 @@ function Get-FreshBitmapImage {
     }
     
     try {
-        Write-LogEntry -Severity "DEBUG" -Message "Creating fresh BitmapImage for: $ImageName"
+        #Write-LogEntry -Severity "DEBUG" -Message "Creating fresh BitmapImage for: $ImageName"
         
         $bitmapImage = New-Object System.Windows.Media.Imaging.BitmapImage
         $bitmapImage.BeginInit()
@@ -457,7 +457,7 @@ function Initialize-WPF {
                         $freshHoverImage = Get-FreshBitmapImage -ImagePath $script:CloseButtonHoverImagePath -ImageName "Close Button (Hover - Fresh)"
                         if ($null -ne $freshHoverImage) {
                             $sender.Source = $freshHoverImage
-                            Write-LogEntry -Severity "DEBUG" -Message "Close button hover state activated"
+                            #Write-LogEntry -Severity "DEBUG" -Message "Close button hover state activated"
                         }
                         else {
                             Write-LogEntry -Severity "WARN" -Message "Failed to load fresh hover image"
@@ -479,7 +479,7 @@ function Initialize-WPF {
                         $freshNormalImage = Get-FreshBitmapImage -ImagePath $script:CloseButtonNormalImagePath -ImageName "Close Button (Normal - Fresh)"
                         if ($null -ne $freshNormalImage) {
                             $sender.Source = $freshNormalImage
-                            Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated"
+                            #Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated"
                         }
                         else {
                             Write-LogEntry -Severity "WARN" -Message "Failed to load fresh normal image"
