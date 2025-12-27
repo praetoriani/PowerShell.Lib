@@ -1,3 +1,8 @@
+<div align="center">
+  <img src="./ModernUI-Poster.png" alt="Alternativer Text">
+</div>
+
+---
 
 # 🎨 ModernUI v1.00.00
 
