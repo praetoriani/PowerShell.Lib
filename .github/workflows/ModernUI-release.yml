@@ -203,7 +203,7 @@ jobs:
 
             ## ⬇️ **File Download:**
             <br>
-            **📦 [`${{ env.ZIP_FILENAME }}`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }})**
+            **📦 [`${{ env.APP_NAME }}-release.zip`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.APP_NAME }}-release.zip)**
             <br>
 
             ## 🚀 Installation:
@@ -230,7 +230,7 @@ jobs:
           # RELEASE SETTINGS
           files: ${{ env.ZIP_FILENAME }}     # The ZIP file as download asset
           draft: false                       # false = Release is published immediately
-          prerelease: true                  # false = Normal release (not marked as beta)
+          prerelease: false                  # false = Normal release (not marked as beta)
           
           # ERROR HANDLING
           fail_on_unmatched_files: true      # Workflow fails if ZIP file doesn't exist
@@ -267,7 +267,7 @@ jobs:
           echo "  2. Download '${{ env.ZIP_FILENAME }}'"
           echo "  4. Extract ${{ env.ZIP_FILENAME }}"
           echo "  5. Run PowerShell Console"
-          echo "  6. Go to the extrcted folder"
+          echo "  6. Go to the extracted folder"
           echo "  7. Run the main PowerShell Script"
           echo ""
           echo "🔧 For Developers:"
@@ -278,5 +278,5 @@ jobs:
             echo "  • This release was created automatically by pushing tag: $TAG_NAME"
             echo "  • To create another release, push a new muiapp-* tag or use manual trigger"
           fi
-          echo "  • Manual trigger available at: https://github.com/${{ github.repository }}/actions/workflows/ModernUI-release.yml"
+          echo "  • Manual trigger available at: https://github.com/${{ github.repository }}/actions/workflows/${{ env.APP_NAME }}-release.yml"
           echo ""
