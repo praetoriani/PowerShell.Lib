@@ -12,10 +12,12 @@ name: ModernUI Release
 # UMGEBUNGSVARIABLEN. DIESE GLOBALEN VARIABLEN SIND AUSSCHLIESSLICH IM JOB-TEIL VERFÜGAR, DA DIESER DIE LAUFZEIT DARSTELLT!
 # ZUGRIFF AUF DIE GLOBALEN VARIABLEN IM JOB-TEIL VIA ${{ env.VARIABLENNAME }}
 env:
-   ZIP_FILENAME: "ModernUI.zip"       # Globale Variable für ZIP-Name.
-   APP_NAME: "ModernUI"               # Globale Variable für den Programm-Namen
-   APP_VERS: "v1.00.00"               # Globale Variable für die Programm-Version
+   ZIP_FILENAME: "ModernUI.zip"       # Legt den Namen der ZIP-Datei fest
+   APP_NAME: "ModernUI"               # Das hier ist der eigentliche Programmname
+   APP_VERS: "v1.00.00"               # Die aktuelle Programm-Version
    APPTAGID: "muiapp-"                # Globale Variable für den Tag-Namen bzw. Tag-ID
+   INSTALLER: "setup-modernui.ps1"    # Das Installer-Script, welches nach dem Download ausgeführt werden muss
+   RUN_APP: "ModernUI.ps1"            # Das Script muss gestartet werden, um das Programm zu öffnen
 
 # TRIGGER CONFIGURATION - MULTIPLE TRIGGERS SUPPORTED
 # Defines when this workflow should be executed
@@ -91,8 +93,8 @@ jobs:
           fi
           
           # Validate tag format
-          if [[ ! $TAG_NAME =~ ^muiapp-.*$ ]]; then
-            echo "❌ Error: Tag name must start with 'muiapp-'"
+          if [[ ! $TAG_NAME =~ ^${{ env.APPTAGID }}.*$ ]]; then
+            echo "❌ Error: Tag name must start with '${{ env.APPTAGID }}'"
             echo "❌ Provided: $TAG_NAME"
             exit 1
           fi
@@ -202,6 +204,7 @@ jobs:
             <br>
 
             ## ⬇️ **File Download:**
+            <br>
             
             **📦 [`${{ env.ZIP_FILENAME }}`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }})**
             <br>
@@ -210,15 +213,15 @@ jobs:
             1. Download the `${{ env.ZIP_FILENAME }}` file above
             2. Extract to your desired folder
             3. Open PowerShell and Navigate to the extracted folder
-            4. Run: `.\ModernUI.ps1`
+            4. Run: `.\${{ env.RUN_APP }}`
             <br>
 
             ## 💡 Insider tip:
             You can create a shortcut by your own by creating a shortcut and using the following command as the target.:
             ```
-            C:\Windows\System32\conhost.exe --headless powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "C:\PATH\TO\ModernUI.ps1"
+            C:\Windows\System32\conhost.exe --headless powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "C:\PATH\TO\${{ env.RUN_APP }}"
             ```
-            Change `-File "C:\PATH\TO\ModernUI.ps1"` to the actual location of `ModernUI.ps1`
+            Change `-File "C:\PATH\TO\${{ env.RUN_APP }}"` to the actual location of `${{ env.RUN_APP }}`
             Save the changes, run the Shortcut and thank me later 😉
             <br>
 
@@ -276,7 +279,7 @@ jobs:
             echo "  • To create another release, go to Actions → ${{ env.APP_NAME }} Release → Run workflow"
           else
             echo "  • This release was created automatically by pushing tag: $TAG_NAME"
-            echo "  • To create another release, push a new muiapp-* tag or use manual trigger"
+            echo "  • To create another release, push a new ${{ env.APPTAGID }}* tag or use manual trigger"
           fi
           echo "  • Manual trigger available at: https://github.com/${{ github.repository }}/actions/workflows/${{ env.APP_NAME }}-release.yml"
           echo ""
