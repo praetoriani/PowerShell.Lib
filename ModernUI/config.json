@@ -1,6 +1,6 @@
 {
   "app": {
-    "version": "1.00.00",
+    "version": "1.00.02",
     "name": "ModernUI",
     "description": "Modern UI Framework for PowerShell WPF",
     "developer": "Praetoriani (a.k.a. Marc Sczepanski)",
@@ -18,7 +18,7 @@
     }
   },
   "window": {
-    "title": "ModernUI v1.00.00",
+    "title": "ModernUI",
     "width": 800,
     "height": 600,
     "startupLocation": "CenterScreen"
@@ -34,7 +34,8 @@
     "winaxnMaxImage": "axn-winmax-normal.png",
     "winaxnMaxHover": "axn-winmax-hover.png",
     "winaxnHelpImage": "axn-winhelp-normal.png",
-    "winaxnHelpHover": "axn-winhelp-hover.png"
+    "winaxnHelpHover": "axn-winhelp-hover.png",
+    "appscreenImage": "appscreen.png"
   },
   "screen": {
     "basePath": "./WPF",
