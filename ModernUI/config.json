@@ -1,6 +1,5 @@
 {
   "app": {
-    // The app-Section includes general informations about the app itself
     "version": "1.00.00",
     "name": "ModernUI",
     "description": "Modern UI Framework for PowerShell WPF",
@@ -8,10 +7,8 @@
     "website": "https://github.com/praetoriani/PowerShell.Lib"
   },
   "debug": {
-    // The debug-Section is used to configure the internal debugger. With these settings the debugger
-    // will generate runtime.log-file. The entries inside the log will look like: "[1982.06.22 ; 08:16:24]  [ℹ️ INFO]  → Config successfully loaded"
     "file": "runtime.log",
-    "enabled": true,
+    "enabled": "true",
     "datetime": "yyyy.MM.dd ; HH:mm:ss",
     "severityLevel": {
       "INFO":   "[ℹ️ INFO]  → ",
@@ -21,14 +18,12 @@
     }
   },
   "window": {
-    // The window-Section includes data for the main app window
     "title": "ModernUI v1.00.00",
     "width": 800,
     "height": 600,
     "startupLocation": "CenterScreen"
   },
   "paths": {
-    // The paths-Section configures PNGs that are used to create the app's ui
     "baseImagePath": "./PNG",
     "windowIcon": "appicon.png",
     "backgroundImage": "ModernUI-WinBG.png",
@@ -42,7 +37,6 @@
     "winaxnHelpHover": "axn-winhelp-hover.png"
   },
   "screen": {
-    // The screens-Section configures XAML files that include code to create the WPF-based application dialogues
     "basePath": "./WPF",
     "mainwin":  "ModernUI.xaml",
     "helpwin":  "PopupHelp.xaml",
