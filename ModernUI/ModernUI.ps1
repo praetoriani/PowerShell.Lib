@@ -42,7 +42,6 @@ $script:Config = $null
 $script:LogFilePath = $null
 $script:LogEnabled = $false
 $script:ImageCache = @{}
-$script:CloseButtonHovered = $false
 
 # ============================================================================
 # ASSEMBLY LOADING
@@ -402,11 +401,13 @@ function Initialize-WPF {
 
         # =====================================================================
         # SETUP CLOSE BUTTON WITH HOVER EFFECT
+        # KEY: Attach hover events DIRECTLY to the Image element
+        # This bypasses WPF event routing and parent interference
         # =====================================================================
         
         if ($null -ne $closeButtonLabel -and $null -ne $closeButtonImg) {
             try {
-                # Store images and image element in closure variables
+                # Store images in closure variables
                 $normalImg = $script:CloseButtonNormalImage
                 $hoverImg = $script:CloseButtonHoverImage
                 $imgElement = $closeButtonImg
@@ -418,60 +419,33 @@ function Initialize-WPF {
                 Write-LogEntry -Severity "DEBUG" -Message "Close button image set (normal)"
                 
                 # ============================================================
-                # HOVER EFFECT using MouseMove (NOT MouseEnter/MouseLeave)
-                # This is more reliable in WPF, especially with parent drag
-                # handlers interfering
+                # CRITICAL: Register MouseEnter/MouseLeave on IMAGE element
+                # NOT on the Label - this avoids parent interference
                 # ============================================================
                 
-                # MouseMove - Check if over button
-                $closeButtonLabel.Add_MouseMove({
-                    param($sender, $e)
+                # MouseEnter on IMAGE
+                $closeButtonImg.Add_MouseEnter({
                     try {
-                        # Get button position
-                        $buttonPos = $closeButtonLabel.PointToScreen([System.Windows.Point]::new(0, 0))
-                        $buttonBounds = New-Object System.Windows.Rect($buttonPos, `
-                            $closeButtonLabel.RenderSize)
-                        
-                        # Get current mouse position
-                        $mousePos = [System.Windows.Input.Mouse]::GetPosition($closeButtonLabel)
-                        
-                        # Check if mouse is within button bounds
-                        $isInside = ($mousePos.X -ge 0 -and $mousePos.X -le $closeButtonLabel.ActualWidth -and `
-                                    $mousePos.Y -ge 0 -and $mousePos.Y -le $closeButtonLabel.ActualHeight)
-                        
-                        if ($isInside -and -not $script:CloseButtonHovered) {
-                            # Mouse entered
-                            $script:CloseButtonHovered = $true
-                            $imgElement.Source = $hoverImg
-                            Write-LogEntry -Severity "DEBUG" -Message "Close button hover state activated"
-                        }
-                        elseif (-not $isInside -and $script:CloseButtonHovered) {
-                            # Mouse left
-                            $script:CloseButtonHovered = $false
-                            $imgElement.Source = $normalImg
-                            Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated"
-                        }
+                        $imgElement.Source = $hoverImg
+                        Write-LogEntry -Severity "DEBUG" -Message "Close button hover state activated"
                     }
                     catch {
-                        Write-LogEntry -Severity "WARN" -Message "Error in mouse move handler: $_"
+                        Write-LogEntry -Severity "WARN" -Message "Error on image MouseEnter: $_"
                     }
                 })
                 
-                # MouseLeave as fallback (for safety)
-                $closeButtonLabel.Add_MouseLeave({
+                # MouseLeave on IMAGE
+                $closeButtonImg.Add_MouseLeave({
                     try {
-                        if ($script:CloseButtonHovered) {
-                            $script:CloseButtonHovered = $false
-                            $imgElement.Source = $normalImg
-                            Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated (MouseLeave)"
-                        }
+                        $imgElement.Source = $normalImg
+                        Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated"
                     }
                     catch {
-                        Write-LogEntry -Severity "WARN" -Message "Error in mouse leave handler: $_"
+                        Write-LogEntry -Severity "WARN" -Message "Error on image MouseLeave: $_"
                     }
                 })
                 
-                # PreviewMouseLeftButtonDown - Close window
+                # PreviewMouseLeftButtonDown on LABEL (click handling)
                 $closeButtonLabel.Add_PreviewMouseLeftButtonDown({
                     param($sender, $e)
                     try {
@@ -486,7 +460,7 @@ function Initialize-WPF {
                     $e.Handled = $true
                 })
                 
-                # Add tooltip
+                # Add tooltip to LABEL
                 try {
                     $tooltip = New-Object System.Windows.Controls.ToolTip
                     $tooltip.Content = "Close Application"
