@@ -42,6 +42,7 @@ $script:Config = $null
 $script:LogFilePath = $null
 $script:LogEnabled = $false
 $script:ImageCache = @{}
+$script:CloseButtonImageElement = $null
 
 # ============================================================================
 # ASSEMBLY LOADING
@@ -53,7 +54,7 @@ try {
     [void] [System.Reflection.Assembly]::LoadWithPartialName("WindowsBase")
 }
 catch {
-    Write-Error "[ERROR] Assembly loading failed: $_"
+    Write-Host "[ERROR] Assembly loading failed: $_" -ForegroundColor Red
     exit 1
 }
 
@@ -81,36 +82,25 @@ function Initialize-Logging {
             $null = New-Item -Path $script:LogFilePath -ItemType File -Force -ErrorAction SilentlyContinue
             $script:LogEnabled = $true
             
-            Write-LogEntry -Severity "INFO" -Message "Logging initialized - $logFileName" -WriteConsole
+            Write-LogEntry -Severity "INFO" -Message "Logging initialized - $logFileName"
         }
         else {
-            Write-LogEntry -Severity "INFO" -Message "Logging disabled in config" -WriteConsole
+            Write-LogEntry -Severity "INFO" -Message "Logging disabled in config"
         }
     }
     catch {
-        Write-Error "[ERROR] Logging initialization failed: $_"
+        Write-Host "[ERROR] Logging initialization failed: $_" -ForegroundColor Red
     }
 }
 
 function Write-LogEntry {
     param(
         [string]$Severity = "INFO",
-        [string]$Message = "",
-        [switch]$WriteConsole = $false
+        [string]$Message = ""
     )
 
     try {
         if (-not $script:LogEnabled -or [string]::IsNullOrEmpty($script:LogFilePath)) {
-            if ($WriteConsole) {
-                $consoleColor = switch ($Severity) {
-                    "INFO" { "Cyan" }
-                    "WARN" { "Yellow" }
-                    "ERROR" { "Red" }
-                    "DEBUG" { "Gray" }
-                    default { "White" }
-                }
-                Write-Host "[$Severity] $Message" -ForegroundColor $consoleColor
-            }
             return
         }
 
@@ -126,12 +116,10 @@ function Write-LogEntry {
                 $severityIcon = $script:Config.debug.severityLevel.$Severity
             }
             catch {
-                # Fallback to plain text if emoji causes issues
                 $severityIcon = "[$Severity] -> "
             }
         }
         else {
-            # Fallback: use severity name as text
             $severityIcon = "[$Severity] -> "
         }
 
@@ -140,21 +128,9 @@ function Write-LogEntry {
 
         # Write to log file
         $logEntry | Out-File -FilePath $script:LogFilePath -Append -Encoding UTF8 -ErrorAction SilentlyContinue
-
-        # Also write to console if requested
-        if ($WriteConsole) {
-            $consoleColor = switch ($Severity) {
-                "INFO" { "Cyan" }
-                "WARN" { "Yellow" }
-                "ERROR" { "Red" }
-                "DEBUG" { "Gray" }
-                default { "White" }
-            }
-            Write-Host $logEntry -ForegroundColor $consoleColor
-        }
     }
     catch {
-        Write-Host "[ERROR] Failed to write log entry: $_" -ForegroundColor Red
+        # Silently fail - don't even write errors to console
     }
 }
 
@@ -166,19 +142,17 @@ function Load-Configuration {
     param([string]$Path)
 
     if (-not (Test-Path $Path)) {
-        Write-Error "[ERROR] Configuration file not found: $Path"
+        Write-Host "[ERROR] Configuration file not found: $Path" -ForegroundColor Red
         return $null
     }
 
     try {
-        Write-Host "[INFO] Loading configuration from: $Path" -ForegroundColor Cyan
         $configJson = Get-Content -Path $Path -Raw -Encoding UTF8
         $config = $configJson | ConvertFrom-Json -ErrorAction Stop
-        Write-Host "[OK] Configuration loaded successfully" -ForegroundColor Green
         return $config
     }
     catch {
-        Write-Error "[ERROR] Configuration error: $($_.Exception.Message)"
+        Write-Host "[ERROR] Configuration error: $($_.Exception.Message)" -ForegroundColor Red
         return $null
     }
 }
@@ -253,11 +227,11 @@ function Load-XamlFile {
         $xamlPath = Join-Path -Path $PSScriptRoot -ChildPath "WPF" | Join-Path -ChildPath $XamlFileName
         
         if (-not (Test-Path $xamlPath)) {
-            Write-LogEntry -Severity "ERROR" -Message "XAML file not found: $xamlPath" -WriteConsole
+            Write-LogEntry -Severity "ERROR" -Message "XAML file not found: $xamlPath"
             return $null
         }
 
-        Write-LogEntry -Severity "INFO" -Message "Loading XAML file: $XamlFileName" -WriteConsole
+        Write-LogEntry -Severity "INFO" -Message "Loading XAML file: $XamlFileName"
         
         $xamlContent = Get-Content -Path $xamlPath -Raw -Encoding UTF8
         
@@ -265,7 +239,7 @@ function Load-XamlFile {
         return $xamlContent
     }
     catch {
-        Write-LogEntry -Severity "ERROR" -Message "Error loading XAML file: $_" -WriteConsole
+        Write-LogEntry -Severity "ERROR" -Message "Error loading XAML file: $_"
         return $null
     }
 }
@@ -278,7 +252,7 @@ function Initialize-WindowResources {
     param([pscustomobject]$Config)
 
     try {
-        Write-LogEntry -Severity "INFO" -Message "Initializing window resources..." -WriteConsole
+        Write-LogEntry -Severity "INFO" -Message "Initializing window resources..."
         
         # Resolve image paths
         $iconPath = Resolve-ImagePath -ImageName $Config.paths.windowIcon
@@ -310,25 +284,25 @@ function Initialize-WindowResources {
         
         # Validate critical resources
         if ($null -eq $script:BackgroundImage) {
-            Write-LogEntry -Severity "ERROR" -Message "Background image failed to load" -WriteConsole
+            Write-LogEntry -Severity "ERROR" -Message "Background image failed to load"
             return $false
         }
         
         if ($null -eq $script:CloseButtonNormalImage) {
-            Write-LogEntry -Severity "ERROR" -Message "Close button normal image failed to load" -WriteConsole
+            Write-LogEntry -Severity "ERROR" -Message "Close button normal image failed to load"
             return $false
         }
 
         if ($null -eq $script:CloseButtonHoverImage) {
-            Write-LogEntry -Severity "ERROR" -Message "Close button hover image failed to load" -WriteConsole
+            Write-LogEntry -Severity "ERROR" -Message "Close button hover image failed to load"
             return $false
         }
         
-        Write-LogEntry -Severity "INFO" -Message "All resources loaded successfully" -WriteConsole
+        Write-LogEntry -Severity "INFO" -Message "All resources loaded successfully"
         return $true
     }
     catch {
-        Write-LogEntry -Severity "ERROR" -Message "Resource initialization failed: $_" -WriteConsole
+        Write-LogEntry -Severity "ERROR" -Message "Resource initialization failed: $_"
         return $false
     }
 }
@@ -341,13 +315,13 @@ function Initialize-WPF {
     param([pscustomobject]$Config)
 
     try {
-        Write-LogEntry -Severity "INFO" -Message "Initializing WPF UI..." -WriteConsole
+        Write-LogEntry -Severity "INFO" -Message "Initializing WPF UI..."
         
         # Load XAML from external file
         $xamlString = Load-XamlFile -XamlFileName $Config.screen.mainwin
         
         if ([string]::IsNullOrEmpty($xamlString)) {
-            Write-LogEntry -Severity "ERROR" -Message "Failed to load XAML content" -WriteConsole
+            Write-LogEntry -Severity "ERROR" -Message "Failed to load XAML content"
             return $null
         }
 
@@ -357,7 +331,7 @@ function Initialize-WPF {
         $window = [System.Windows.Markup.XamlReader]::Load($xmlReader)
 
         if ($null -eq $window) {
-            Write-LogEntry -Severity "ERROR" -Message "XAML parsing returned null" -WriteConsole
+            Write-LogEntry -Severity "ERROR" -Message "XAML parsing returned null"
             return $null
         }
 
@@ -376,6 +350,7 @@ function Initialize-WPF {
         $mainVersionText = $window.FindName("MainVersionText")
         $appScreenImg = $window.FindName("AppScreenImage")
         $bgImage = $window.FindName("BackgroundImage")
+        $closeButtonImg = $window.FindName("CloseButtonImage")
 
         Write-LogEntry -Severity "DEBUG" -Message "UI elements resolved from XAML"
 
@@ -429,79 +404,86 @@ function Initialize-WPF {
         # SETUP CLOSE BUTTON WITH HOVER EFFECT
         # =====================================================================
         
-        if ($null -ne $closeButtonLabel) {
+        if ($null -ne $closeButtonLabel -and $null -ne $closeButtonImg) {
             try {
-                # Get the image element inside the label
-                $closeButtonImg = $closeButtonLabel.Content -as [System.Windows.Controls.Image]
+                # Store reference to image element for use in event handlers
+                $script:CloseButtonImageElement = $closeButtonImg
                 
-                if ($null -ne $closeButtonImg) {
-                    # Set initial image
-                    $closeButtonImg.Source = $script:CloseButtonNormalImage
-                    $closeButtonLabel.Cursor = [System.Windows.Input.Cursors]::Hand
-                    
-                    Write-LogEntry -Severity "DEBUG" -Message "Close button image set (normal)"
-                    
-                    # MouseEnter - Show hover image
-                    $closeButtonLabel.Add_MouseEnter({
-                        try {
-                            $closeButtonImg.Source = $script:CloseButtonHoverImage
+                # Set initial image
+                $closeButtonImg.Source = $script:CloseButtonNormalImage
+                $closeButtonLabel.Cursor = [System.Windows.Input.Cursors]::Hand
+                
+                Write-LogEntry -Severity "DEBUG" -Message "Close button image set (normal)"
+                
+                # MouseEnter - Show hover image
+                $closeButtonLabel.Add_MouseEnter({
+                    try {
+                        if ($null -ne $script:CloseButtonImageElement) {
+                            $script:CloseButtonImageElement.Source = $script:CloseButtonHoverImage
                             Write-LogEntry -Severity "DEBUG" -Message "Close button hover state activated"
                         }
-                        catch {
-                            Write-LogEntry -Severity "WARN" -Message "Error on mouse enter: $_"
-                        }
-                    })
-                    
-                    # MouseLeave - Show normal image
-                    $closeButtonLabel.Add_MouseLeave({
-                        try {
-                            $closeButtonImg.Source = $script:CloseButtonNormalImage
-                            Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated"
-                        }
-                        catch {
-                            Write-LogEntry -Severity "WARN" -Message "Error on mouse leave: $_"
-                        }
-                    })
-                    
-                    # PreviewMouseLeftButtonDown - Close window
-                    $closeButtonLabel.Add_PreviewMouseLeftButtonDown({
-                        param($sender, $e)
-                        try {
-                            Write-LogEntry -Severity "INFO" -Message "Close button clicked - closing application" -WriteConsole
-                            if ($script:WindowReference -ne $null) {
-                                $script:WindowReference.Close()
-                            }
-                        }
-                        catch {
-                            Write-LogEntry -Severity "ERROR" -Message "Error closing window: $_"
-                        }
-                        $e.Handled = $true
-                    })
-                    
-                    # Add tooltip
-                    try {
-                        $tooltip = New-Object System.Windows.Controls.ToolTip
-                        $tooltip.Content = "Close Application"
-                        $tooltip.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(64, 64, 64))
-                        $tooltip.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(255, 255, 255))
-                        $tooltip.FontSize = 12
-                        $tooltip.Padding = New-Object System.Windows.Thickness(8)
-                        $closeButtonLabel.ToolTip = $tooltip
-                        Write-LogEntry -Severity "DEBUG" -Message "Tooltip added to close button"
                     }
                     catch {
-                        Write-LogEntry -Severity "WARN" -Message "Tooltip error: $_"
+                        Write-LogEntry -Severity "WARN" -Message "Error on mouse enter: $_"
                     }
-                    
-                    Write-LogEntry -Severity "INFO" -Message "Close button with hover effect fully configured"
+                })
+                
+                # MouseLeave - Show normal image
+                $closeButtonLabel.Add_MouseLeave({
+                    try {
+                        if ($null -ne $script:CloseButtonImageElement) {
+                            $script:CloseButtonImageElement.Source = $script:CloseButtonNormalImage
+                            Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated"
+                        }
+                    }
+                    catch {
+                        Write-LogEntry -Severity "WARN" -Message "Error on mouse leave: $_"
+                    }
+                })
+                
+                # PreviewMouseLeftButtonDown - Close window
+                $closeButtonLabel.Add_PreviewMouseLeftButtonDown({
+                    param($sender, $e)
+                    try {
+                        Write-LogEntry -Severity "INFO" -Message "Close button clicked - closing application"
+                        if ($script:WindowReference -ne $null) {
+                            $script:WindowReference.Close()
+                        }
+                    }
+                    catch {
+                        Write-LogEntry -Severity "ERROR" -Message "Error closing window: $_"
+                    }
+                    $e.Handled = $true
+                })
+                
+                # Add tooltip
+                try {
+                    $tooltip = New-Object System.Windows.Controls.ToolTip
+                    $tooltip.Content = "Close Application"
+                    $tooltip.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(64, 64, 64))
+                    $tooltip.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(255, 255, 255))
+                    $tooltip.FontSize = 12
+                    $tooltip.Padding = New-Object System.Windows.Thickness(8)
+                    $closeButtonLabel.ToolTip = $tooltip
+                    Write-LogEntry -Severity "DEBUG" -Message "Tooltip added to close button"
                 }
-                else {
-                    Write-LogEntry -Severity "ERROR" -Message "Close button image element not found" -WriteConsole
+                catch {
+                    Write-LogEntry -Severity "WARN" -Message "Tooltip error: $_"
                 }
+                
+                Write-LogEntry -Severity "INFO" -Message "Close button with hover effect fully configured"
             }
             catch {
-                Write-LogEntry -Severity "ERROR" -Message "Close button setup failed: $_" -WriteConsole
+                Write-LogEntry -Severity "ERROR" -Message "Close button setup failed: $_"
                 return $null
+            }
+        }
+        else {
+            if ($null -eq $closeButtonLabel) {
+                Write-LogEntry -Severity "ERROR" -Message "Close button Label element not found in XAML"
+            }
+            if ($null -eq $closeButtonImg) {
+                Write-LogEntry -Severity "ERROR" -Message "Close button Image element not found in XAML"
             }
         }
 
@@ -523,12 +505,13 @@ function Initialize-WPF {
             Write-LogEntry -Severity "DEBUG" -Message "Title bar drag functionality enabled"
         }
 
-        Write-LogEntry -Severity "INFO" -Message "WPF UI initialized successfully" -WriteConsole
+        Write-LogEntry -Severity "INFO" -Message "WPF UI initialized successfully"
         return $window
     }
     catch {
-        Write-LogEntry -Severity "ERROR" -Message "WPF initialization failed: $_" -WriteConsole
-        Write-Error $_.ScriptStackTrace
+        Write-LogEntry -Severity "ERROR" -Message "WPF initialization failed: $_"
+        Write-Host "[ERROR] WPF initialization failed: $_" -ForegroundColor Red
+        Write-Host $_.ScriptStackTrace -ForegroundColor Red
         return $null
     }
 }
@@ -538,67 +521,48 @@ function Initialize-WPF {
 # ============================================================================
 
 try {
-    Write-Host ""
-    Write-Host "=================================================" -ForegroundColor Cyan
-    Write-Host "[INFO] Starting ModernUI v1.00.02..." -ForegroundColor Cyan
-    Write-Host "=================================================" -ForegroundColor Cyan
-    Write-Host ""
-    
-    # Load configuration
+    # Load configuration (early to set up logging)
     $script:Config = Load-Configuration -Path $ConfigPath
     if ($null -eq $script:Config) {
-        Write-Error "[ERROR] Configuration loading failed"
+        Write-Host "[FATAL] Configuration loading failed" -ForegroundColor Red
         exit 1
     }
 
     # Initialize logging
     Initialize-Logging -Config $script:Config
 
-    Write-LogEntry -Severity "INFO" -Message "ModernUI v1.00.02 startup initiated" -WriteConsole
-    Write-LogEntry -Severity "INFO" -Message "Application: $($script:Config.app.name) v$($script:Config.app.version)" -WriteConsole
+    # Start logging the application startup
+    Write-LogEntry -Severity "INFO" -Message "ModernUI v1.00.02 startup initiated"
+    Write-LogEntry -Severity "INFO" -Message "Application: $($script:Config.app.name) v$($script:Config.app.version)"
     
     # Initialize window resources
     if (-not (Initialize-WindowResources -Config $script:Config)) {
-        Write-LogEntry -Severity "ERROR" -Message "Resource initialization failed" -WriteConsole
+        Write-LogEntry -Severity "ERROR" -Message "Resource initialization failed"
+        Write-Host "[FATAL] Resource initialization failed" -ForegroundColor Red
         exit 1
     }
-
-    Write-Host ""
     
     # Initialize WPF UI
     $window = Initialize-WPF -Config $script:Config
     
     if ($null -eq $window) {
-        Write-LogEntry -Severity "ERROR" -Message "Window creation failed" -WriteConsole
+        Write-LogEntry -Severity "ERROR" -Message "Window creation failed"
+        Write-Host "[FATAL] Window creation failed" -ForegroundColor Red
         exit 1
     }
     
-    Write-Host ""
-    Write-Host "=================================================" -ForegroundColor Green
-    Write-Host "[OK] ModernUI v1.00.02 started successfully" -ForegroundColor Green
-    Write-Host "=================================================" -ForegroundColor Green
-    Write-Host "   [OK] Window initialized" -ForegroundColor Green
-    Write-Host "   [OK] Configuration loaded from config.json" -ForegroundColor Green
-    Write-Host "   [OK] XAML loaded from external file" -ForegroundColor Green
-    Write-Host "   [OK] All resources loaded" -ForegroundColor Green
-    Write-Host "   [OK] Logging system active" -ForegroundColor Green
-    Write-Host "   [OK] Close button with hover effect" -ForegroundColor Green
-    Write-Host "   [OK] Frameless window design" -ForegroundColor Green
-    Write-Host "   [OK] Production-ready version" -ForegroundColor Green
-    if ($script:LogEnabled) {
-        Write-Host "   [OK] Log file: $($script:LogFilePath)" -ForegroundColor Green
-    }
-    Write-Host "=================================================" -ForegroundColor Green
-    Write-Host ""
+    # Log that window is displayed
+    Write-LogEntry -Severity "INFO" -Message "Window displayed - waiting for user interaction"
     
-    Write-LogEntry -Severity "INFO" -Message "Window displayed - waiting for user interaction" -WriteConsole
+    # Show the window (blocking call until closed)
     $window.ShowDialog() | Out-Null
     
-    Write-LogEntry -Severity "INFO" -Message "Application closed successfully" -WriteConsole
-    Write-Host "[OK] Application closed" -ForegroundColor Green
+    # Log application closure
+    Write-LogEntry -Severity "INFO" -Message "Application closed successfully"
 }
 catch {
-    Write-LogEntry -Severity "ERROR" -Message "Fatal error: $_" -WriteConsole
-    Write-Error $_.ScriptStackTrace
+    Write-LogEntry -Severity "ERROR" -Message "Fatal error: $_"
+    Write-Host "[FATAL ERROR] $_" -ForegroundColor Red
+    Write-Host $_.ScriptStackTrace -ForegroundColor Red
     exit 1
 }
