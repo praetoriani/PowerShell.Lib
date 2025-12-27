@@ -42,6 +42,8 @@ $script:Config = $null
 $script:LogFilePath = $null
 $script:LogEnabled = $false
 $script:ImageCache = @{}
+$script:CloseButtonHoverImagePath = $null
+$script:CloseButtonNormalImagePath = $null
 
 # ============================================================================
 # ASSEMBLY LOADING
@@ -201,8 +203,7 @@ function Load-BitmapImage {
         $bitmapImage.UriSource = New-Object System.Uri($ImagePath, [System.UriKind]::Absolute)
         $bitmapImage.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
         $bitmapImage.EndInit()
-        # NOTE: Do NOT freeze the image - it prevents dynamic updates!
-        # $bitmapImage.Freeze()
+        # Do NOT freeze to allow dynamic updates
         
         # Cache the image
         $script:ImageCache[$ImagePath] = $bitmapImage
@@ -212,6 +213,34 @@ function Load-BitmapImage {
     }
     catch {
         Write-LogEntry -Severity "ERROR" -Message "Error loading image: $_"
+        return $null
+    }
+}
+
+function Get-FreshBitmapImage {
+    param(
+        [string]$ImagePath,
+        [string]$ImageName = "Unknown"
+    )
+    
+    if ([string]::IsNullOrEmpty($ImagePath) -or -not (Test-Path $ImagePath)) {
+        Write-LogEntry -Severity "WARN" -Message "Fresh image file not found: $ImagePath"
+        return $null
+    }
+    
+    try {
+        Write-LogEntry -Severity "DEBUG" -Message "Creating fresh BitmapImage for: $ImageName"
+        
+        $bitmapImage = New-Object System.Windows.Media.Imaging.BitmapImage
+        $bitmapImage.BeginInit()
+        $bitmapImage.UriSource = New-Object System.Uri($ImagePath, [System.UriKind]::Absolute)
+        $bitmapImage.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+        $bitmapImage.EndInit()
+        
+        return $bitmapImage
+    }
+    catch {
+        Write-LogEntry -Severity "ERROR" -Message "Error creating fresh image: $_"
         return $null
     }
 }
@@ -260,6 +289,10 @@ function Initialize-WindowResources {
         $closeButtonNormalPath = Resolve-ImagePath -ImageName $Config.paths.winaxnCloseImage
         $closeButtonHoverPath = Resolve-ImagePath -ImageName $Config.paths.winaxnCloseHover
         $appScreenPath = Resolve-ImagePath -ImageName $Config.paths.appscreenImage
+        
+        # Store paths for later use in hover events
+        $script:CloseButtonNormalImagePath = $closeButtonNormalPath
+        $script:CloseButtonHoverImagePath = $closeButtonHoverPath
         
         # Load images
         if ($iconPath) {
@@ -402,46 +435,55 @@ function Initialize-WPF {
 
         # =====================================================================
         # SETUP CLOSE BUTTON WITH HOVER EFFECT
-        # KEY: Store references to images and use $sender in events
+        # KEY: Load fresh images on each hover to ensure proper rendering
         # =====================================================================
         
         if ($null -ne $closeButtonLabel -and $null -ne $closeButtonImg) {
             try {
-                # Store images in closure variables (not frozen, so they can be updated)
-                $normalImg = $script:CloseButtonNormalImage
-                $hoverImg = $script:CloseButtonHoverImage
-                
                 # Set initial image
-                $closeButtonImg.Source = $normalImg
+                $closeButtonImg.Source = $script:CloseButtonNormalImage
                 $closeButtonLabel.Cursor = [System.Windows.Input.Cursors]::Hand
                 
                 Write-LogEntry -Severity "DEBUG" -Message "Close button image set (normal)"
                 
                 # ============================================================
-                # HOVER EFFECT: Use $sender directly to avoid frozen image issues
-                # Store images in closure scope for the event handlers
+                # MouseEnter: Load fresh hover image
                 # ============================================================
                 
-                # MouseEnter on IMAGE
                 $closeButtonImg.Add_MouseEnter({
                     param($sender, $e)
                     try {
-                        # Use the freshly loaded hover image
-                        $sender.Source = $hoverImg
-                        Write-LogEntry -Severity "DEBUG" -Message "Close button hover state activated"
+                        # Load a FRESH image instance for hover state
+                        $freshHoverImage = Get-FreshBitmapImage -ImagePath $script:CloseButtonHoverImagePath -ImageName "Close Button (Hover - Fresh)"
+                        if ($null -ne $freshHoverImage) {
+                            $sender.Source = $freshHoverImage
+                            Write-LogEntry -Severity "DEBUG" -Message "Close button hover state activated"
+                        }
+                        else {
+                            Write-LogEntry -Severity "WARN" -Message "Failed to load fresh hover image"
+                        }
                     }
                     catch {
                         Write-LogEntry -Severity "WARN" -Message "Error on image MouseEnter: $_"
                     }
                 })
                 
-                # MouseLeave on IMAGE
+                # ============================================================
+                # MouseLeave: Load fresh normal image
+                # ============================================================
+                
                 $closeButtonImg.Add_MouseLeave({
                     param($sender, $e)
                     try {
-                        # Restore the normal image
-                        $sender.Source = $normalImg
-                        Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated"
+                        # Load a FRESH image instance for normal state
+                        $freshNormalImage = Get-FreshBitmapImage -ImagePath $script:CloseButtonNormalImagePath -ImageName "Close Button (Normal - Fresh)"
+                        if ($null -ne $freshNormalImage) {
+                            $sender.Source = $freshNormalImage
+                            Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated"
+                        }
+                        else {
+                            Write-LogEntry -Severity "WARN" -Message "Failed to load fresh normal image"
+                        }
                     }
                     catch {
                         Write-LogEntry -Severity "WARN" -Message "Error on image MouseLeave: $_"
