@@ -216,7 +216,7 @@ jobs:
             ## ⬇️ **File Download:**
             <br>
 
-            **App Name**: ${{ env.APP_NAME }} ${{ env.APP_VERS }} (Build: ${{ env.APP_BUILD }})
+            **App Name**: ${{ env.APP_NAME }}
             **App Version**: ${{ env.APP_VERS }} (Build: ${{ env.APP_BUILD }})
             **Release Date**: ${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }})
             
