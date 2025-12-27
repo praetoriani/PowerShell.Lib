@@ -15,7 +15,7 @@ env:
    ZIP_FILENAME: "ModernUI.zip"       # Legt den Namen der ZIP-Datei fest
    APP_DEV: "Praetoriani"             # Name des Entwicklers
    APP_NAME: "ModernUI"               # Das hier ist der eigentliche Programmname
-   APP_VERS: "v1.00.00"               # Die aktuelle Programm-Version
+   APP_VERS: "v1.00.02"               # Die aktuelle Programm-Version
    PROJECT: "ModernUI"                # Der Ordnername des Projektes innerhalb von PowerShell.Lib (!!)
    APPTAGID: "muiapp-"                # Globale Variable für den Tag-Namen bzw. Tag-ID
    INSTALLER: "setup-modernui.ps1"    # Das Installer-Script, welches nach dem Download ausgeführt werden muss
