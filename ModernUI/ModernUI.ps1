@@ -42,7 +42,6 @@ $script:Config = $null
 $script:LogFilePath = $null
 $script:LogEnabled = $false
 $script:ImageCache = @{}
-$script:CloseButtonImageElement = $null
 
 # ============================================================================
 # ASSEMBLY LOADING
@@ -401,25 +400,29 @@ function Initialize-WPF {
         }
 
         # =====================================================================
-        # SETUP CLOSE BUTTON WITH HOVER EFFECT
+        # SETUP CLOSE BUTTON WITH HOVER EFFECT (CORRECTED)
         # =====================================================================
         
         if ($null -ne $closeButtonLabel -and $null -ne $closeButtonImg) {
             try {
-                # Store reference to image element for use in event handlers
-                $script:CloseButtonImageElement = $closeButtonImg
+                # THE KEY: Store images and image element in variables that will be
+                # CAPTURED by the closure of the event handlers
+                $normalImg = $script:CloseButtonNormalImage
+                $hoverImg = $script:CloseButtonHoverImage
+                $imgElement = $closeButtonImg
                 
                 # Set initial image
-                $closeButtonImg.Source = $script:CloseButtonNormalImage
+                $imgElement.Source = $normalImg
                 $closeButtonLabel.Cursor = [System.Windows.Input.Cursors]::Hand
                 
                 Write-LogEntry -Severity "DEBUG" -Message "Close button image set (normal)"
                 
                 # MouseEnter - Show hover image
+                # IMPORTANT: Use $imgElement captured from outer scope
                 $closeButtonLabel.Add_MouseEnter({
                     try {
-                        if ($null -ne $script:CloseButtonImageElement) {
-                            $script:CloseButtonImageElement.Source = $script:CloseButtonHoverImage
+                        if ($null -ne $imgElement) {
+                            $imgElement.Source = $hoverImg
                             Write-LogEntry -Severity "DEBUG" -Message "Close button hover state activated"
                         }
                     }
@@ -429,10 +432,11 @@ function Initialize-WPF {
                 })
                 
                 # MouseLeave - Show normal image
+                # IMPORTANT: Use $imgElement captured from outer scope
                 $closeButtonLabel.Add_MouseLeave({
                     try {
-                        if ($null -ne $script:CloseButtonImageElement) {
-                            $script:CloseButtonImageElement.Source = $script:CloseButtonNormalImage
+                        if ($null -ne $imgElement) {
+                            $imgElement.Source = $normalImg
                             Write-LogEntry -Severity "DEBUG" -Message "Close button hover state deactivated"
                         }
                     }
