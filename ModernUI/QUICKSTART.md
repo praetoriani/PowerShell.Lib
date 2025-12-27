@@ -1,189 +1,165 @@
-# ⚡ Quick Start - Get ModernUI Running in 5 Minutes
+# ModernUI - QUICKSTART (v1.00.02)
 
-## Prerequisites
-
-- Windows 10 or 11
-- PowerShell 7.0+ (or 5.1 with .NET 4.8)
-- .NET Framework 4.8+
-- Git (optional, for cloning)
+This quickstart guide helps you run and understand **ModernUI v1.00.02**
+inside the `PowerShell.Lib` repository.
 
 ---
 
-## Step 1: Get the Code (1 min)
+## 1. Prerequisites
 
-### Option A: Clone with Git
-
-```powershell
-git clone https://github.com/praetoriani/PowerShell.Lib.git
-cd PowerShell.Lib\ModernUI
-```
-
-### Option B: Download ZIP
-
-1. Visit [GitHub Repository](https://github.com/praetoriani/PowerShell.Lib)
-2. Click Code → Download ZIP
-3. Extract and navigate to `PowerShell.Lib\ModernUI`
+- **Operating System:** Windows 10 or Windows 11
+- **PowerShell:** PowerShell 7.x (PowerShell Core)
+- **.NET Framework:** 4.8 (for WPF)
+- **Repository:** `PowerShell.Lib` cloned locally
 
 ---
 
-## Step 2: Verify Files (1 min)
+## 2. Directory structure
 
-Make sure you have these files:
+The relevant ModernUI files are located here:
 
-```
-ModernUI/
-├── ModernUI.ps1              ✓ Required
-├── config.json               ✓ Required
-├── ModernUI.xaml             ✓ Required
-└── PNG/                       ✓ Required
-    ├── appicon.png
-    ├── ModernUI-WinBG.png
-    ├── axn-winclose-normal.png
-    └── axn-winclose-hover.png
-```
-
-**Missing files?** Something went wrong with the download/clone.
-
----
-
-## Step 3: Check Execution Policy (1 min)
-
-Open PowerShell and check:
-
-```powershell
-Get-ExecutionPolicy
-```
-
-If it shows `Restricted`, run:
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```text
+PowerShell.Lib/
+  ModernUI/
+    ModernUI.ps1
+    config.json
+    VERSION
+    VERSION.md
+    BUGFIXES.md
+    CHANGELOG.md
+    QUICKSTART.md
+    README.md
+    PNG/
+      appicon.png
+      ModernUI-WinBG.png
+      appscreen.png
+      axn-winclose-normal.png
+      axn-winclose-hover.png
+      ...
+    WPF/
+      ModernUI.xaml
 ```
 
 ---
 
-## Step 4: Run ModernUI (1 min)
+## 3. Configuration (config.json)
 
-```powershell
-.\ModernUI.ps1
-```
+`config.json` is the central configuration file for ModernUI. Important
+sections:
 
-**Expected output:**
-- Window appears immediately
-- Dark-themed UI with "ModernUI" title
-- Close button (X) visible in title bar
-- Background image with waves
-- No error messages
+- `app`
+  - `version`: `"1.00.02"`
+  - `name`: `"ModernUI"`
+  - `description`, `developer`, `website` for metadata.
 
----
+- `debug`
+  - `file`: Name of the log file (e.g. `"runtime.log"`).
+  - `enabled`: `"true"` or `"false"`.
+  - `datetime`: Timestamp format used in log entries.
+  - `severityLevel`: Labels and icons for `INFO`, `WARN`, `ERROR`,
+    `DEBUG`.
 
-## Step 5: Test (1 min)
+- `window`
+  - Basic window configuration (title, width, height, startup location).
 
-### Click Title Bar
-- Drag the window around
-- Release to drop
+- `paths`
+  - PNG file names for window icon, background and window control icons.
+  - `appscreenImage` defines which image is used for the main screen
+    preview.
 
-### Hover Close Button
-- Tooltip appears: "Close Application"
-- Button changes color on hover
+- `screen`
+  - XAML files for the main window and additional popups.
 
-### Click Close Button
-- Window closes cleanly
-- No errors in console
-
----
-
-## ✅ Success!
-
-If you see all of the above, **ModernUI is working perfectly!** 🎉
+**Tip:** Keep `config.json` under version control and treat it as a
+primary part of the application.
 
 ---
 
-## Common Issues
+## 4. Running ModernUI
 
-### Issue: "ModernUI.ps1 cannot be loaded"
+1. Open a PowerShell 7 console.
+2. Navigate to the ModernUI folder:
 
-**Solution:** Check execution policy
+   ```powershell
+   Set-Location "<path-to-repo>\PowerShell.Lib\ModernUI"
+   ```
 
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
+3. Run the ModernUI script:
 
-### Issue: "File not found" errors
+   ```powershell
+   .\ModernUI.ps1
+   ```
 
-**Solution:** Make sure you're in the correct directory
+4. The main window should open with:
+   - A frameless Modern UI styled window.
+   - Background image from `config.paths.backgroundImage`.
+   - A centered title `ModernUI` and version label `v1.00.02`.
+   - An app screen preview showing `appscreen.png`.
+   - Footer text: `Written by Praetoriani` and
+     `Now available on GitHub`.
 
-```powershell
-cd PowerShell.Lib\ModernUI
-ls  # Should show ModernUI.ps1, config.json, PNG folder, etc.
-```
-
-### Issue: Window doesn't appear
-
-**Solution:** Check .NET Framework version
-
-```powershell
-[System.Runtime.InteropServices.RuntimeInformation]::FrameworkDescription
-```
-
-Should show `.NET Framework 4.8+` or `.NET 5.0+`
-
-### Issue: "Cannot find PNG images"
-
-**Solution:** Verify PNG folder exists and contains images
-
-```powershell
-ls .\PNG\  # Should list all PNG files
-```
-
-### Issue: Config.json errors
-
-**Solution:** Check JSON is valid
-
-```powershell
-(Get-Content config.json) | ConvertFrom-Json
-```
-
-If no error, JSON is valid.
+If logging is enabled in `config.json`, a log file (e.g. `runtime.log`)
+will be created in the ModernUI root directory.
 
 ---
 
-## Next Steps
+## 5. Logging behaviour
 
-### Learn More
-- Read [README.md](./README.md) for full documentation
-- Check [CHANGELOG.md](./CHANGELOG.md) for version history
-- See [BUGFIXES.md](./BUGFIXES.md) for technical details
+- When `debug.enabled` is set to `"true"`:
+  - The log file defined in `debug.file` is created (or overwritten) at
+    start.
+  - All important events are written using `Write-LogEntry`.
 
-### Customize
-- Edit `config.json` to change image paths
-- Replace PNG files with your own graphics
-- Modify `ModernUI.ps1` to add functionality
+- When `debug.enabled` is set to `"false"`:
+  - No log file is created.
+  - The script will only output minimal information to the console.
 
-### Share
-- Star the [GitHub repository](https://github.com/praetoriani/PowerShell.Lib)
-- Share with colleagues
-- Create issues for bugs or feature requests
+Log entries follow this structure:
 
----
+```text
+[yyyy.MM.dd ; HH:mm:ss] [ℹ️ INFO]  → Example message
+```
 
-## Getting Help
-
-### Still stuck?
-
-1. Check [README.md FAQ](./README.md#faq) section
-2. Review [BUGFIXES.md](./BUGFIXES.md) for known issues
-3. Search [GitHub Issues](https://github.com/praetoriani/PowerShell.Lib/issues)
-4. Create a new issue with:
-   - Your OS version
-   - PowerShell version (`$PSVersionTable`)
-   - Error message (copy full error)
-
-### Contact
-
-- Email: marc.sczepanski@gmail.com
-- GitHub: [@praetoriani](https://github.com/praetoriani)
+Format and icons are fully controlled by `config.json`.
 
 ---
 
-**Done! Enjoy ModernUI! 🚀**
+## 6. Close button behaviour
+
+- The close button in the title bar is implemented as a `Label` with an
+  `Image` child.
+- The normal and hover icons are configured via:
+  - `paths.winaxnCloseImage`
+  - `paths.winaxnCloseHover`
+- On hover, the image switches to the hover icon.
+- On leaving the button, the image switches back to the normal icon.
+- On click (preview mouse left button down), the window closes and the
+  event is marked as handled.
+
+---
+
+## 7. Customising ModernUI
+
+You can adjust the look and behaviour of ModernUI without changing the
+PowerShell code in many cases:
+
+- Change PNG files in the `PNG` folder.
+- Adjust image file names and window properties in `config.json`.
+- Extend or modify the layout in `WPF/ModernUI.xaml`.
+
+If you add new windows (e.g. Help or About screens):
+
+- Place the XAML files in `ModernUI/WPF/`.
+- Reference them in `config.screen`.
+- Load them from PowerShell similarly to the main window.
+
+---
+
+## 8. Where to look next
+
+- **`ModernUI.ps1`** – main entry point, logging, XAML loading and
+  resource wiring.
+- **`WPF/ModernUI.xaml`** – visual layout of the main window.
+- **`config.json`** – core configuration for the application.
+- **`CHANGELOG.md`** – overview of what changed in v1.00.02.
+- **`BUGFIXES.md`** – details about fixed issues in this version.
