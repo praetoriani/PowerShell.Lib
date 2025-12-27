@@ -118,10 +118,21 @@ function Write-LogEntry {
         $dateTimeFormat = if ($script:Config.debug.datetime) { $script:Config.debug.datetime } else { "yyyy.MM.dd ; HH:mm:ss" }
         $timestamp = Get-Date -Format $dateTimeFormat
 
-        # Get severity icon from config
-        $severityIcon = "[ℹ️ INFO]  → "
+        # Get severity icon from config - use safe defaults if not available
+        $severityIcon = "[INFO] -> "
+        
         if ($script:Config.debug.severityLevel -and $script:Config.debug.severityLevel.$Severity) {
-            $severityIcon = $script:Config.debug.severityLevel.$Severity
+            try {
+                $severityIcon = $script:Config.debug.severityLevel.$Severity
+            }
+            catch {
+                # Fallback to plain text if emoji causes issues
+                $severityIcon = "[$Severity] -> "
+            }
+        }
+        else {
+            # Fallback: use severity name as text
+            $severityIcon = "[$Severity] -> "
         }
 
         # Format log entry
@@ -362,6 +373,7 @@ function Initialize-WPF {
         $windowIconImg = $window.FindName("WindowIcon")
         $titleText = $window.FindName("TitleText")
         $versionText = $window.FindName("VersionText")
+        $mainVersionText = $window.FindName("MainVersionText")
         $appScreenImg = $window.FindName("AppScreenImage")
         $bgImage = $window.FindName("BackgroundImage")
 
@@ -397,6 +409,11 @@ function Initialize-WPF {
         if ($versionText) {
             $versionText.Text = "v$($Config.app.version)"
             Write-LogEntry -Severity "DEBUG" -Message "Version text set: v$($Config.app.version)"
+        }
+
+        if ($mainVersionText) {
+            $mainVersionText.Text = "v$($Config.app.version)"
+            Write-LogEntry -Severity "DEBUG" -Message "Main version text set: v$($Config.app.version)"
         }
 
         # =====================================================================
