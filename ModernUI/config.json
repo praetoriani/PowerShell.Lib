@@ -11,10 +11,10 @@
     "enabled": "true",
     "datetime": "yyyy.MM.dd ; HH:mm:ss",
     "severityLevel": {
-      "INFO":   "[ℹ️ INFO]  → ",
-      "WARN":   "[⚠️ WARN]  → ",
-      "ERROR":  "[🛑 ERROR] → ",
-      "DEBUG":  "[💡 DEBUG] → "
+      "INFO":   "[INFO]   -> ",
+      "WARN":   "[WARN]   -> ",
+      "ERROR":  "[ERROR]  -> ",
+      "DEBUG":  "[DEBUG]  -> "
     }
   },
   "window": {
