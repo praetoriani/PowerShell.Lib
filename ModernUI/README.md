@@ -1,6 +1,10 @@
-# ModernUI v1.00.02
+<div align="center">
+
+# ModernUI v1.00.02 (Build: 251227)
 
 ![ModernUI Poster](./ModernUI-Poster.png)
+
+</div>
 
 ---
 
