@@ -16,6 +16,7 @@ env:
    APP_DEV: "Praetoriani"             # Name des Entwicklers
    APP_NAME: "ModernUI"               # Das hier ist der eigentliche Programmname
    APP_VERS: "v1.00.00"               # Die aktuelle Programm-Version
+   PROJECT: "ModernUI"                # Der Ordnername des Projektes innerhalb von PowerShell.Lib (!!)
    APPTAGID: "muiapp-"                # Globale Variable für den Tag-Namen bzw. Tag-ID
    INSTALLER: "setup-modernui.ps1"    # Das Installer-Script, welches nach dem Download ausgeführt werden muss
    RUN_APP: "ModernUI.ps1"            # Das Script muss gestartet werden, um das Programm zu öffnen
@@ -202,7 +203,7 @@ jobs:
             | Component | Requirement |
             |-----------|-------------|
             | **OS** | Windows 10/11 |
-            | **PowerShell** | 7.0+ (or 5.1 with .NET 4.8) |
+            | **PowerShell** | 7.x + (or 5.1 with .NET 4.8) |
             | **.NET Framework** | 4.8+ |
             | **Execution Policy** | RemoteSigned or Unrestricted |
 
@@ -269,11 +270,13 @@ jobs:
           echo "📊 Release Information:"
           echo "  🧩 App: ${{ env.APP_NAME }}"
           echo "  🔢 Version: ${{ env.APP_VERS }}"
+          echo "  ⚙️ Build: ${{ env.APP_BUILD }}"
           echo "  🏷️ Tag: $TAG_NAME"
           echo "  🔄 Trigger: $TRIGGER_TYPE"
-          echo "  📁 Repository: ${{ github.repository }}"
+          echo "  🗄️ Repository: ${{ github.repository }}"
+          echo "  📂 Directory: ${{ github.repository }}/${{ env.PROJECT }}"
           echo "  🔗 Commit: ${{ github.sha }}"
-          echo "  ⏰ Created: $(date '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "  ⏰ Created: ${{ env.BUILD_STAMP }} (UTC)"
           echo ""
           echo "🌐 Release Links:"
           echo "  📖 Release Page: https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
