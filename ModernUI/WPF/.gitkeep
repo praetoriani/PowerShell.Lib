@@ -1,5 +1,6 @@
 # ◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠
-# This directory will beused to store PNG-Graphics
-# These PNGs are important to built the UI
+# This directory will beused to store WPF-Files
+# These WPF files include essentially XAML code.
+# This Code creates user interfaces for PowerShell.
 # DO NOT DELETE AND/OR EDIT THEM!!!
 # ◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡◠◡
