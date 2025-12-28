@@ -338,7 +338,7 @@ jobs:
             ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes: <br><br> {0} <br><br>', github.event.inputs.release_notes) || '' }}
             
             ---
-            *This release was automatically created by GitHub Actions.*
+            *This release was created on ${{ env.BUILD_STAMP }} by GitHub Actions.*
           
           # RELEASE SETTINGS
           files: ${{ env.ZIP_FILENAME }}     # The ZIP file as download asset
@@ -366,10 +366,12 @@ jobs:
           echo "  🧩 App: ${{ env.APP_NAME }}"
           echo "  🔢 Version: ${{ env.APPVERS_FULL }}"
           echo "  ⚙️ Build: ${{ env.APP_BUILD }}"
+          echo "  📦 Release Type: ${{ github.event.inputs.release_type }}"
+          echo "  🪛 Developer: ${{ env.APP_DEV }}"
           echo "  🏷️ Tag: $TAG_NAME"
           echo "  🔄 Trigger: $TRIGGER_TYPE"
-          echo "  🗄️ Repository: ${{ github.repository }}"
-          echo "  📂 Directory: ${{ github.repository }}/${{ env.PROJECT }}"
+          echo "  🗄️ Repository: [${{ github.repository }}](https://github.com/${{ github.repository }}/)"
+          echo "  📂 Directory: [${{ github.repository }}/${{ env.PROJECT }}](https://github.com/${{ github.repository }}/tree/main/${{ env.PROJECT }})"
           echo "  🔗 Commit: ${{ github.sha }}"
           echo "  ⏰ Created: ${{ env.BUILD_STAMP }} (UTC)"
           echo ""
