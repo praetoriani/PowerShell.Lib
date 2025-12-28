@@ -34,26 +34,48 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag name for the release (e.g., muiapp-v1.00.00)'
+        description: '🏷️ Tag name for the release (e.g. muiapp-v1.00.00)'
         required: true
         default: 'muiapp-v1.00.00'
         type: string
+      version_number:
+        description: '📋 Version Number (e.g. v1.00.00)'
+        required: true
+        default: 'v1.00.00'
+        type: string
+      release_type:
+        description: '📝 Release-Type (e.g. stable release)'
+        required: true
+        default: 'stable release'
+        type: choice
+        options:
+          - stable release
+          - public beta
+          - alpha state
+          - hotfix
+          - final release
       create_tag:
-        description: 'Create the tag if it does not exist'
+        description: '🔧 Create the tag if it does not exist'
         required: true
         default: true
         type: boolean
       release_notes:
-        description: 'Additional release notes (optional)'
+        description: '✏️ Additional release notes (optional)'
         required: false
         default: ''
         type: string
+#      notification_email:
+#        description: '📧 E-Mail for Notifications'
+#        required: false
+#        default: 'sysdaemon.message@gmail.com'
+#        type: string
 
 # PERMISSIONS
 # GitHub Actions requires explicit permission to create releases and tags
 permissions:
   contents: write  # Allows creating and editing repository contents
   actions: write   # Allows workflow management
+  pages: write
 
 # JOB DEFINITION
 # A workflow can contain multiple jobs, here we have only one
@@ -78,12 +100,77 @@ jobs:
       
       # STEP 2: Create some Job-Internal variables like Date/Time-Stamp for the current build or timezone
       # These vars can be used like ${{ env.VARNAME }}
-      - name: Create Job-Internal vars
+      - name: Create Build Number, Date/Time-Stamps
         run: |
-          echo "BUILD_STAMP=$(date +'%d.%m.%Y ; %H:%M:%S')" >> $GITHUB_ENV
-          echo "TIME_ZONE=Europe/Berlin" >> $GITHUB_ENV
-          echo "APP_BUILD=$(date +'%y%m%d')" >> $GITHUB_ENV
+          # Create the Build-Number and Date/Time-Stamps
+          BUILD_STAMP=$(date +'%d.%m.%Y ; %H:%M:%S')
+          APP_BUILD=$(date +'%y%m%d')
+          BUILD_DATE=$(date +'%Y-%m-%d')
+          BUILD_TIME=$(date +'%H:%M:%S')
+          BUILD_ISO=$(date +'%Y-%m-%dT%H:%M:%S')
+
+          # Store the results as environmental vars
+          echo "BUILD_STAMP=$BUILD_STAMP" >> $GITHUB_ENV
+          echo "APP_BUILD=$APP_BUILD" >> $GITHUB_ENV
+          echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
+          echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_ENV
+          echo "BUILD_ISO=$BUILD_ISO" >> $GITHUB_ENV
+
+          # Export as step output
+          echo "build-stamp=$BUILD_STAMP" >> $GITHUB_OUTPUT
+          echo "build-time=$BUILD_TIME" >> $GITHUB_OUTPUT
+          echo "app-build=$APP_BUILD" >> $GITHUB_OUTPUT
+          echo "build-date=$BUILD_DATE" >> $GITHUB_OUTPUT
+          echo "build-iso=$BUILD_ISO" >> $GITHUB_OUTPUT
+
+          # Debug Output
+          echo ""
+          echo "📊 New Environmental vars successfully set:"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  APP_BUILD:      $APP_BUILD"
+          echo "  BUILD_STAMP:    $BUILD_STAMP"
+          echo "  BUILD_DATE:     $BUILD_DATE"
+          echo "  BUILD_TIME:     $BUILD_TIME"
+          echo "  BUILD_ISO:      $BUILD_ISO"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
       
+      # STEP 3: This job wil determine the Tag and extracts the version-number from the tag-name which is given by the user through the input of this workflog
+      # All extracted informations will be stored in environmental vars. These vars can be used like ${{ env.VARNAME }}
+      - name: Tag Determination and Version Number Extraction
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG_NAME="${{ github.event.inputs.tag_name }}"
+            echo "🔧 Manual trigger - Tag: $TAG_NAME"
+          else
+            TAG_NAME="${{ github.ref_name }}"
+            echo "🏷️ Automatic trigger - Tag: $TAG_NAME"
+          fi
+          
+          # Format: muiapp-v1.00.00 -> v1.00.00
+          VERSION=$(echo "$TAG_NAME" | sed 's/^muiapp-//')
+          # Format: muiapp-v1.00.00 -> 1.00.00
+          VERSION_CLEAN=$(echo "$VERSION" | sed 's/^v//')
+
+          # Store the results as environmental vars
+          echo "APPVERS_FULL=$VERSION" >> $GITHUB_ENV
+          echo "APPVERS_CLEAN=$VERSION_CLEAN" >> $GITHUB_ENV
+          echo "FULL_TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+
+          # Export as step outputs
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_clean=$VERSION_CLEAN" >> $GITHUB_OUTPUT
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+
+          # Debug Output:
+          echo ""
+          echo "📊 New Environmental vars successfully set:"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  FULL_TAG_NAME:     $FULL_TAG_NAME"
+          echo "  APPVERS_FULL:      $APPVERS_FULL"
+          echo "  APPVERS_CLEAN:     $APPVERS_CLEAN"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
       # STEP 2: Setup variables for different trigger types
       # Handle both automatic (tag push) and manual (workflow_dispatch) triggers
       - name: Setup release variables
@@ -192,7 +279,7 @@ jobs:
           # RELEASE TITLE
           # Uses the tag name (e.g. "ModernUI muiapp-v1.00.10")
           # name: ${{ env.APP_NAME }} ${{ steps.setup.outputs.tag_name }}
-          name: ${{ env.APP_NAME }} ${{ env.APP_VERS }} (Build ${{ env.APP_BUILD }})
+          name: ${{ env.APP_NAME }} ${{ env.APPVERS_FULL }} (Build ${{ env.APP_BUILD }})
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
@@ -218,8 +305,9 @@ jobs:
             <br>
 
             **App Name**: ${{ env.APP_NAME }}
-            **App Version**: ${{ env.APP_VERS }} (Build: ${{ env.APP_BUILD }})
-            **Release Date**: ${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }})
+            **App Version**: ${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }})
+            **Release Type**: ${{ github.event.inputs.release_type }}
+            **Release Date**: ${{ env.BUILD_STAMP }}
             
             **📦 [`${{ env.ZIP_FILENAME }}`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }})**
             <br>
@@ -269,7 +357,7 @@ jobs:
           echo ""
           echo "📊 Release Information:"
           echo "  🧩 App: ${{ env.APP_NAME }}"
-          echo "  🔢 Version: ${{ env.APP_VERS }}"
+          echo "  🔢 Version: ${{ env.APPVERS_FULL }}"
           echo "  ⚙️ Build: ${{ env.APP_BUILD }}"
           echo "  🏷️ Tag: $TAG_NAME"
           echo "  🔄 Trigger: $TRIGGER_TYPE"
