@@ -182,10 +182,10 @@ jobs:
           echo "Starting Workflow Configuration. Stay tuned ... "
           
           # Create the Build-Number and Date/Time-Stamps
-          GITHUB_REPO_URL=https://github.com/${{ github.repository }}/
-          GITHUB_PROJECT_URL=https://github.com/${{ github.repository }}/${{ env.PROJECT }}
-          BUNDLE_RELEASE_PAGE=https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }}
-          BUNDLE_ZIP_DOWNLOAD=https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }}"
+          GITHUB_REPO_URL="https://github.com/${{ github.repository }}/"
+          GITHUB_PROJECT_URL="https://github.com/${{ github.repository }}/${{ env.PROJECT }}"
+          BUNDLE_RELEASE_PAGE="https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }}"
+          BUNDLE_ZIP_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }}"
 
           # Store the results as environmental vars
           echo "GITHUB_REPO_URL=$GITHUB_REPO_URL" >> $GITHUB_ENV
