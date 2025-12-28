@@ -286,7 +286,8 @@ jobs:
 
             [![Version Number](https://img.shields.io/badge/${{ github.event.inputs.version_number }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
             [![Release Type](https://img.shields.io/badge/${{ github.event.inputs.release_type }}-007acc?style=flat&label=App%20Release%3A%20&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
-
+            
+            <br>
 
             | Category | Information |
             |------|------|
@@ -301,6 +302,9 @@ jobs:
             ## 💻 System Requirements
 
             ### Software
+
+            > [!NOTE]
+            > The following list/overview is to be understood as a recommendation and represents an absolute minimum of system requirements that must be met to run this program..
 
             | Component | Requirement |
             |-----------|-------------|
