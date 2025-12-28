@@ -12,14 +12,13 @@ name: ModernUI Release
 # UMGEBUNGSVARIABLEN. DIESE GLOBALEN VARIABLEN SIND AUSSCHLIESSLICH IM JOB-TEIL VERFÜGAR, DA DIESER DIE LAUFZEIT DARSTELLT!
 # ZUGRIFF AUF DIE GLOBALEN VARIABLEN IM JOB-TEIL VIA ${{ env.VARIABLENNAME }}
 env:
-   ZIP_FILENAME: "ModernUI.zip"       # Legt den Namen der ZIP-Datei fest
-   APP_DEV: "Praetoriani"             # Name des Entwicklers
-   APP_NAME: "ModernUI"               # Das hier ist der eigentliche Programmname
-   APP_VERS: "v1.00.02"               # Die aktuelle Programm-Version
-   PROJECT: "ModernUI"                # Der Ordnername des Projektes innerhalb von PowerShell.Lib (!!)
-   APPTAGID: "muiapp-"                # Globale Variable für den Tag-Namen bzw. Tag-ID
-   INSTALLER: "setup-modernui.ps1"    # Das Installer-Script, welches nach dem Download ausgeführt werden muss
-   RUN_APP: "ModernUI.ps1"            # Das Script muss gestartet werden, um das Programm zu öffnen
+  APP_DEV: "Praetoriani"             # Name des Entwicklers
+  APP_NAME: "ModernUI"               # Das hier ist der eigentliche Programmname
+  PROJECT: "ModernUI"                # Der Exakte Ordnername des Projektes innerhalb von PowerShell.Lib (!!)
+  APPTAGID: "muiapp-"                # Globale Variable für den Tag-Namen bzw. Tag-ID
+  ZIP_FILENAME: "ModernUI.zip"       # Legt den Namen der ZIP-Datei fest
+  INSTALLER: "setup-modernui.ps1"    # Das Installer-Script, welches nach dem Download ausgeführt werden muss
+  RUN_APP: "ModernUI.ps1"            # Das Script muss gestartet werden, um das Programm zu öffnen
 
 # TRIGGER CONFIGURATION - MULTIPLE TRIGGERS SUPPORTED
 # Defines when this workflow should be executed
@@ -283,6 +282,17 @@ jobs:
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
+            ## 📋 General App Informations
+
+            [![Static Badge](https://img.shields.io/badge/${{ env.APPVERS_FULL }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
+
+            **App Name**: ${{ env.APP_NAME }}
+            **App Version**: ${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }})
+            **Release Type**: ${{ github.event.inputs.release_type }}
+            **Release Date**: ${{ env.BUILD_STAMP }}
+            **Developed by**: ${{ env.APP_DEV }}
+            <br>
+
             ## 💻 System Requirements
 
             ### Software
@@ -304,10 +314,7 @@ jobs:
             ## ⬇️ **File Download:**
             <br>
 
-            **App Name**: ${{ env.APP_NAME }}
-            **App Version**: ${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }})
-            **Release Type**: ${{ github.event.inputs.release_type }}
-            **Release Date**: ${{ env.BUILD_STAMP }}
+            The link below will start a direct download of the ZIP-File
             
             **📦 [`${{ env.ZIP_FILENAME }}`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }})**
             <br>
@@ -353,7 +360,7 @@ jobs:
           TAG_NAME="${{ steps.setup.outputs.tag_name }}"
           TRIGGER_TYPE="${{ github.event_name }}"
           
-          echo "🎉 ${{ env.APP_NAME }}  ${{ env.APP_VERS }} release successfully created!"
+          echo "🎉 ${{ env.APP_NAME }}  ${{ env.APPVERS_FULL }} release successfully created!"
           echo ""
           echo "📊 Release Information:"
           echo "  🧩 App: ${{ env.APP_NAME }}"
