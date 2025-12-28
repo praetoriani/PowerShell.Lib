@@ -33,7 +33,7 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: '🏷️ Tag name for the release <br> (e.g. muiapp-v1.00.00)'
+        description: '🏷️ Tag name for the release (e.g. muiapp-v1.00.00)'
         required: true
         default: 'muiapp-v1.00.00'
         type: string
@@ -70,17 +70,17 @@ on:
         default: true
         type: boolean
       zip_file:
-        description: '🗜️ Name of the ZIP-File (e.g. Release.zip)'
+        description: '🗜️ Name of the ZIP-File'
         required: false
         default: ''
         type: string
       setup_file:
-        description: '🪄 Name of the Setup File (e.g. installer.ps1)'
+        description: '🪄 Name of the Setup File'
         required: false
         default: ''
         type: string
       app_launcher:
-        description: '🖥️ Name of the App Launcher (e.g. app-exec.ps1)'
+        description: '🖥️ Name of the App Launcher'
         required: false
         default: ''
         type: string
