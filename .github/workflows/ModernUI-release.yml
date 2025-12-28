@@ -283,15 +283,13 @@ jobs:
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
             ## 📋 General App Informations
-            
-            [![Version Number](https://img.shields.io/badge/${{ github.event.inputs.release_type }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
-            [![Release Type](https://img.shields.io/badge/${{ github.event.inputs.release_type }}-00a3cc?style=flat&label=App%20Release%3A&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
 
+            [![Version Number](https://img.shields.io/badge/${{ github.event.inputs.version_number }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
 
             | Category | Information |
             |------|------|
             | 🖼️ **App Name** | ${{ env.APP_NAME }} |
-            | 🔢 **App Version** | ${{ github.event.inputs.release_type }} (Build: ${{ env.APP_BUILD }}) |
+            | 🔢 **App Version** | ${{ github.event.inputs.version_number }} (Build: ${{ env.APP_BUILD }}) |
             | 📦 **Release Type** | ${{ github.event.inputs.release_type }} |
             | 🗓️ **Release Date** | ${{ env.BUILD_STAMP }} |
             | 🪛 **Developed by** | ${{ env.APP_DEV }} |
