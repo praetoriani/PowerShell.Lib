@@ -45,14 +45,14 @@ on:
       release_type:
         description: '📝 Release-Type (e.g. stable release)'
         required: true
-        default: 'stable release'
+        default: 'Stable Release'
         type: choice
         options:
-          - stable release
-          - public beta
-          - alpha state
-          - hotfix
-          - final release
+          - Stable Release
+          - Alpha State
+          - Public Beta
+          - Hotfix/Bugfix
+          - Final Release
       create_tag:
         description: '🔧 Create the tag if it does not exist'
         required: true
@@ -278,19 +278,24 @@ jobs:
           # RELEASE TITLE
           # Uses the tag name (e.g. "ModernUI muiapp-v1.00.10")
           # name: ${{ env.APP_NAME }} ${{ steps.setup.outputs.tag_name }}
-          name: ${{ env.APP_NAME }} ${{ env.APPVERS_FULL }} (Build ${{ env.APP_BUILD }})
+          name: ${{ env.APP_NAME }} ${{ github.event.inputs.version_number }} (Build ${{ env.APP_BUILD }})
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
             ## 📋 General App Informations
 
-            [![Static Badge](https://img.shields.io/badge/${{ env.APPVERS_FULL }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
+            [![Version Number](https://img.shields.io/badge/${{ github.event.inputs.release_type }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
+            [![Release Type](https://img.shields.io/badge/${{ github.event.inputs.release_type }}-00a3cc?style=flat&label=App%20Release%3A&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
 
-            **App Name**: ${{ env.APP_NAME }}
-            **App Version**: ${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }})
-            **Release Type**: ${{ github.event.inputs.release_type }}
-            **Release Date**: ${{ env.BUILD_STAMP }}
-            **Developed by**: ${{ env.APP_DEV }}
+
+            | Category | Information |
+            |------|------|
+            | 🖼️ **App Name** | ${{ env.APP_NAME }} |
+            | 🔢 **App Version** | ${{ github.event.inputs.release_type }} (Build: ${{ env.APP_BUILD }}) |
+            | 📦 **Release Type** | ${{ github.event.inputs.release_type }} |
+            | 🗓️ **Release Date** | ${{ env.BUILD_STAMP }} |
+            | 🪛 **Developed by** | ${{ env.APP_DEV }} |
+            
             <br>
 
             ## 💻 System Requirements
@@ -306,17 +311,21 @@ jobs:
 
             ### Hardware (Minimum)
 
-            - **CPU**: Dual-Core 2.0 GHz
-            - **RAM**: 512 MB
-            - **Disk**: ~10 MB
+            | Hardware | Recommended |
+            |----------|-------------|
+            | **CPU** | Dual-Core 2.0 GHz |
+            | **RAM** | 512 MB |
+            | **Disk** | ~10 MB |
+
             <br>
 
             ## ⬇️ **File Download:**
             <br>
 
-            The link below will start a direct download of the ZIP-File
-            
-            **📦 [`${{ env.ZIP_FILENAME }}`](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }})**
+            Click on the Badge below to start the direct download of the ZIP-File.
+
+            [![ZIP Download](https://img.shields.io/badge/${{ env.ZIP_FILENAME }}-d9d9d9?style=flat&label=%F0%9F%93%A6%20Download%3A%20&labelColor=545454)](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }})
+
             <br>
 
             ## 🚀 Installation:
