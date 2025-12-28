@@ -142,7 +142,7 @@ jobs:
           if [[ "$USERINPUT_VERSION" =~ "$VERSION_REGEX" ]]; then
             echo "✅ Given Version-Number successfully validated"
           else
-            echo "❌ Given Version-Number is not like v1.00.00"
+            echo "❌ Given Version-Number $USERINPUT_VERSION is not like v1.00.00"
             $VALIDATION_PASSED=false
           fi
           
@@ -150,7 +150,7 @@ jobs:
           if [[ "$USERINPUT_TAGNAME" =~ "$TAGNAME_REGEX" ]]; then
             echo "✅ Given Tag-Name successfully validated"
           else
-            echo "❌ Given Tag-Name is not like muiapp-v1.00.00"
+            echo "❌ Given Tag-Name $USERINPUT_TAGNAME is not like muiapp-v1.00.00"
             $VALIDATION_PASSED=false
           fi
 
@@ -158,7 +158,7 @@ jobs:
           if [[ "$USERINPUT_VERSION" = "$TAG_VERSION" ]]; then
             echo "✅ Version-Number and Version in Tag-Name are identical"
           else
-            echo "❌ Version-Number and Version in Tag-Name do not match"
+            echo "❌ $USERINPUT_VERSION does not match $TAG_VERSION"
             $VALIDATION_PASSED=false
           fi
           
