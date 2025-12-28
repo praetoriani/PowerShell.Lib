@@ -201,7 +201,7 @@ jobs:
 
           # Create the Build-Number and Date/Time-Stamps
           APP_BUILD=$(date +'%y%m%d')
-          TIME_ZONE=Europe/Berlin • CET
+          TIME_ZONE="Europe/Berlin • CET"
           BUILD_STAMP=$(date +'%d.%m.%Y ; %H:%M:%S %Z')
           BUILD_DATE=$(date +'%Y-%m-%d')
           BUILD_TIME=$(date +'%H:%M:%S %Z')
