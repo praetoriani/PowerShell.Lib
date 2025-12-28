@@ -33,7 +33,7 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: '🏷️ Tag name for the release \n (e.g. muiapp-v1.00.00)'
+        description: '🏷️ Tag name for the release <br> (e.g. muiapp-v1.00.00)'
         required: true
         default: 'muiapp-v1.00.00'
         type: string
