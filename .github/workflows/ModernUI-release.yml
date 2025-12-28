@@ -69,6 +69,21 @@ on:
         required: true
         default: true
         type: boolean
+      zip_file:
+        description: '🗜️ Name of the ZIP-File (e.g. Release.zip)'
+        required: false
+        default: ''
+        type: string
+      setup_file:
+        description: '🪄 Name of the Setup File (e.g. installer.ps1)'
+        required: false
+        default: ''
+        type: string
+      app_launcher:
+        description: '🖥️ Name of the App Launcher (e.g. app-exec.ps1)'
+        required: false
+        default: ''
+        type: string
       release_notes:
         description: '✏️ Additional release notes (optional)'
         required: false
