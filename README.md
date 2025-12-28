@@ -29,9 +29,9 @@ As mentioned, each of the following projects was extensively tested and, after s
 > Despite all the measures I have taken, it is of course possible that there are still some bugs in the applications.
 
 Enjoy browsing my PowerShell.Lib repository ☺️ !
-<br><br><br>
+<br><br>
 <details>
-  <summary>Browse Official Releases</summary>
+  <summary><h3><strong>📖 Official Release List</strong></h3></summary>
 
 ## ModernUI
 
