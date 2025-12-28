@@ -301,11 +301,11 @@ jobs:
 
             ## 💻 System Requirements
 
-            ### Software
-
             > [!NOTE]
             > The following list/overview is a recommendation and represents an absolute minimum of system requirements that must be met to run this app
 
+            
+            ### Software            
             | Component | Requirement |
             |-----------|-------------|
             | **OS** | Windows 10/11 |
