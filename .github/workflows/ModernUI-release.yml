@@ -45,14 +45,14 @@ on:
       release_type:
         description: '📝 Release-Type (e.g. stable release)'
         required: true
-        default: 'Stable Release'
+        default: 'Stable'
         type: choice
         options:
-          - Stable Release
-          - Alpha State
-          - Public Beta
+          - Stable
+          - Alpha
+          - Beta
           - Hotfix/Bugfix
-          - Final Release
+          - Final
       create_tag:
         description: '🔧 Create the tag if it does not exist'
         required: true
@@ -285,6 +285,8 @@ jobs:
             ## 📋 General App Informations
 
             [![Version Number](https://img.shields.io/badge/${{ github.event.inputs.version_number }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
+            [![Release Type](https://img.shields.io/badge/${{ github.event.inputs.release_type }}-007acc?style=flat&label=App%20Release%3A%20&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
+
 
             | Category | Information |
             |------|------|
@@ -334,7 +336,7 @@ jobs:
             <br>
 
             ## 💡 Insider tip:
-            You can create a shortcut by your own by creating a shortcut and using the following command as the target.:
+            For best execution results ans user experience, I recommend creating a shortcut using the following command as the target.:
             ```
             C:\Windows\System32\conhost.exe --headless powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "C:\PATH\TO\${{ env.RUN_APP }}"
             ```
