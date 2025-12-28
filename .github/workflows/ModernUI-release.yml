@@ -51,8 +51,19 @@ on:
           - Stable
           - Alpha
           - Beta
-          - Hotfix/Bugfix
+          - Hotfix
+          - Bugfix
           - Final
+      is_draft:
+        description: '🧰 Create as Draft Release'
+        required: false
+        default: false
+        type: boolean
+      is_prerelease:
+        description: '📐 Mark as Pre-Release?'
+        required: false
+        default: false
+        type: boolean
       create_tag:
         description: '🔧 Create the tag if it does not exist'
         required: true
@@ -87,90 +98,194 @@ jobs:
     if: |
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/muiapp-')) ||
       github.event_name == 'workflow_dispatch'
-    
+
     # WORKFLOW STEPS
     # Each step is executed sequentially
     steps:
-      # STEP 1: Download repository code
+      # STEP 01: Download repository code
       # GitHub Actions runs on a fresh server and needs access to your code
       - name: Checkout repository
         uses: actions/checkout@v4  # Official GitHub Action for code download
         # After this step, all your repository files are available
       
-      # STEP 2: Create some Job-Internal variables like Date/Time-Stamp for the current build or timezone
-      # These vars can be used like ${{ env.VARNAME }}
-      - name: Create Build Number, Date/Time-Stamps
+      # STEP 02: This job validates some of the inputs made by the user
+      # PLEASE NOTE: If the validation fails, the workflow will be stopped!
+      - name: Input Validation
+        id: step-input-validation
         run: |
+          # First, some informative output
+          echo "Validation Process started ... "
+          
+          # Set current validation state to true!
+          VALIDATION_PASSED=true
+
+          # Get User-Inputs and store them
+          echo " → Reading user inputs"
+          USERINPUT_TAGNAME=${{ github.event.inputs.tag_name }}
+          USERINPUT_VERSION=${{ github.event.inputs.version_number }}
+          echo " → Inputs were stored for validation"
+
+          # Set Expression for validation
+          echo " → Setting up RegEx for validation"
+          VERSION_REGEX="^v([0-9]+)\.([0-9]{2})\.([0-9]{2})$"
+          TAGNAME_REGEX="^muiapp-v([0-9]+)\.([0-9]{2})\.([0-9]{2})$"
+          TAG_VERSION_EXP="s/^muiapp-//"
+          echo " → RegEx-Cretion successfully finished"
+
+          # Extract the Version-Number from the Tag-Name: muiapp-v1.00.00 -> v1.00.00
+          TAG_VERSION=$(echo "${{ github.event.inputs.tag_name }}" | sed '$TAG_VERSION_EXP')
+          echo " → Version-Number was extracted from Tag-Name"
+          
+          echo " → Validating user inputs. Please wait ..."
+          echo " "
+          # Validate given Version-Number
+          if [[ "$USERINPUT_VERSION" =~ "$VERSION_REGEX" ]]; then
+            echo "✅ Given Version-Number successfully validated"
+          else
+            echo "❌ Given Version-Number is not like v1.00.00"
+            $VALIDATION_PASSED=false
+          fi
+          
+          # Validate given Tag-Name
+          if [[ "$USERINPUT_TAGNAME" =~ "$TAGNAME_REGEX" ]]; then
+            echo "✅ Given Tag-Name successfully validated"
+          else
+            echo "❌ Given Tag-Name is not like muiapp-v1.00.00"
+            $VALIDATION_PASSED=false
+          fi
+
+          # Validate that both Version-Numbers are the same
+          if [[ "$USERINPUT_VERSION" = "$TAG_VERSION" ]]; then
+            echo "✅ Version-Number and Version in Tag-Name are identical"
+          else
+            echo "❌ Version-Number and Version in Tag-Name do not match"
+            $VALIDATION_PASSED=false
+          fi
+          
+          # Final validation
+          if [[ "$VALIDATION_PASSED" = "true" ]]; then
+            echo "✅ Validation-Process successfully finished"
+            echo "VALIDATION_PASSED=true" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "❌ Validation-Process failed"
+            echo "VALIDATION_PASSED=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+                    
+      # STEP 03: In this step we're doing some workflow-configuration by creating some important environmental vars
+      # These vars can be used after this step by using ${{ env.VARNAME }}
+      - name: Performing Workflow Configuration
+        id: step-workflow-config
+        run: |
+          # First, some informative output
+          echo "Starting Workflow Configuration. Stay tuned ... "
+          
           # Create the Build-Number and Date/Time-Stamps
-          BUILD_STAMP=$(date +'%d.%m.%Y ; %H:%M:%S')
+          GITHUB_REPO_URL=https://github.com/${{ github.repository }}/
+          GITHUB_PROJECT_URL=https://github.com/${{ github.repository }}/${{ env.PROJECT }}
+          BUNDLE_RELEASE_PAGE=https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }}
+          BUNDLE_ZIP_DOWNLOAD=https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }}"
+
+          # Store the results as environmental vars
+          echo "GITHUB_REPO_URL=$GITHUB_REPO_URL" >> $GITHUB_ENV
+          echo "GITHUB_PROJECT_URL=$GITHUB_PROJECT_URL" >> $GITHUB_ENV
+          echo "BUNDLE_RELEASE_PAGE=$BUNDLE_RELEASE_PAGE" >> $GITHUB_ENV
+          echo "BUNDLE_ZIP_DOWNLOAD=$BUNDLE_ZIP_DOWNLOAD" >> $GITHUB_ENV
+
+          # Export as step output
+          echo "github-repo-url=$GITHUB_REPO_URL" >> $GITHUB_OUTPUT
+          echo "github-project-url=$GITHUB_PROJECT_URL" >> $GITHUB_OUTPUT
+          echo "bundle-release-page=$BUNDLE_RELEASE_PAGE" >> $GITHUB_OUTPUT
+          echo "bundle-zip-download=$BUNDLE_ZIP_DOWNLOAD" >> $GITHUB_OUTPUT
+
+          # Create the Build-Number and Date/Time-Stamps
           APP_BUILD=$(date +'%y%m%d')
+          TIME_ZONE=Europe/Berlin • CET
+          BUILD_STAMP=$(date +'%d.%m.%Y ; %H:%M:%S %Z')
           BUILD_DATE=$(date +'%Y-%m-%d')
-          BUILD_TIME=$(date +'%H:%M:%S')
+          BUILD_TIME=$(date +'%H:%M:%S %Z')
           BUILD_ISO=$(date +'%Y-%m-%dT%H:%M:%S')
 
           # Store the results as environmental vars
-          echo "BUILD_STAMP=$BUILD_STAMP" >> $GITHUB_ENV
           echo "APP_BUILD=$APP_BUILD" >> $GITHUB_ENV
+          echo "TIME_ZONE=$TIME_ZONE" >> $GITHUB_ENV
+          echo "BUILD_STAMP=$BUILD_STAMP" >> $GITHUB_ENV
           echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
           echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_ENV
           echo "BUILD_ISO=$BUILD_ISO" >> $GITHUB_ENV
 
           # Export as step output
+          echo "app-build=$APP_BUILD" >> $GITHUB_OUTPUT
+          echo "time-zone=$TIME_ZONE" >> $GITHUB_OUTPUT
           echo "build-stamp=$BUILD_STAMP" >> $GITHUB_OUTPUT
           echo "build-time=$BUILD_TIME" >> $GITHUB_OUTPUT
-          echo "app-build=$APP_BUILD" >> $GITHUB_OUTPUT
           echo "build-date=$BUILD_DATE" >> $GITHUB_OUTPUT
           echo "build-iso=$BUILD_ISO" >> $GITHUB_OUTPUT
+          
+          # Create the Build-Number and Date/Time-Stamps
+          APPVERS_FULL=$(echo "$TAG_NAME" | sed 's/^muiapp-//')
+          APPVERS_CLEAN=$(echo "$VERSION" | sed 's/^v//')
+
+          # Store the results as environmental vars
+          echo "APPVERS_FULL=$APPVERS_FULL" >> $GITHUB_ENV
+          echo "APPVERS_CLEAN=$APPVERS_CLEAN" >> $GITHUB_ENV
+
+          # Export as step output
+          echo "appvers-full=$APPVERS_FULL" >> $GITHUB_OUTPUT
+          echo "appvers-clean=$APPVERS_CLEAN" >> $GITHUB_OUTPUT
+
+          # Get the user inputs for draft and prerelease
+          APPMODE_DRAFT="${{ github.event.inputs.is_draft }}"
+          APPMODE_PREREL="${{ github.event.inputs.is_prerelease }}"
+
+          # Set to default value if empty
+          [ -z "$APPMODE_DRAFT" ] && APPMODE_DRAFT="false"
+          [ -z "$APPMODE_PREREL" ] && APPMODE_PREREL="false"
+
+          # If we have a draft → automatically set Pre-Release
+          if [ "$APPMODE_DRAFT" = "true" ]; then
+            APPMODE_PREREL="true"
+          fi
+
+          # Store the results as environmental vars
+          echo "APPMODE_DRAFT=$APPMODE_DRAFT" >> $GITHUB_ENV
+          echo "APPMODE_PREREL=$APPMODE_PREREL" >> $GITHUB_ENV
+
+          # Export as step output
+          echo "appmode-draft=$APPMODE_DRAFT" >> $GITHUB_OUTPUT
+          echo "appmode-prerel=$APPMODE_PREREL" >> $GITHUB_OUTPUT
 
           # Debug Output
           echo ""
           echo "📊 New Environmental vars successfully set:"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "  APP_BUILD:      $APP_BUILD"
-          echo "  BUILD_STAMP:    $BUILD_STAMP"
-          echo "  BUILD_DATE:     $BUILD_DATE"
-          echo "  BUILD_TIME:     $BUILD_TIME"
-          echo "  BUILD_ISO:      $BUILD_ISO"
+          echo "  GITHUB_REPO_URL:       ${{ env.GITHUB_REPO_URL }}"
+          echo "  GITHUB_PROJECT_URL:    ${{ env.GITHUB_PROJECT_URL }}"
+          echo "  BUNDLE_RELEASE_PAGE:   ${{ env.BUNDLE_RELEASE_PAGE }}"
+          echo "  BUNDLE_ZIP_DOWNLOAD:   ${{ env.BUNDLE_ZIP_DOWNLOAD }}"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  APP_BUILD:         ${{ env.APP_BUILD }}"
+          echo "  APPVERS_FULL:      ${{ env.APPVERS_FULL }}"
+          echo "  APPVERS_CLEAN:     ${{ env.APPVERS_CLEAN }}"
+          echo "  APPMODE_DRAFT:     ${{ env.APPMODE_DRAFT }}"
+          echo "  APPMODE_PREREL:    ${{ env.APPMODE_PREREL }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  TIME_ZONE:         ${{ env.TIME_ZONE }}"
+          echo "  BUILD_STAMP:       ${{ env.BUILD_STAMP }}"
+          echo "  BUILD_DATE:        ${{ env.BUILD_DATE }}"
+          echo "  BUILD_TIME:        ${{ env.BUILD_TIME }}"
+          echo "  BUILD_ISO:         ${{ env.BUILD_ISO }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-      
-      # STEP 3: This job wil determine the Tag and extracts the version-number from the tag-name which is given by the user through the input of this workflog
-      # All extracted informations will be stored in environmental vars. These vars can be used like ${{ env.VARNAME }}
-      - name: Tag Determination and Version Number Extraction
+      # STEP 04: This Step will dynamically generate the content output for the release page
+      - name: Creating Content Information for the Release Page
+        id: step-create-content
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG_NAME="${{ github.event.inputs.tag_name }}"
-            echo "🔧 Manual trigger - Tag: $TAG_NAME"
-          else
-            TAG_NAME="${{ github.ref_name }}"
-            echo "🏷️ Automatic trigger - Tag: $TAG_NAME"
-          fi
-          
-          # Format: muiapp-v1.00.00 -> v1.00.00
-          VERSION=$(echo "$TAG_NAME" | sed 's/^muiapp-//')
-          # Format: muiapp-v1.00.00 -> 1.00.00
-          VERSION_CLEAN=$(echo "$VERSION" | sed 's/^v//')
+          # ... to be continued ...
+          echo "We're sorry, but this step isn't implemented atm."
 
-          # Store the results as environmental vars
-          echo "APPVERS_FULL=$VERSION" >> $GITHUB_ENV
-          echo "APPVERS_CLEAN=$VERSION_CLEAN" >> $GITHUB_ENV
-          echo "FULL_TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-
-          # Export as step outputs
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "version_clean=$VERSION_CLEAN" >> $GITHUB_OUTPUT
-          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
-
-          # Debug Output:
-          echo ""
-          echo "📊 New Environmental vars successfully set:"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "  FULL_TAG_NAME:     $FULL_TAG_NAME"
-          echo "  APPVERS_FULL:      $APPVERS_FULL"
-          echo "  APPVERS_CLEAN:     $APPVERS_CLEAN"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-      # STEP 2: Setup variables for different trigger types
+      # STEP 05: Setup variables for different trigger types
       # Handle both automatic (tag push) and manual (workflow_dispatch) triggers
       - name: Setup release variables
         id: setup
@@ -199,7 +314,7 @@ jobs:
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
           echo "✅ Tag validation successful: $TAG_NAME"
       
-      # STEP 3: Create tag if manual trigger and tag doesn't exist
+      # STEP 06: Create tag if manual trigger and tag doesn't exist
       # This step only runs for manual triggers when create_tag is enabled
       - name: Create tag if manual trigger
         if: |
@@ -224,7 +339,7 @@ jobs:
             echo "✅ Tag created and pushed successfully"
           fi
       
-      # STEP 4: Create release package
+      # STEP 07: Create release package
       # Only the ModernUI folder is packed into a ZIP package
       - name: Create ${{ env.APP_NAME }} release package
         run: |
@@ -267,7 +382,7 @@ jobs:
           echo "📦 ZIP file contents:"
           unzip -l ${{ env.ZIP_FILENAME }}
       
-      # STEP 5: Create GitHub release with enhanced descriptions
+      # STEP 08: Create GitHub release with enhanced descriptions
       # This is the most important step - the actual release is created here
       - name: Create GitHub release with assets
         uses: softprops/action-gh-release@v1  # Proven third-party action for releases
@@ -284,6 +399,8 @@ jobs:
           body: |
             ## 📋 General App Informations
 
+            case "$RELEASE_TYPE" in
+
             [![Version Number](https://img.shields.io/badge/${{ github.event.inputs.version_number }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
             [![Release Type](https://img.shields.io/badge/${{ github.event.inputs.release_type }}-007acc?style=flat&label=App%20Release%3A%20&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
             
@@ -294,7 +411,7 @@ jobs:
             | 🖼️ **App Name** | ${{ env.APP_NAME }} |
             | 🔢 **App Version** | ${{ github.event.inputs.version_number }} (Build: ${{ env.APP_BUILD }}) |
             | 📦 **Release Type** | ${{ github.event.inputs.release_type }} |
-            | 🗓️ **Release Date** | ${{ env.BUILD_STAMP }} |
+            | 🗓️ **Release Date** | ${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }}) |
             | 🪛 **Developed by** | ${{ env.APP_DEV }} |
             
             <br>
@@ -351,12 +468,12 @@ jobs:
             ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes: <br><br> {0} <br><br>', github.event.inputs.release_notes) || '' }}
             
             ---
-            *This release was created on ${{ env.BUILD_STAMP }} by GitHub Actions.*
+            *This release was created on ${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }}) by GitHub Actions.*
           
           # RELEASE SETTINGS
-          files: ${{ env.ZIP_FILENAME }}     # The ZIP file as download asset
-          draft: false                       # false = Release is published immediately
-          prerelease: false                  # false = Normal release (not marked as beta)
+          files: ${{ env.ZIP_FILENAME }}          # The ZIP file as download asset
+          draft: ${{ env.APPMODE_DRAFT }}         # if false = Release is published immediately
+          prerelease: ${{ env.APPMODE_PREREL }}   # if false = Normal release (not marked as beta)
           
           # ERROR HANDLING
           fail_on_unmatched_files: true      # Workflow fails if ZIP file doesn't exist
@@ -366,7 +483,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
-      # STEP 6: Confirm success with enhanced logging
+      # STEP 09: Confirm success with enhanced logging
       # Optional, but helpful for debugging and monitoring
       - name: Confirm release creation and provide usage instructions
         run: |
@@ -376,21 +493,25 @@ jobs:
           echo "🎉 ${{ env.APP_NAME }}  ${{ env.APPVERS_FULL }} release successfully created!"
           echo ""
           echo "📊 Release Information:"
+          echo "  ————————————————————————————————————————————————————————————————————————————————————————————————————"
           echo "  🧩 App: ${{ env.APP_NAME }}"
           echo "  🔢 Version: ${{ env.APPVERS_FULL }}"
           echo "  ⚙️ Build: ${{ env.APP_BUILD }}"
+          echo "  💡 ISO Build No: ${{ env.BUILD_ISO }}"
           echo "  📦 Release Type: ${{ github.event.inputs.release_type }}"
           echo "  🪛 Developer: ${{ env.APP_DEV }}"
+          echo "  🗓️ Created: ${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }})"
+          echo "  ————————————————————————————————————————————————————————————————————————————————————————————————————"
           echo "  🏷️ Tag: $TAG_NAME"
           echo "  🔄 Trigger: $TRIGGER_TYPE"
           echo "  🗄️ Repository: [${{ github.repository }}](https://github.com/${{ github.repository }}/)"
           echo "  📂 Directory: [${{ github.repository }}/${{ env.PROJECT }}](https://github.com/${{ github.repository }}/tree/main/${{ env.PROJECT }})"
           echo "  🔗 Commit: ${{ github.sha }}"
-          echo "  ⏰ Created: ${{ env.BUILD_STAMP }} (UTC)"
-          echo ""
+          echo "  ————————————————————————————————————————————————————————————————————————————————————————————————————"
           echo "🌐 Release Links:"
           echo "  📖 Release Page: https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
           echo "  💾 Direct Download: https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/${{ env.ZIP_FILENAME }}"
+          echo "  ————————————————————————————————————————————————————————————————————————————————————————————————————"
           echo ""
           echo "🚀 Next Steps for Users:"
           echo "  1. Visit the release page above"
