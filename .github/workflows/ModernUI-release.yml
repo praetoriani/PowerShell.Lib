@@ -13,10 +13,7 @@ name: ModernUI Release
 # ZUGRIFF AUF DIE GLOBALEN VARIABLEN IM JOB-TEIL VIA ${{ env.VARIABLENNAME }}
 env:
   APP_DEV: "Praetoriani"             # Name des Entwicklers
-  APP_NAME: "ModernUI"               # Das hier ist der eigentliche Programmname
-  PROJECT: "ModernUI"                # Der Exakte Ordnername des Projektes innerhalb von PowerShell.Lib (!!)
   APPTAGID: "muiapp-"                # Globale Variable für den Tag-Namen bzw. Tag-ID
-  ZIP_FILENAME: "ModernUI.zip"       # Legt den Namen der ZIP-Datei fest
   INSTALLER: "setup-modernui.ps1"    # Das Installer-Script, welches nach dem Download ausgeführt werden muss
   RUN_APP: "ModernUI.ps1"            # Das Script muss gestartet werden, um das Programm zu öffnen
 
@@ -32,6 +29,16 @@ on:
   # MANUAL TRIGGER: Allows running workflow from GitHub Actions interface
   workflow_dispatch:
     inputs:
+      bundle_name:
+        description: '📦 App Name'
+        required: true
+        default: 'ModernUI'
+        type: string
+      github_dir:
+        description: '📂 Foldername inside PowerShell.Lib'
+        required: true
+        default: 'ModernUI'
+        type: string
       tag_name:
         description: '🏷️ Tag name for the release (e.g. muiapp-v1.00.00)'
         required: true
@@ -54,6 +61,11 @@ on:
           - Hotfix
           - Bugfix
           - Final
+      zip_file:
+        description: '🗜️ Name of the ZIP-File'
+        required: false
+        default: 'ModernUI.zip'
+        type: string
       is_draft:
         description: '🧰 Create as Draft Release'
         required: false
@@ -69,26 +81,21 @@ on:
         required: true
         default: true
         type: boolean
-      zip_file:
-        description: '🗜️ Name of the ZIP-File'
-        required: false
-        default: 'ModernUI.zip'
-        type: string
-      setup_file:
-        description: '🪄 Name of the Setup File'
-        required: false
-        default: ''
-        type: string
-      app_launcher:
-        description: '🖥️ Name of the App Launcher'
-        required: false
-        default: 'ModernUI.ps1'
-        type: string
       release_notes:
         description: '✏️ Additional release notes (optional)'
         required: false
         default: ''
         type: string
+#      setup_file:
+#        description: '🪄 Name of the Setup File'
+#        required: false
+#        default: ''
+#        type: string
+#      app_launcher:
+#        description: '🖥️ Name of the App Launcher'
+#        required: false
+#        default: 'ModernUI.ps1'
+#        type: string
 #      notification_email:
 #        description: '📧 E-Mail for Notifications'
 #        required: false
@@ -139,6 +146,8 @@ jobs:
           USERINPUT_TAGNAME=${{ github.event.inputs.tag_name }}
           USERINPUT_VERSION=${{ github.event.inputs.version_number }}
           USERINPUT_ZIPFILE=${{ github.event.inputs.zip_file }}
+          USERINPUT_APPNAME=${{ github.event.inputs.bundle_name }}
+          USERINPUT_DIRNAME=${{ github.event.inputs.github_dir }}
           echo " → Inputs were stored for validation"
 
           # Set Expression for validation
@@ -153,6 +162,14 @@ jobs:
           TAG_VERSION=$(echo "${USERINPUT_TAGNAME}" | sed "s/^${TAG_VERSION_EXP}//")
           echo " → Version-Number was extracted from Tag-Name"
           
+          # Set USERINPUT_APPNAME to false if it is empty
+          echo " → Checking for given App Name"
+          [ -z "$USERINPUT_APPNAME" ] && USERINPUT_APPNAME="false"
+          
+          # Set USERINPUT_DIRNAME to false if it is empty
+          echo " → Checking for given Directory Name"
+          [ -z "$USERINPUT_DIRNAME" ] && USERINPUT_DIRNAME="false"
+          
           echo " → Validating user inputs. Please wait ..."
           echo " "
           # Validate given Version-Number
@@ -161,6 +178,22 @@ jobs:
           else
             echo "❌ Given Version-Number $USERINPUT_VERSION is not like v1.00.00"
             VALIDATION_PASSED=false
+          fi
+          
+          # Validate given App Name
+          if [ "${USERINPUT_APPNAME}" = "false" ]; then
+            echo "❌ ${USERINPUT_APPNAME} is not an valid App Name"
+            VALIDATION_PASSED=false
+          else
+            echo "✅ ${USERINPUT_APPNAME} is an valid App Name"
+          fi
+          
+          # Validate given Directory Name
+          if [ "${USERINPUT_DIRNAME}" = "false" ]; then
+            echo "❌ ${USERINPUT_DIRNAME} is not a valid Directory Name"
+            VALIDATION_PASSED=false
+          else
+            echo "✅ ${USERINPUT_DIRNAME} is a valid Directory Name"
           fi
           
           # Validate given Tag-Name
@@ -206,34 +239,53 @@ jobs:
           # First, some informative output
           echo "Starting Workflow Configuration. Stay tuned ... "
           
-          # Create the Build-Number and Date/Time-Stamps
+          # Create some usefull URLs
+          echo " → Creating URLs"
           GITHUB_REPO_URL="https://github.com/${{ github.repository }}/"
-          GITHUB_PROJECT_URL="https://github.com/${{ github.repository }}/${{ env.PROJECT }}"
+          GITHUB_PROJECT_URL="https://github.com/${{ github.repository }}/tree/main/${{ github.event.inputs.github_dir }}"
           BUNDLE_RELEASE_PAGE="https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }}"
-          BUNDLE_ZIP_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }}"
+          BUNDLE_ZIP_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ github.event.inputs.zip_file }}"
 
           # Store the results as environmental vars
+          echo " → Creating environmental vars"
           echo "GITHUB_REPO_URL=$GITHUB_REPO_URL" >> $GITHUB_ENV
           echo "GITHUB_PROJECT_URL=$GITHUB_PROJECT_URL" >> $GITHUB_ENV
           echo "BUNDLE_RELEASE_PAGE=$BUNDLE_RELEASE_PAGE" >> $GITHUB_ENV
           echo "BUNDLE_ZIP_DOWNLOAD=$BUNDLE_ZIP_DOWNLOAD" >> $GITHUB_ENV
 
           # Export as step output
+          echo " → Exporting vars as step outputs"
           echo "github-repo-url=$GITHUB_REPO_URL" >> $GITHUB_OUTPUT
           echo "github-project-url=$GITHUB_PROJECT_URL" >> $GITHUB_OUTPUT
           echo "bundle-release-page=$BUNDLE_RELEASE_PAGE" >> $GITHUB_OUTPUT
           echo "bundle-zip-download=$BUNDLE_ZIP_DOWNLOAD" >> $GITHUB_OUTPUT
 
           # Create the Build-Number and Date/Time-Stamps
+          echo " → Creating Build-Number"
           APP_BUILD=$(date +'%y%m%d')
-          TIME_ZONE="Europe/Berlin • CET"
           BUILD_STAMP=$(date +'%d.%m.%Y ; %H:%M:%S %Z')
+          echo " → Set ZIP-Filename"
+          ZIP_FILE="${{ github.event.inputs.zip_file }}"
+          echo " → Set Release-Type"
+          APP_RELTYPE="${{ github.event.inputs.release_type }}"
+          echo " → Set App-Name"
+          APP_NAME="${{ github.event.inputs.bundle_name }}"
+          echo " → Set Directory Name"
+          GITHUB_DIR="${{ github.event.inputs.github_dir }}"
+          echo " → Creating Timezone"
+          TIME_ZONE="Europe/Berlin • CET"
+          echo " → Creating Date/Time-Stamps"
           BUILD_DATE=$(date +'%Y-%m-%d')
           BUILD_TIME=$(date +'%H:%M:%S %Z')
           BUILD_ISO=$(date +'%Y-%m-%dT%H:%M:%S')
 
           # Store the results as environmental vars
+          echo " → Creating environmental vars"
           echo "APP_BUILD=$APP_BUILD" >> $GITHUB_ENV
+          echo "ZIP_FILE=$ZIP_FILE" >> $GITHUB_ENV
+          echo "APP_RELTYPE=$APP_RELTYPE" >> $GITHUB_ENV
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "GITHUB_DIR=$GITHUB_DIR" >> $GITHUB_ENV
           echo "TIME_ZONE=$TIME_ZONE" >> $GITHUB_ENV
           echo "BUILD_STAMP=$BUILD_STAMP" >> $GITHUB_ENV
           echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
@@ -241,30 +293,40 @@ jobs:
           echo "BUILD_ISO=$BUILD_ISO" >> $GITHUB_ENV
 
           # Export as step output
+          echo " → Exporting vars as step outputs"
           echo "app-build=$APP_BUILD" >> $GITHUB_OUTPUT
+          echo "zip-file=$ZIP_FILE" >> $GITHUB_OUTPUT
+          echo "app-reltype=$APP_RELTYPE" >> $GITHUB_OUTPUT
+          echo "app-name=$APP_NAME" >> $GITHUB_OUTPUT
+          echo "github-dir=$GITHUB_DIR" >> $GITHUB_OUTPUT
           echo "time-zone=$TIME_ZONE" >> $GITHUB_OUTPUT
           echo "build-stamp=$BUILD_STAMP" >> $GITHUB_OUTPUT
           echo "build-time=$BUILD_TIME" >> $GITHUB_OUTPUT
           echo "build-date=$BUILD_DATE" >> $GITHUB_OUTPUT
           echo "build-iso=$BUILD_ISO" >> $GITHUB_OUTPUT
           
-          # Create the Build-Number and Date/Time-Stamps
-          APPVERS_FULL=$(echo "${{ github.event.inputs.tag_name }}" | sed 's/^muiapp-//')
+          # Extracting Version Number from given Tag-Name
+          echo " → Extracting Version-Number from provided Tag-Name"
+          APPVERS_FULL="${{ github.event.inputs.version_number }}"
           APPVERS_CLEAN=$(echo "${{ github.event.inputs.tag_name }}" | sed 's/^v//')
 
           # Store the results as environmental vars
+          echo " → Creating environmental vars"
           echo "APPVERS_FULL=$APPVERS_FULL" >> $GITHUB_ENV
           echo "APPVERS_CLEAN=$APPVERS_CLEAN" >> $GITHUB_ENV
 
           # Export as step output
+          echo " → Exporting vars as step outputs"
           echo "appvers-full=$APPVERS_FULL" >> $GITHUB_OUTPUT
           echo "appvers-clean=$APPVERS_CLEAN" >> $GITHUB_OUTPUT
 
           # Get the user inputs for draft and prerelease
+          echo " → Get user inputs for Drafts/PreRelease"
           APPMODE_DRAFT="${{ github.event.inputs.is_draft }}"
           APPMODE_PREREL="${{ github.event.inputs.is_prerelease }}"
 
           # Set to default value if empty
+          echo " → Set default values for Drafts/PreRelease (if empty)"
           [ -z "$APPMODE_DRAFT" ] && APPMODE_DRAFT="false"
           [ -z "$APPMODE_PREREL" ] && APPMODE_PREREL="false"
 
@@ -274,10 +336,12 @@ jobs:
           fi
 
           # Store the results as environmental vars
+          echo " → Creating environmental vars"
           echo "APPMODE_DRAFT=$APPMODE_DRAFT" >> $GITHUB_ENV
           echo "APPMODE_PREREL=$APPMODE_PREREL" >> $GITHUB_ENV
 
           # Export as step output
+          echo " → Exporting vars as step outputs"
           echo "appmode-draft=$APPMODE_DRAFT" >> $GITHUB_OUTPUT
           echo "appmode-prerel=$APPMODE_PREREL" >> $GITHUB_OUTPUT
 
@@ -290,7 +354,10 @@ jobs:
           echo "  BUNDLE_RELEASE_PAGE:   ${BUNDLE_RELEASE_PAGE}"
           echo "  BUNDLE_ZIP_DOWNLOAD:   ${BUNDLE_ZIP_DOWNLOAD}"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  APP_NAME:          ${APP_NAME}"
+          echo "  ZIP_FILE:          ${ZIP_FILE}"
           echo "  APP_BUILD:         ${APP_BUILD}"
+          echo "  APP_RELTYPE:       ${APP_RELTYPE}"
           echo "  APPVERS_FULL:      ${APPVERS_FULL}"
           echo "  APPVERS_CLEAN:     ${APPVERS_CLEAN}"
           echo "  APPMODE_DRAFT:     ${APPMODE_DRAFT}"
@@ -394,18 +461,18 @@ jobs:
           
           # Create ZIP file with all ${{ env.APP_NAME }} files
           # -r = recursive (include all subdirectories)
-          zip -r ../${{ env.ZIP_FILENAME }} ${{ env.APP_NAME }}/
+          zip -r ../${{ env.ZIP_FILE }} ${{ env.APP_NAME }}/
           
           # Return to root directory
           cd ..
           
           # Confirmation and display ZIP file size
           echo "✅ ZIP file created:"
-          ls -lh ${{ env.ZIP_FILENAME }}
+          ls -lh ${{ env.ZIP_FILE }}
           
           # Verify ZIP file contents
           echo "📦 ZIP file contents:"
-          unzip -l ${{ env.ZIP_FILENAME }}
+          unzip -l ${{ env.ZIP_FILE }}
       
       # STEP 08: Create GitHub release with enhanced descriptions
       # This is the most important step - the actual release is created here
@@ -418,22 +485,22 @@ jobs:
           # RELEASE TITLE
           # Uses the tag name (e.g. "ModernUI muiapp-v1.00.10")
           # name: ${{ env.APP_NAME }} ${{ steps.setup.outputs.tag_name }}
-          name: ${{ env.APP_NAME }} ${{ github.event.inputs.version_number }} (Build ${{ env.APP_BUILD }})
+          name: ${{ env.APP_NAME }} ${{ env.APPVERS_FULL }} (Build ${{ env.APP_BUILD }})
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
             ## 📋 General App Informations
 
-            [![Version Number](https://img.shields.io/badge/${{ github.event.inputs.version_number }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
-            [![Release Type](https://img.shields.io/badge/${{ github.event.inputs.release_type }}-007acc?style=flat&label=App%20Release%3A%20&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
+            [![Version Number](https://img.shields.io/badge/${{ env.APPVERS_FULL }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](${{ env.BUNDLE_RELEASE_PAGE }})
+            [![Release Type](https://img.shields.io/badge/${{ env.APP_RELTYPE }}-007acc?style=flat&label=App%20Release%3A%20&labelColor=545454)](${{ env.BUNDLE_RELEASE_PAGE }})
             
             <br>
 
             | Category | Information |
             |------|------|
             | 🖼️ **App Name** | ${{ env.APP_NAME }} |
-            | 🔢 **App Version** | ${{ github.event.inputs.version_number }} (Build: ${{ env.APP_BUILD }}) |
-            | 📦 **Release Type** | ${{ github.event.inputs.release_type }} |
+            | 🔢 **App Version** | ${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }}) |
+            | 📦 **Release Type** | ${{ env.APP_RELTYPE }} |
             | 🗓️ **Release Date** | ${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }}) |
             | 🪛 **Developed by** | ${{ env.APP_DEV }} |
             
@@ -468,12 +535,12 @@ jobs:
 
             Click on the Badge below to start the direct download of the ZIP-File.
 
-            [![ZIP Download](https://img.shields.io/badge/${{ env.ZIP_FILENAME }}-d9d9d9?style=flat&label=%F0%9F%93%A6%20Download%3A%20&labelColor=545454)](https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${{ env.ZIP_FILENAME }})
+            [![ZIP Download](https://img.shields.io/badge/${{ env.ZIP_FILE }}-d9d9d9?style=flat&label=%F0%9F%93%A6%20Download%3A%20&labelColor=545454)](${{ env.BUNDLE_ZIP_DOWNLOAD }})
 
             <br>
 
             ## 🚀 Installation:
-            1. Download the `${{ env.ZIP_FILENAME }}` file above
+            1. Download the `${{ env.ZIP_FILE }}` file above
             2. Extract to your desired folder
             3. Open PowerShell and Navigate to the extracted folder
             4. Run: `.\${{ env.RUN_APP }}`
@@ -494,7 +561,7 @@ jobs:
             *This release was created on ${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }}) by GitHub Actions.*
           
           # RELEASE SETTINGS
-          files: ${{ env.ZIP_FILENAME }}          # The ZIP file as download asset
+          files: ${{ env.ZIP_FILE }}              # The ZIP file as download asset
           draft: ${{ env.APPMODE_DRAFT }}         # if false = Release is published immediately
           prerelease: ${{ env.APPMODE_PREREL }}   # if false = Normal release (not marked as beta)
           
@@ -513,7 +580,7 @@ jobs:
           TAG_NAME="${{ steps.setup.outputs.tag_name }}"
           TRIGGER_TYPE="${{ github.event_name }}"
           
-          echo "🎉 ${{ env.APP_NAME }}  ${{ env.APPVERS_FULL }} release successfully created!"
+          echo "🎉 ${{ env.APP_NAME }}  ${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }}) release successfully created!"
           echo ""
           echo "📊 Release Information:"
           echo "  ————————————————————————————————————————————————————————————————————————————————————————————————————"
@@ -521,25 +588,27 @@ jobs:
           echo "  🔢 Version: ${{ env.APPVERS_FULL }}"
           echo "  ⚙️ Build: ${{ env.APP_BUILD }}"
           echo "  💡 ISO Build No: ${{ env.BUILD_ISO }}"
-          echo "  📦 Release Type: ${{ github.event.inputs.release_type }}"
+          echo "  📦 Release Type: ${{ env.APP_RELTYPE }}"
+          echo "  📐 Draft Release: ${{ env.APPMODE_DRAFT }}"
+          echo "  🛠️ Pre-Release: ${{ env.APPMODE_PREREL }}"
           echo "  🪛 Developer: ${{ env.APP_DEV }}"
           echo "  🗓️ Created: ${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }})"
           echo "  ————————————————————————————————————————————————————————————————————————————————————————————————————"
           echo "  🏷️ Tag: $TAG_NAME"
           echo "  🔄 Trigger: $TRIGGER_TYPE"
-          echo "  🗄️ Repository: [${{ github.repository }}](https://github.com/${{ github.repository }}/)"
-          echo "  📂 Directory: [${{ github.repository }}/${{ env.PROJECT }}](https://github.com/${{ github.repository }}/tree/main/${{ env.PROJECT }})"
+          echo "  🗄️ Repository: ${{ env.GITHUB_REPO_URL }}"
+          echo "  📂 Directory: ${{ env.GITHUB_PROJECT_URL }}"
           echo "  🔗 Commit: ${{ github.sha }}"
           echo "  ————————————————————————————————————————————————————————————————————————————————————————————————————"
           echo "🌐 Release Links:"
-          echo "  📖 Release Page: https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
-          echo "  💾 Direct Download: https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/${{ env.ZIP_FILENAME }}"
+          echo "  📖 Release Page: ${{ env.BUNDLE_RELEASE_PAGE }}"
+          echo "  💾 Direct Download: ${{ env.BUNDLE_ZIP_DOWNLOAD }}"
           echo "  ————————————————————————————————————————————————————————————————————————————————————————————————————"
           echo ""
           echo "🚀 Next Steps for Users:"
           echo "  1. Visit the release page above"
-          echo "  2. Download '${{ env.ZIP_FILENAME }}'"
-          echo "  4. Extract ${{ env.ZIP_FILENAME }}"
+          echo "  2. Download '${{ env.ZIP_FILE }}'"
+          echo "  4. Extract ${{ env.ZIP_FILE }}"
           echo "  5. Run PowerShell Console"
           echo "  6. Go to the extracted folder"
           echo "  7. Run the main PowerShell Script"
