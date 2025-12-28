@@ -72,7 +72,7 @@ on:
       zip_file:
         description: '🗜️ Name of the ZIP-File'
         required: false
-        default: ''
+        default: 'ModernUI.zip'
         type: string
       setup_file:
         description: '🪄 Name of the Setup File'
@@ -82,7 +82,7 @@ on:
       app_launcher:
         description: '🖥️ Name of the App Launcher'
         required: false
-        default: ''
+        default: 'ModernUI.ps1'
         type: string
       release_notes:
         description: '✏️ Additional release notes (optional)'
