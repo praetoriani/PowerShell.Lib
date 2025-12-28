@@ -224,8 +224,8 @@ jobs:
           echo "build-iso=$BUILD_ISO" >> $GITHUB_OUTPUT
           
           # Create the Build-Number and Date/Time-Stamps
-          APPVERS_FULL=$(echo "$TAG_NAME" | sed 's/^muiapp-//')
-          APPVERS_CLEAN=$(echo "$VERSION" | sed 's/^v//')
+          APPVERS_FULL=$(echo "${{ github.event.inputs.tag_name }}" | sed 's/^muiapp-//')
+          APPVERS_CLEAN=$(echo "${{ github.event.inputs.tag_name }}" | sed 's/^v//')
 
           # Store the results as environmental vars
           echo "APPVERS_FULL=$APPVERS_FULL" >> $GITHUB_ENV
@@ -398,8 +398,6 @@ jobs:
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
           body: |
             ## 📋 General App Informations
-
-            case "$RELEASE_TYPE" in
 
             [![Version Number](https://img.shields.io/badge/${{ github.event.inputs.version_number }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
             [![Release Type](https://img.shields.io/badge/${{ github.event.inputs.release_type }}-007acc?style=flat&label=App%20Release%3A%20&labelColor=545454)](https://github.com/${{ github.repository }}/releases/tag/${{ github.event.inputs.tag_name }})
