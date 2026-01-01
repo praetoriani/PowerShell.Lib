@@ -265,7 +265,6 @@ jobs:
           APPVERS_FULL="${{ github.event.inputs.version_number }}"
           APPVERS_CLEAN=$(echo "${{ github.event.inputs.tag_name }}" | sed 's/^v//')
 
-
           # Creating File- and Directory Names
           echo " → Set App-Name"
           APP_NAME=$(echo "${{ github.event.inputs.bundle_name }}" | sed 's/[^a-zA-Z0-9]//g')
@@ -277,6 +276,9 @@ jobs:
           FILE_ZIP="${APP_NAME}-${APPVERS_FULL}-${APP_BUILD}.zip"
           FILE_7ZP="${APP_NAME}-${APPVERS_FULL}-${APP_BUILD}.7z"
           FILE_LOG="${APP_NAME}-${APPVERS_FULL}-${APP_BUILD}.log"
+          HTML_REQUIRE="${APP_NAME}-${APPVERS_FULL}-${APP_BUILD}-Requirements.html"
+          HTML_INSTALL="${APP_NAME}-${APPVERS_FULL}-${APP_BUILD}-Setup.html"
+          HTML_GAWLOGS="${APP_NAME}-${APPVERS_FULL}-${APP_BUILD}-GAWLOG.html"
           
           # Get the user inputs for draft and prerelease
           echo " → Get user inputs for Drafts/PreRelease"
@@ -323,6 +325,9 @@ jobs:
           echo "FILE_ZIP=$FILE_ZIP" >> $GITHUB_ENV
           echo "FILE_7ZP=$FILE_7ZP" >> $GITHUB_ENV
           echo "FILE_LOG=$FILE_LOG" >> $GITHUB_ENV
+          echo "HTML_REQUIRE=$HTML_REQUIRE" >> $GITHUB_ENV
+          echo "HTML_INSTALL=$HTML_INSTALL" >> $GITHUB_ENV
+          echo "HTML_GAWLOGS=$HTML_GAWLOGS" >> $GITHUB_ENV
           echo " → Creating environmental vars for Drafts/PreRelease"
           echo "APPMODE_DRAFT=$APPMODE_DRAFT" >> $GITHUB_ENV
           echo "APPMODE_PREREL=$APPMODE_PREREL" >> $GITHUB_ENV
@@ -353,6 +358,9 @@ jobs:
           echo "file-zip=$FILE_ZIP" >> $GITHUB_OUTPUT
           echo "file-7zp=$FILE_7ZP" >> $GITHUB_OUTPUT
           echo "file-log=$FILE_LOG" >> $GITHUB_OUTPUT
+          echo "html-require=$HTML_REQUIRE" >> $GITHUB_OUTPUT
+          echo "html-install=$HTML_INSTALL" >> $GITHUB_OUTPUT
+          echo "html-gawlogs=$HTML_GAWLOGS" >> $GITHUB_OUTPUT
           echo "appmode-draft=$APPMODE_DRAFT" >> $GITHUB_OUTPUT
           echo "appmode-prerel=$APPMODE_PREREL" >> $GITHUB_OUTPUT
           echo "github-repo-url=$GITHUB_REPO_URL" >> $GITHUB_OUTPUT
@@ -384,6 +392,9 @@ jobs:
           echo "  FILE_ZIP:         ${FILE_ZIP}"
           echo "  FILE_7ZP:         ${FILE_7ZP}"
           echo "  FILE_LOG:         ${FILE_LOG}"
+          echo "  HTML_REQUIRE:     ${HTML_REQUIRE}"
+          echo "  HTML_INSTALL:     ${HTML_INSTALL}"
+          echo "  HTML_GAWLOGS:     ${HTML_GAWLOGS}"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "  APPMODE_DRAFT:     ${GITHUB_REPO_URL}"
           echo "  APPMODE_PREREL:    ${GITHUB_REPO_URL}"
@@ -544,6 +555,490 @@ jobs:
           # **********************************************************************
 
 
+          # CREATE "${APP_NAME}-${APPVERS_FULL}-${APP_BUILD}-Requirements.html"
+          # **********************************************************************
+          echo " "
+          echo "📄 Creating HTML files for System Requirements ..."
+          cat > "${{ env.HTML_REQUIRE }}" << 'EOF'
+          <!DOCTYPE html>
+          <html lang="de">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>${{ env.APP_NAME }} - System Requirements</title>
+              <style>
+                  * {
+                      margin: 0;
+                      padding: 0;
+                      box-sizing: border-box;
+                  }
+                  
+                  body {
+                      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                      color: #333;
+                      line-height: 1.6;
+                      padding: 20px;
+                      min-height: 100vh;
+                  }
+                  
+                  .container {
+                      max-width: 900px;
+                      margin: 0 auto;
+                      background: white;
+                      border-radius: 10px;
+                      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+                      overflow: hidden;
+                  }
+                  
+                  .header {
+                      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                      color: white;
+                      padding: 40px 20px;
+                      text-align: center;
+                  }
+                  
+                  .header h1 {
+                      font-size: 2.5em;
+                      margin-bottom: 10px;
+                      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+                  }
+                  
+                  .header p {
+                      font-size: 1.1em;
+                      opacity: 0.95;
+                  }
+                  
+                  .content {
+                      padding: 40px;
+                  }
+                  
+                  .section {
+                      margin-bottom: 40px;
+                  }
+                  
+                  .section h2 {
+                      color: #1e3c72;
+                      border-bottom: 3px solid #2a5298;
+                      padding-bottom: 10px;
+                      margin-bottom: 20px;
+                      font-size: 1.8em;
+                  }
+                  
+                  .section h3 {
+                      color: #2a5298;
+                      margin-top: 20px;
+                      margin-bottom: 15px;
+                      font-size: 1.2em;
+                  }
+                  
+                  table {
+                      width: 100%;
+                      border-collapse: collapse;
+                      margin-bottom: 20px;
+                      background: #f8f9fa;
+                  }
+                  
+                  table th {
+                      background: #2a5298;
+                      color: white;
+                      padding: 15px;
+                      text-align: left;
+                      font-weight: 600;
+                  }
+                  
+                  table td {
+                      padding: 12px 15px;
+                      border-bottom: 1px solid #ddd;
+                  }
+                  
+                  table tbody tr:hover {
+                      background: #e8f0f7;
+                      transition: background 0.3s ease;
+                  }
+                  
+                  .note-box {
+                      background: #e3f2fd;
+                      border-left: 4px solid #2a5298;
+                      padding: 15px;
+                      border-radius: 5px;
+                      margin-bottom: 20px;
+                  }
+                  
+                  .note-box strong {
+                      color: #1e3c72;
+                  }
+                  
+                  .footer {
+                      background: #f8f9fa;
+                      padding: 20px;
+                      text-align: center;
+                      border-top: 1px solid #ddd;
+                      font-size: 0.9em;
+                      color: #666;
+                  }
+                  
+                  .version-badge {
+                      display: inline-block;
+                      background: #2a5298;
+                      color: white;
+                      padding: 5px 15px;
+                      border-radius: 20px;
+                      font-size: 0.9em;
+                      margin-top: 10px;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <div class="header">
+                      <h1>💻 System Requirements</h1>
+                      <p>${{ env.APP_NAME }} v${{ env.APPVERS_FULL }}</p>
+                      <span class="version-badge">Build: ${{ env.APP_BUILD }}</span>
+                  </div>
+                  
+                  <div class="content">
+                      <div class="note-box">
+                          <strong>📌 Please Note:</strong><br>
+                          The following list/overview is a recommendation and represents an absolute minimum of system requirements that must be met to run this app. It might be possible that the PowerShell script will also work under other/similar conditions than the following requirements.
+                      </div>
+                      
+                      <div class="section">
+                          <h2>🖥️ Software Requirements</h2>
+                          <table>
+                              <thead>
+                                  <tr>
+                                      <th>Component</th>
+                                      <th>Requirement</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  <tr>
+                                      <td><strong>OS</strong></td>
+                                      <td>Windows 10 / 11</td>
+                                  </tr>
+                                  <tr>
+                                      <td><strong>PowerShell</strong></td>
+                                      <td>7.x + (oder 5.1 mit .NET 4.8)</td>
+                                  </tr>
+                                  <tr>
+                                      <td><strong>.NET Framework</strong></td>
+                                      <td>4.8+</td>
+                                  </tr>
+                                  <tr>
+                                      <td><strong>Execution Policy</strong></td>
+                                      <td>RemoteSigned or Unrestricted</td>
+                                  </tr>
+                              </tbody>
+                          </table>
+                      </div>
+                      
+                      <div class="section">
+                          <h2>⚙️ Hardware Requirements (Minimum)</h2>
+                          <table>
+                              <thead>
+                                  <tr>
+                                      <th>Hardware</th>
+                                      <th>Recommended</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  <tr>
+                                      <td><strong>CPU</strong></td>
+                                      <td>Dual-Core 2.0 GHz</td>
+                                  </tr>
+                                  <tr>
+                                      <td><strong>RAM</strong></td>
+                                      <td>512 MB</td>
+                                  </tr>
+                                  <tr>
+                                      <td><strong>Storage</strong></td>
+                                      <td>~10 MB verfügbar</td>
+                                  </tr>
+                              </tbody>
+                          </table>
+                      </div>
+                  </div>
+                  
+                  <div class="footer">
+                      <p><strong>${{ env.APP_NAME }}</strong> v${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }})</p>
+                      <p>Made with ❤️ in Munich (Germany)</p>
+                      <br>
+                      <p>This page was automatically generated on:<br>${{ env.FULL_DATETIME }}<br>using Github Actions.</p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+          echo "✅ ${{ env.HTML_REQUIRE }} created successfully."
+          # **********************************************************************
+
+
+          # CREATE "${APP_NAME}-${APPVERS_FULL}-${APP_BUILD}-Setup.html"
+          # **********************************************************************
+          echo " "
+          echo "📄 Creating HTML file for Setup ..."
+          cat > "${{ env.HTML_INSTALL }}" << 'EOF'
+          <!DOCTYPE html>
+          <html lang="de">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>${{ env.APP_NAME }} - Installation Instructions</title>
+              <style>
+                  * {
+                      margin: 0;
+                      padding: 0;
+                      box-sizing: border-box;
+                  }
+                  
+                  body {
+                      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                      background: linear-gradient(165deg, #575757 0%, #575757 50%, #575757 100%);
+                      color: #333;
+                      line-height: 1.6;
+                      padding: 20px;
+                      min-height: 100vh;
+                  }
+                  
+                  .container {
+                      max-width: 900px;
+                      margin: 0 auto;
+                      background: white;
+                      border-radius: 10px;
+                      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+                      overflow: hidden;
+                  }
+                  
+                  .header {
+                      background: linear-gradient(165deg, #c1c4d3 0%, #727374 50%, #373738 100%);
+                      color: white;
+                      padding: 40px 20px;
+                      text-align: center;
+                  }
+                  
+                  .header h1 {
+                      font-size: 2.5em;
+                      margin-bottom: 10px;
+                      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+                  }
+                  
+                  .header p {
+                      font-size: 1.1em;
+                      opacity: 0.95;
+                  }
+                  
+                  .content {
+                      padding: 40px;
+                  }
+                  
+                  .section {
+                      margin-bottom: 40px;
+                  }
+                  
+                  .section h2 {
+                      color: #1371be;
+                      border-bottom: 3px solid #373738;
+                      padding-bottom: 10px;
+                      margin-bottom: 20px;
+                      font-size: 1.8em;
+                  }
+                  
+                  .section h3 {
+                      color: #1371be;
+                      margin-top: 20px;
+                      margin-bottom: 15px;
+                      font-size: 1.2em;
+                  }
+                  
+                  .step-box {
+                      background: #f8f9fa;
+                      border-left: 4px solid #373738;
+                      padding: 15px;
+                      border-radius: 5px;
+                      margin-bottom: 15px;
+                  }
+                  
+                  .step-number {
+                      display: inline-block;
+                      background: #373738;
+                      color: white;
+                      width: 30px;
+                      height: 30px;
+                      border-radius: 50%;
+                      text-align: center;
+                      line-height: 30px;
+                      font-weight: bold;
+                      margin-right: 10px;
+                  }
+                  
+                  .code-block {
+                      background: #2d2d2d;
+                      color: #f8f8f2;
+                      padding: 15px;
+                      border-radius: 5px;
+                      overflow-x: auto;
+                      margin: 15px 0;
+                      font-family: 'Courier New', monospace;
+                      font-size: 0.9em;
+                      line-height: 1.5;
+                  }
+                  
+                  .warning-box {
+                      background: #fff3cd;
+                      border-left: 4px solid #ffc107;
+                      padding: 15px;
+                      border-radius: 5px;
+                      margin-bottom: 20px;
+                  }
+                  
+                  .warning-box strong {
+                      color: #856404;
+                  }
+                  
+                  .info-box {
+                      background: #d1ecf1;
+                      border-left: 4px solid #1371be;
+                      padding: 15px;
+                      border-radius: 5px;
+                      margin-bottom: 20px;
+                  }
+                  
+                  .info-box strong {
+                      color: #0c5460;
+                  }
+                  
+                  .footer {
+                      background: #f8f9fa;
+                      padding: 20px;
+                      text-align: center;
+                      border-top: 1px solid #ddd;
+                      font-size: 0.9em;
+                      color: #666;
+                  }
+                  
+                  .version-badge {
+                      display: inline-block;
+                      background: #1371be;
+                      color: rgb(255, 255, 255);
+                      padding: 5px 15px;
+                      border-radius: 20px;
+                      font-size: 0.9em;
+                      margin-top: 10px;
+                  }
+                  
+                  ul, ol {
+                      margin-left: 20px;
+                      margin-bottom: 15px;
+                  }
+                  
+                  li {
+                      margin-bottom: 8px;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <div class="header">
+                      <h1>🚀 Installation Instructions</h1>
+                      <p>${{ env.APP_NAME }} v${{ env.APPVERS_FULL }}</p>
+                      <span class="version-badge">Build: ${{ env.APP_BUILD }}</span>
+                  </div>
+                  
+                  <div class="content">
+                      <div class="info-box">
+                          <strong>ℹ️ Please note:</strong><br>
+                          The following Installation instruction assumes that you already downloaded one of the following files from the Official Github Release Page:<br>
+                          ${{ env.BUNDLE_RELEASE_PAGE }}
+                          <br><br>
+                          ${{ env.FILE_ZIP }} from URL:<br>
+                          ${{ env.BUNDLE_ZIP_DOWNLOAD }}
+                          <br><br>
+                          ${{ env.FILE_7ZP }} from URL:<br>
+                          ${{ env.BUNDLE_7ZP_DOWNLOAD }}
+                          <br>
+
+                      </div>
+                      
+                      <div class="section">
+                          <h2>⚙️ How to run the App</h2>
+                          
+                          <div class="step-box">
+                              <span class="step-number">1</span>
+                              <strong>Open the Download Folder</strong>
+                              <p style="margin-top: 10px;">Open the Windows Explorer and navigate to the folder where you saved the downloaded archive file..</p>
+                          </div>
+                          
+                          <div class="step-box">
+                              <span class="step-number">2</span>
+                              <strong>Unzip the archive file</strong>
+                              <p style="margin-top: 10px;">Extract the downloaded archive (ZIP or 7z) to a folder of your choice:</p>
+                              <ul style="margin-top: 10px;">
+                                  <li><strong>ZIP:</strong> Right-click → "Extract all"</li>
+                                  <li><strong>7z:</strong> Requires 7-Zip or WinRAR for extraction.</li>
+                              </ul>
+                          </div>
+                          
+                          <div class="step-box">
+                              <span class="step-number">3</span>
+                              <strong>Open PowerShell</strong>
+                              <p style="margin-top: 10px;">Open PowerShell (Windows Key + R, then type "powershell") or Windows Terminal. It does not need to be run with elevated rights.</p>
+                          </div>
+                          
+                          <div class="step-box">
+                              <span class="step-number">4</span>
+                              <strong>Navigate to the target directory</strong>
+                              <p style="margin-top: 10px;">In PowerShell, navigate to the extracted folder.:</p>
+                              <div class="code-block">cd "C:\Path\to\extracted\folder"</div>
+                          </div>
+                          
+                          <div class="step-box">
+                              <span class="step-number">5</span>
+                              <strong>Run the main script</strong>
+                              <p style="margin-top: 10px;">Start the application with the following command:</p>
+                              <div class="code-block">.\${{ env.RUN_APP }}</div>
+                              <p style="margin-top: 10px;"><strong>That's it! 😉</strong></p>
+                          </div>
+                      </div>
+                      
+                      <div class="section">
+                          <h2>💡 Insider-Tipp: Create a Shortcut</h2>
+                          
+                          <p>For best execution results ans user experience,<br>I recommend creating a shortcut using the following command as the target:</p>
+                          
+                          <div class="code-block">C:\Windows\System32\conhost.exe --headless powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "C:\PATH\TO\${{ env.RUN_APP }}"</div>
+                          
+                          <div class="warning-box">
+                              <strong>⚠️ Important:</strong><br>
+                              Please replace <code>"C:\PATH\TO\${{ env.RUN_APP }}"</code> with the actual location of the file. <code>${{ env.RUN_APP }}</code>
+                          </div>
+                          
+                          <p><strong>Steps to create a shortcut:</strong></p><br>
+                          <ol>
+                              <li>Right-click on the desktop</li>
+                              <li>Select "Create new shortcut"</li>
+                              <li>Insert the command above (with the path adjusted)</li>
+                              <li>Save the shortcut</li>
+                          </ol>
+                          
+                          <p style="margin-top: 15px;"><strong>Double-click the shortcut to launch the app and thank me later! 😉</strong></p>
+                      </div>
+                  </div>
+                  
+                  <div class="footer">
+                      <p>Installation Instruction for:<br><strong>${{ env.APP_NAME }}</strong> v${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }})</p>
+                      <p>Made with ❤️ in Munich (Germany)</p>
+                      <br>
+                      <p>This page was automatically generated on:<br>${{ env.FULL_DATETIME }}<br>using Github Actions.</p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+          echo "✅ ${{ env.HTML_INSTALL }} created successfully."
+          # **********************************************************************
+
+
           # SUMMARY
           # **********************************************************************
           echo " "
@@ -553,6 +1048,10 @@ jobs:
           echo "📦 Archive Summary:"
           ls -lh ${{ env.FILE_ZIP }}
           ls -lh ${{ env.FILE_7ZP }}
+          echo " "
+          echo "🖇️ Additional Assets:"
+          echo "${{ env.HTML_REQUIRE }}"
+          echo "${{ env.HTML_INSTALL }}"
           echo " "
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           # **********************************************************************
@@ -589,30 +1088,6 @@ jobs:
             
             <br>
 
-            ## 💻 System Requirements
-
-            > [!NOTE]
-            > The following list/overview is a recommendation and represents an absolute minimum of system requirements that must be met to run this app
-
-            
-            ### Software            
-            | Component | Requirement |
-            |-----------|-------------|
-            | **OS** | Windows 10/11 |
-            | **PowerShell** | 7.x + (or 5.1 with .NET 4.8) |
-            | **.NET Framework** | 4.8+ |
-            | **Execution Policy** | RemoteSigned or Unrestricted |
-
-            ### Hardware (Minimum)
-
-            | Hardware | Recommended |
-            |----------|-------------|
-            | **CPU** | Dual-Core 2.0 GHz |
-            | **RAM** | 512 MB |
-            | **Disk** | ~10 MB |
-
-            <br>
-
             ## ⬇️ **File Download:**
             <br>
 
@@ -622,36 +1097,6 @@ jobs:
             
             [![7z Download](https://img.shields.io/badge/Click%20to%20Download-d9d9d9?style=flat&label=%F0%9F%93%A6%207z%20Archive&labelColor=545454)](${{ env.BUNDLE_7ZP_DOWNLOAD }})
 
-
-            <br>
-
-            ## 🚀 Installation:
-
-            ℹ️ Please note:
-            The following Installation instruction assumes that you already downloaded
-            one of the following files from the Official Github Release Page
-            ${{ env.BUNDLE_RELEASE_PAGE }}
-            <br>
-            ${{ env.FILE_ZIP }} from URL:
-            ${{ env.BUNDLE_ZIP_DOWNLOAD }}
-            ${{ env.FILE_7ZP }} from URL:
-            ${{ env.BUNDLE_7ZP_DOWNLOAD }}
-            <br>
-            1. Go to the Download folder where you saved the downloaded archive
-            2. Extract the downloaded archive to your desired destination folder
-            3. Open PowerShell and Navigate to the destination folder
-            4. Run: `.\${{ env.RUN_APP }}`
-            <br>
-            That's it 😉
-            <br>
-
-            ## 💡 Insider tip:
-            For best execution results ans user experience, I recommend creating a shortcut using the following command as the target.:
-            ```
-            C:\Windows\System32\conhost.exe --headless powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "C:\PATH\TO\${{ env.RUN_APP }}"
-            ```
-            Change `-File "C:\PATH\TO\${{ env.RUN_APP }}"` to the actual location of `${{ env.RUN_APP }}`
-            Save the changes, run the Shortcut and thank me later 😉
             <br>
 
             ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes: <br><br> {0} <br><br>', github.event.inputs.release_notes) || '' }}
@@ -663,6 +1108,8 @@ jobs:
           files: |
             ${{ env.FILE_ZIP }}
             ${{ env.FILE_7ZP }}
+            ${{ env.HTML_REQUIRE }}
+            ${{ env.HTML_INSTALL }}
           draft: ${{ env.APPMODE_DRAFT }}         # if false = Release is published immediately
           prerelease: ${{ env.APPMODE_PREREL }}   # if false = Normal release (not marked as beta)
           
