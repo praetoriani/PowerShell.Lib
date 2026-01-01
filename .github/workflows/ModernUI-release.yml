@@ -701,7 +701,7 @@ jobs:
               <div class="container">
                   <div class="header">
                       <h1>💻 System Requirements</h1>
-                      <p>${{ env.APP_NAME }} v${{ env.APPVERS_FULL }}</p>
+                      <p>${{ env.APP_NAME }} ${{ env.APPVERS_FULL }}</p>
                       <span class="version-badge">Build: ${{ env.APP_BUILD }}</span>
                   </div>
                   
@@ -948,15 +948,15 @@ jobs:
           <body>
               <div class="container">
                   <div class="header">
-                      <h1>🚀 Installation Instructions</h1>
-                      <p>${{ env.APP_NAME }} v${{ env.APPVERS_FULL }}</p>
+                      <h1>🚀 Installation Guide</h1>
+                      <p>${{ env.APP_NAME }} ${{ env.APPVERS_FULL }}</p>
                       <span class="version-badge">Build: ${{ env.APP_BUILD }}</span>
                   </div>
                   
                   <div class="content">
                       <div class="info-box">
                           <strong>ℹ️ Please note:</strong><br>
-                          The following Installation instruction assumes that you already downloaded one of the following files from the Official Github Release Page:<br>
+                          The following Guide  assumes that you already downloaded one of the following files from the Official Github Release Page:<br>
                           ${{ env.BUNDLE_RELEASE_PAGE }}
                           <br><br>
                           ${{ env.FILE_ZIP }} from URL:<br>
