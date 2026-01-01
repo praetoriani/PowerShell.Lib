@@ -248,17 +248,17 @@ jobs:
 
           # Create the Build-Number and Date/Time-Stamps
           echo " → Creating Timezone"
-          TZ_SHORT="Europe/Berlin"
-          TIME_ZONE="$TZ_SHORT • CET"
+          TZ_SHORT="CET"
+          TIME_ZONE="Europe/Berlin"
           echo " → Creating Date/Time-Stamps"
-          BUILD_DATE=$(TZ=$TZ_SHORT date +'%Y-%m-%d')
-          BUILD_TIME=$(TZ=$TZ_SHORT date +'%H:%M:%S')
-          BUILD_ISO=$(TZ=$TZ_SHORT date +'%Y-%m-%dT%H:%M:%S')
+          BUILD_DATE=$(TZ=$TIME_ZONE date +'%Y-%m-%d')
+          BUILD_TIME=$(TZ=$TIME_ZONE date +'%H:%M:%S')
+          BUILD_ISO=$(TZ=$TIME_ZONE date +'%Y-%m-%dT%H:%M:%S')
           UTC_TIME=$(TZ=UTC date +'%d.%m.%Y ; %H:%M:%S')
-          FULL_DATETIME=$(TZ=$TZ_SHORT date '+%A, %d. %B %Y - %H:%M:%S Uhr ($TIME_ZONE)')
+          FULL_DATETIME=$(TZ=$TIME_ZONE date '+%A, %d. %B %Y - %H:%M:%S Uhr (${TIME_ZONE} • ${TZ_SHORT})')
           echo " → Creating Build-Number"
           APP_BUILD=$(date +'%y%m%d')
-          BUILD_STAMP=$(TZ=$TZ_SHORT date +'%d.%m.%Y ; %H:%M:%S')
+          BUILD_STAMP=$(TZ=$TIME_ZONE date +'%d.%m.%Y ; %H:%M:%S')
 
           # Extracting Version Number from given Tag-Name
           echo " → Extracting Version-Number from provided Tag-Name"
@@ -575,7 +575,7 @@ jobs:
             ## 📋 General App Informations
 
             [![Version Number](https://img.shields.io/badge/${{ env.APPVERS_FULL }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](${{ env.BUNDLE_RELEASE_PAGE }})
-            [![Release Type](https://img.shields.io/badge/${{ env.APP_RELTYPE }}-007acc?style=flat&label=App%20Release%3A%20&labelColor=545454)](${{ env.BUNDLE_RELEASE_PAGE }})
+            [![Release Type](https://img.shields.io/badge/${{ env.APP_RELTYPE }}-007acc?style=flat&label=App%20Release%3A%20&labelColor=545454)](${{ env.BUNDLE_7ZP_DOWNLOAD }})
             
             <br>
 
@@ -616,9 +616,12 @@ jobs:
             ## ⬇️ **File Download:**
             <br>
 
-            Click on the Badge below to start the direct download of the ZIP-File.
+            Click on the Badges below to start the direct downloads of the desired Archive.
 
-            [![ZIP Download](https://img.shields.io/badge/${{ env.FILE_ZIP }}-d9d9d9?style=flat&label=%F0%9F%93%A6%20Download%3A%20&labelColor=545454)](${{ env.BUNDLE_ZIP_DOWNLOAD }})
+            [![ZIP Download](https://img.shields.io/badge/Click%20to%20Download-d9d9d9?style=flat&label=%F0%9F%93%A6%20ZIP%20Archive&labelColor=545454)](${{ env.BUNDLE_ZIP_DOWNLOAD }})
+            
+            [![7z Download](https://img.shields.io/badge/Click%20to%20Download-d9d9d9?style=flat&label=%F0%9F%93%A6%207z%20Archive&labelColor=545454)](${{ env.BUNDLE_ZIP_DOWNLOAD }})
+
 
             <br>
 
