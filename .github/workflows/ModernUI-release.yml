@@ -524,7 +524,7 @@ jobs:
           # -mx=9 = maximum compression level (0-9, 9 is highest)
           # -v0 = single volume (no splitting)
           cd release-temp
-          7z a -r -mx=9 -v0 ..../${{ env.FILE_7ZP }} ${{ env.APP_NAME }}/
+          7z a -r -mx=9 -v0 ../${{ env.FILE_7ZP }} ${{ env.APP_NAME }}/
           
           # Return to root directory
           cd ..
@@ -562,7 +562,7 @@ jobs:
           
           # RELEASE TITLE
           # Uses the tag name (e.g. "ModernUI muiapp-v1.00.10")
-          # name: ${{ env.APP_NAME }} ${{ steps.setup.outputs.tag_name }}
+          # OLD STEP NAME: ${{ env.APP_NAME }} ${{ steps.setup.outputs.tag_name }}
           name: ${{ env.APP_NAME }} ${{ env.APPVERS_FULL }} (Build ${{ env.APP_BUILD }})
           
           # ENHANCED RELEASE DESCRIPTION (Markdown format supported)
