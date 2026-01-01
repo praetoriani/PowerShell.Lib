@@ -255,7 +255,7 @@ jobs:
           BUILD_TIME=$(TZ=$TIME_ZONE date +'%H:%M:%S')
           BUILD_ISO=$(TZ=$TIME_ZONE date +'%Y-%m-%dT%H:%M:%S')
           UTC_TIME=$(TZ=UTC date +'%d.%m.%Y ; %H:%M:%S')
-          FULL_DATETIME=$(TZ=$TIME_ZONE date '+%A, %d. %B %Y - %H:%M:%S Uhr (${TIME_ZONE} • ${TZ_SHORT})')
+          FULL_DATETIME=$(TZ=$TIME_ZONE date '+%A, %d. %B %Y - %H:%M:%S Uhr ($TIME_ZONE • $TZ_SHORT)')
           echo " → Creating Build-Number"
           APP_BUILD=$(date +'%y%m%d')
           BUILD_STAMP=$(TZ=$TIME_ZONE date +'%d.%m.%Y ; %H:%M:%S')
@@ -575,7 +575,7 @@ jobs:
             ## 📋 General App Informations
 
             [![Version Number](https://img.shields.io/badge/${{ env.APPVERS_FULL }}%20(Build%3A%20${{ env.APP_BUILD }})-29a329?style=flat&label=App%20Version&labelColor=545454)](${{ env.BUNDLE_RELEASE_PAGE }})
-            [![Release Type](https://img.shields.io/badge/${{ env.APP_RELTYPE }}-007acc?style=flat&label=App%20Release%3A%20&labelColor=545454)](${{ env.BUNDLE_7ZP_DOWNLOAD }})
+            [![Release Type](https://img.shields.io/badge/${{ env.APP_RELTYPE }}-007acc?style=flat&label=App%20Release%3A%20&labelColor=545454)](${{ env.BUNDLE_RELEASE_PAGE }})
             
             <br>
 
@@ -620,7 +620,7 @@ jobs:
 
             [![ZIP Download](https://img.shields.io/badge/Click%20to%20Download-d9d9d9?style=flat&label=%F0%9F%93%A6%20ZIP%20Archive&labelColor=545454)](${{ env.BUNDLE_ZIP_DOWNLOAD }})
             
-            [![7z Download](https://img.shields.io/badge/Click%20to%20Download-d9d9d9?style=flat&label=%F0%9F%93%A6%207z%20Archive&labelColor=545454)](${{ env.BUNDLE_ZIP_DOWNLOAD }})
+            [![7z Download](https://img.shields.io/badge/Click%20to%20Download-d9d9d9?style=flat&label=%F0%9F%93%A6%207z%20Archive&labelColor=545454)](${{ env.BUNDLE_7ZP_DOWNLOAD }})
 
 
             <br>
