@@ -524,7 +524,7 @@ jobs:
           # -mx=9 = maximum compression level (0-9, 9 is highest)
           # -v0 = single volume (no splitting)
           cd release-temp
-          7z a -r -mx=9 ..../${{ env.FILE_7ZP }} ${{ env.APP_NAME }}/
+          7z a -r -mx=9 -v0 ..../${{ env.FILE_7ZP }} ${{ env.APP_NAME }}/
           
           # Return to root directory
           cd ..
