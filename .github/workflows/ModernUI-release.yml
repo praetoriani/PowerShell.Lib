@@ -628,15 +628,15 @@ jobs:
             ## 🚀 Installation:
 
             ℹ️ Please note:
-            The following Installation instruction assumes that you already downloaded<br>
-            one of the following files from the Official Github Release Page<br>
-            (${{ env.BUNDLE_RELEASE_PAGE }})
-
+            The following Installation instruction assumes that you already downloaded
+            one of the following files from the Official Github Release Page
+            ${{ env.BUNDLE_RELEASE_PAGE }}
+            <br><br>
             ${{ env.FILE_ZIP }} from URL:
             ${{ env.BUNDLE_ZIP_DOWNLOAD }}
             ${{ env.FILE_7ZP }} from URL:
             ${{ env.BUNDLE_7ZP_DOWNLOAD }}
-
+            <br><br>
             1. Go to the Download folder where you saved the downloaded archive
             2. Extract the downloaded archive to your desired destination folder
             3. Open PowerShell and Navigate to the destination folder
