@@ -255,7 +255,7 @@ jobs:
           BUILD_TIME=$(TZ=$TIME_ZONE date +'%H:%M:%S')
           BUILD_ISO=$(TZ=$TIME_ZONE date +'%Y-%m-%dT%H:%M:%S')
           UTC_TIME=$(TZ=UTC date +'%d.%m.%Y ; %H:%M:%S')
-          FULL_DATETIME=$(TZ=$TIME_ZONE date '+%A, %d. %B %Y - %H:%M:%S Uhr ($TIME_ZONE • $TZ_SHORT)')
+          FULL_DATETIME=$(TZ=$TIME_ZONE date "+%A, %d. %B %Y ; %H:%M:%S Uhr (${TIME_ZONE} • ${TZ_SHORT})")
           echo " → Creating Build-Number"
           APP_BUILD=$(date +'%y%m%d')
           BUILD_STAMP=$(TZ=$TIME_ZONE date +'%d.%m.%Y ; %H:%M:%S')
