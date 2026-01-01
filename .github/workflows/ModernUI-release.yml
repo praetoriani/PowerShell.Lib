@@ -958,14 +958,7 @@ jobs:
                           <strong>ℹ️ Please note:</strong><br>
                           The following Guide  assumes that you already downloaded one of the following files from the Official Github Release Page:<br>
                           ${{ env.BUNDLE_RELEASE_PAGE }}
-                          <br><br>
-                          ${{ env.FILE_ZIP }} from URL:<br>
-                          ${{ env.BUNDLE_ZIP_DOWNLOAD }}
-                          <br><br>
-                          ${{ env.FILE_7ZP }} from URL:<br>
-                          ${{ env.BUNDLE_7ZP_DOWNLOAD }}
                           <br>
-
                       </div>
                       
                       <div class="section">
