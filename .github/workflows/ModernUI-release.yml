@@ -303,8 +303,8 @@ jobs:
           BUNDLE_ZIP_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${FILE_ZIP}"
           BUNDLE_7ZP_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${FILE_7ZP}"
           BUNDLE_LOG_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${FILE_LOG}"
-          HTML_REQUIRE_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${HTML_INSTALL}"
-          HTML_INSTALL_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${FILE_LOG}"
+          HTML_REQUIRE_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${HTML_REQUIRE}"
+          HTML_INSTALL_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${HTML_INSTALL}"
 
           # Store all the results from above as environmental vars
           echo " → Creating environmental vars for Build-Number and Date/Time-Stamps"
