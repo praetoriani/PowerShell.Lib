@@ -255,7 +255,7 @@ jobs:
           BUILD_TIME=$(TZ=$TZ_SHORT date +'%H:%M:%S')
           BUILD_ISO=$(TZ=$TZ_SHORT date +'%Y-%m-%dT%H:%M:%S')
           UTC_TIME=$(TZ=UTC date +'%d.%m.%Y ; %H:%M:%S')
-          FULL_DATETIME=$(TZ=$TZ_SHORT date '+%A, %d. %B %Y - %H:%M:%S Uhr (%Z)')
+          FULL_DATETIME=$(TZ=$TZ_SHORT date '+%A, %d. %B %Y - %H:%M:%S Uhr ($TIME_ZONE)')
           echo " → Creating Build-Number"
           APP_BUILD=$(date +'%y%m%d')
           BUILD_STAMP=$(TZ=$TZ_SHORT date +'%d.%m.%Y ; %H:%M:%S')
@@ -524,7 +524,7 @@ jobs:
           # -mx=9 = maximum compression level (0-9, 9 is highest)
           # -v0 = single volume (no splitting)
           cd release-temp
-          7z a -r -mx=9 -v0 ..../${{ env.FILE_7ZP }} ${{ env.APP_NAME }}/
+          7z a -r -mx=9 ..../${{ env.FILE_7ZP }} ${{ env.APP_NAME }}/
           
           # Return to root directory
           cd ..
