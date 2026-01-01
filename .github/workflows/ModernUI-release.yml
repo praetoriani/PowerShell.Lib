@@ -1184,3 +1184,593 @@ jobs:
           fi
           echo "  • Manual trigger available at: https://github.com/${{ github.repository }}/actions/workflows/${{ env.APP_NAME }}-release.yml"
           echo ""
+
+
+
+          # Time to create the LOG-File (as HTML-File)
+          echo "📝 Creating Workflow Logfile ${{ env.HTML_GAWLOGS }}"
+          # We normally should not need to create a temporary folder
+          
+          # CREATE "${APP_NAME}-${APPVERS_FULL}-${APP_BUILD}-GAWLOG.html"
+          # **********************************************************************
+          echo " "
+          echo "📄 Creating LOG-File as HTML (${{ env.HTML_GAWLOGS }}) ..."
+          cat > "${{ env.HTML_GAWLOGS }}" << 'EOF'
+          <!DOCTYPE html>
+          <html lang="de">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Release Build Log</title>
+              <style>
+                  * {
+                      margin: 0;
+                      padding: 0;
+                      box-sizing: border-box;
+                  }
+
+                  body {
+                      font-family: 'Segoe UI', 'Roboto', 'Courier New', monospace;
+                      background: #0f0f0f;
+                      color: #e0e0e0;
+                      line-height: 1.6;
+                      padding: 20px;
+                  }
+
+                  .log-container {
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      background: #1a1a1a;
+                      border: 1px solid #333;
+                      border-radius: 8px;
+                      overflow: hidden;
+                      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+                  }
+
+                  .log-header {
+                      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                      padding: 30px;
+                      border-bottom: 2px solid #444;
+                      text-align: center;
+                  }
+
+                  .log-header h1 {
+                      font-size: 28px;
+                      margin-bottom: 10px;
+                      color: #fff;
+                      font-weight: 600;
+                  }
+
+                  .log-header .timestamp {
+                      color: #b0b0b0;
+                      font-size: 14px;
+                  }
+
+                  .log-content {
+                      padding: 30px;
+                      overflow-x: auto;
+                  }
+
+                  .log-section {
+                      margin-bottom: 30px;
+                      padding-bottom: 20px;
+                      border-bottom: 1px solid #333;
+                  }
+
+                  .log-section:last-child {
+                      border-bottom: none;
+                  }
+
+                  .section-title {
+                      font-size: 18px;
+                      font-weight: 600;
+                      color: #4a9eff;
+                      margin-bottom: 15px;
+                      display: flex;
+                      align-items: center;
+                      gap: 10px;
+                      border-bottom: 1px solid #444;
+                      padding-bottom: 10px;
+                  }
+
+                  .section-title::after {
+                      content: '';
+                      flex: 1;
+                      border-bottom: 0px solid #333;
+                  }
+
+                  .log-entry {
+                      margin-bottom: 10px;
+                      padding: 8px 12px;
+                      background: rgba(255, 255, 255, 0.03);
+                      border-left: 3px solid #2a5298;
+                      border-radius: 4px;
+                      font-size: 14px;
+                      transition: all 0.3s ease;
+                  }
+
+                  .log-entry:hover {
+                      background: rgba(255, 255, 255, 0.06);
+                      border-left-color: #4a9eff;
+                  }
+
+                  .log-label {
+                      color: #4a9eff;
+                      font-weight: 600;
+                      display: inline-block;
+                      min-width: 200px;
+                  }
+
+                  .log-value {
+                      color: #b0b0b0;
+                      word-break: break-all;
+                  }
+
+                  .success-badge {
+                      display: inline-block;
+                      background: #1e7e34;
+                      color: #4ade80;
+                      padding: 6px 12px;
+                      border-radius: 4px;
+                      font-size: 12px;
+                      font-weight: 600;
+                      margin-left: 8px;
+                  }
+
+                  .log-divider {
+                      color: #444;
+                      font-size: 12px;
+                      margin: 20px 0;
+                      text-align: center;
+                  }
+
+                  .info-box {
+                      background: rgba(42, 82, 152, 0.1);
+                      border: 1px solid #2a5298;
+                      border-radius: 6px;
+                      padding: 15px;
+                      margin: 15px 0;
+                      color: #b0b0b0;
+                      font-size: 13px;
+                      line-height: 1.8;
+                  }
+
+                  .info-box strong {
+                      color: #4a9eff;
+                  }
+
+                  .success-text {
+                      color: #4ade80;
+                      font-weight: 600;
+                  }
+
+                  .warning-text {
+                      color: #facc15;
+                      font-weight: 600;
+                  }
+
+                  .emoji {
+                      margin-right: 5px;
+                  }
+
+                  .footer {
+                      background: #0f0f0f;
+                      padding: 20px 30px;
+                      border-top: 1px solid #333;
+                      text-align: center;
+                      color: #808080;
+                      font-size: 12px;
+                  }
+
+                  .footer strong {
+                      color: #4a9eff;
+                  }
+
+                  .url-link {
+                      color: #4a9eff;
+                      text-decoration: none;
+                      word-break: break-all;
+                      transition: color 0.3s ease;
+                  }
+
+                  .url-link:hover {
+                      color: #6bb3ff;
+                      text-decoration: underline;
+                  }
+
+                  @media (max-width: 768px) {
+                      .log-container {
+                          border-radius: 4px;
+                      }
+
+                      .log-content {
+                          padding: 15px;
+                      }
+
+                      .log-label {
+                          display: block;
+                          margin-bottom: 5px;
+                          min-width: unset;
+                      }
+
+                      .log-value {
+                          display: block;
+                          margin-left: 10px;
+                      }
+                  }
+
+                  /* Syntax-Highlighting für Code-Blöcke */
+                  .code-block {
+                      background: #0f0f0f;
+                      border: 1px solid #333;
+                      border-radius: 4px;
+                      padding: 12px;
+                      margin: 10px 0;
+                      font-family: 'Courier New', monospace;
+                      font-size: 12px;
+                      overflow-x: auto;
+                      color: #4ade80;
+                  }
+
+                  /* Printer-freundlich */
+                  @media print {
+                      body {
+                          background: white;
+                          color: #000;
+                      }
+
+                      .log-container {
+                          border: 1px solid #ccc;
+                          box-shadow: none;
+                      }
+
+                      .log-header {
+                          background: #f5f5f5;
+                          border-bottom: 2px solid #ddd;
+                      }
+
+                      .log-entry {
+                          background: #fafafa;
+                          border-left-color: #999;
+                      }
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="log-container">
+                  <!-- Header -->
+                  <div class="log-header">
+                      <h1>📊 GITHUB ACTIONS WORKFLOW → RELEASE BUILD LOG</h1>
+                  </div>
+
+                  <!-- Main Content -->
+                  <div class="log-content">
+                      <!-- Success Message -->
+                      <div class="log-section">
+                          <p style="font-size: 16px; color: #4ade80; margin-bottom: 15px;">
+                              <span class="emoji">🎉</span>
+                              <strong>${{ env.APP_NAME }} ${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }}) release successfully created!</strong>
+                              <span class="success-badge">SUCCESS ✓</span>
+                          </p>
+                      </div>
+
+                      <!-- Build Status -->
+                      <div class="log-section">
+                          <h2 class="section-title"><span class="emoji">✅</span> BUILD STATUS</h2>
+                          
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">✅</span> Status:</span>
+                              <span class="log-value"><span class="success-text">SUCCESS ✓</span></span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">✅</span> Release Created:</span>
+                              <span class="log-value"><span class="success-text">YES</span></span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">✅</span> Assets Uploaded:</span>
+                              <span class="log-value"><span class="success-text">YES</span></span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">✅</span> Archive Files:</span>
+                              <span class="log-value"><span class="success-text">CREATED (ZIP & 7Z)</span></span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">✅</span> HTML Files:</span>
+                              <span class="log-value"><span class="success-text">CREATED (Requirements & Setup)</span></span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">✅</span> Workflow LOG FIle:</span>
+                              <span class="log-value"><span class="success-text">CREATED (as HTML)</span></span>
+                          </div>
+                      </div>
+
+                      <!-- Release Information -->
+                      <div class="log-section">
+                          <h2 class="section-title"><span class="emoji">📋</span> RELEASE INFORMATION</h2>
+                          
+                          <div style="margin-bottom: 20px;">
+                              <h3 style="color: #b0b0b0; font-size: 14px; margin-bottom: 10px;">Release Details:</h3>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🧩</span> App Name:</span>
+                                  <span class="log-value">${{ env.APP_NAME }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🔢</span> Version:</span>
+                                  <span class="log-value">${{ env.APPVERS_FULL }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">⚙️</span> Build Number:</span>
+                                  <span class="log-value">${{ env.APP_BUILD }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">💡</span> ISO Build:</span>
+                                  <span class="log-value">${{ env.BUILD_ISO }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">📦</span> Release Type:</span>
+                                  <span class="log-value">${{ env.APP_RELTYPE }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🏷️</span> Tag:</span>
+                                  <span class="log-value">$TAG_NAME</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🔄</span> Trigger Type:</span>
+                                  <span class="log-value">$TRIGGER_TYPE</span>
+                              </div>
+                          </div>
+
+                          <div style="margin-bottom: 20px;">
+                              <h3 style="color: #b0b0b0; font-size: 14px; margin-bottom: 10px;">Release Settings:</h3>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">📐</span> Draft Release:</span>
+                                  <span class="log-value">${{ env.APPMODE_DRAFT }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🛠️</span> Pre-Release:</span>
+                                  <span class="log-value">${{ env.APPMODE_PREREL }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🪛</span> Developer:</span>
+                                  <span class="log-value">${{ env.APP_DEV }}</span>
+                              </div>
+                          </div>
+
+                          <div>
+                              <h3 style="color: #b0b0b0; font-size: 14px; margin-bottom: 10px;">Timestamps:</h3>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🗓️</span> Created:</span>
+                                  <span class="log-value">${{ env.BUILD_STAMP }} (${{ env.TIME_ZONE }})</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">📅</span> Date:</span>
+                                  <span class="log-value">${{ env.BUILD_DATE }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🕐</span> Time:</span>
+                                  <span class="log-value">${{ env.BUILD_TIME }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🌍</span> UTC:</span>
+                                  <span class="log-value">${{ env.UTC_TIME }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">📍</span> Full DateTime:</span>
+                                  <span class="log-value">${{ env.FULL_DATETIME }}</span>
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- Repository Information -->
+                      <div class="log-section">
+                          <h2 class="section-title"><span class="emoji">📁</span> REPOSITORY INFORMATION</h2>
+                          
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">🗄️</span> Repository:</span>
+                              <span class="log-value">${{ github.repository }}</span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">🔗</span> Repository URL:</span>
+                              <span class="log-value"><a href="${{ env.GITHUB_REPO_URL }}" class="url-link">${{ env.GITHUB_REPO_URL }}</a></span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">📂</span> Project Directory:</span>
+                              <span class="log-value"><a href="${{ env.GITHUB_PROJECT_URL }}" class="url-link">${{ env.GITHUB_PROJECT_URL }}</a></span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">🔘</span> Commit SHA:</span>
+                              <span class="log-value code-block">${{ github.sha }}</span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">👤</span> Triggered by:</span>
+                              <span class="log-value">${{ github.triggering_actor }}</span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">🌐</span> Environment:</span>
+                              <span class="log-value">ubuntu-latest</span>
+                          </div>
+                      </div>
+
+                      <!-- Package Files -->
+                      <div class="log-section">
+                          <h2 class="section-title"><span class="emoji">📦</span> PACKAGE FILES</h2>
+                          
+                          <div style="margin-bottom: 20px;">
+                              <h3 style="color: #b0b0b0; font-size: 14px; margin-bottom: 10px;">Archive Files:</h3>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">📦</span> ZIP File:</span>
+                                  <span class="log-value">${{ env.FILE_ZIP }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">📦</span> 7Z File:</span>
+                                  <span class="log-value">${{ env.FILE_7ZP }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🌍</span> Requirements HTML:</span>
+                                  <span class="log-value">${{ env.HTML_REQUIRE }}</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🌍</span> Setup HTML:</span>
+                                  <span class="log-value">${{ env.HTML_INSTALL }}</span>
+                              </div>
+                          </div>
+
+                          <div>
+                              <h3 style="color: #b0b0b0; font-size: 14px; margin-bottom: 10px;">Download Links:</h3>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🔗</span> Release Page:</span>
+                                  <span class="log-value"><a href="${{ env.BUNDLE_RELEASE_PAGE }}" class="url-link">${{ env.BUNDLE_RELEASE_PAGE }}</a></span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">📦</span> ZIP File:</span>
+                                  <span class="log-value"><a href="${{ env.BUNDLE_ZIP_DOWNLOAD }}" class="url-link">${{ env.BUNDLE_ZIP_DOWNLOAD }}</a></span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">📦</span> 7Z File:</span>
+                                  <span class="log-value"><a href="${{ env.BUNDLE_7ZP_DOWNLOAD }}" class="url-link">${{ env.BUNDLE_7ZP_DOWNLOAD }}</a></span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🌍</span> Requirements HTML:</span>
+                                  <span class="log-value"><a href="${{ env.HTML_REQUIRE_DOWNLOAD }}" class="url-link">${{ env.HTML_REQUIRE_DOWNLOAD }}</a></span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🌍</span> Setup HTML:</span>
+                                  <span class="log-value"><a href="${{ env.HTML_INSTALL_DOWNLOAD }}" class="url-link">${{ env.HTML_INSTALL_DOWNLOAD }}</a></span>
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- Workflow Execution Details -->
+                      <div class="log-section">
+                          <h2 class="section-title"><span class="emoji">🔄</span> WORKFLOW EXECUTION DETAILS</h2>
+                          
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">🕹️</span> Trigger Type:</span>
+                              <span class="log-value">$TRIGGER_TYPE</span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">🔖</span> Workflow Run ID:</span>
+                              <span class="log-value">${{ github.run_id }}</span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">🔢</span> Workflow Run Number:</span>
+                              <span class="log-value">${{ github.run_number }}</span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">ℹ️</span> Workflow Name:</span>
+                              <span class="log-value">ModernUI Release</span>
+                          </div>
+                          <div class="log-entry">
+                              <span class="log-label"><span class="emoji">📄</span> Workflow File:</span>
+                              <span class="log-value">.github/workflows/${{ env.APP_NAME }}-release.yml</span>
+                          </div>
+                      </div>
+
+                      <!-- Additional Information -->
+                      <div class="log-section">
+                          <h2 class="section-title"><span class="emoji">📝</span> NOTES & ADDITIONAL INFORMATION</h2>
+                          
+                          <div style="margin-bottom: 15px;">
+                              <h3 style="color: #b0b0b0; font-size: 14px; margin-bottom: 10px;">Release Notes:</h3>
+                              <div style="background: rgba(255, 255, 255, 0.03); border-left: 3px solid #2a5298; border-radius: 4px; padding: 12px; margin-bottom: 10px;">
+                                  <span class="log-value">${{ github.event.inputs.release_notes != '' && format('  {0}', github.event.inputs.release_notes) || '  No additional release notes provided' }}</span>
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- Security & Trust -->
+                      <div class="log-section">
+                          <h2 class="section-title"><span class="emoji">🔒</span> SECURITY & TRUST</h2>
+                          
+                          <div class="info-box">
+                              <p>This release was automatically created by <strong>GitHub Actions</strong>.</p>
+                              <p style="margin-top: 10px;">For security reasons, always download from the official GitHub release page.</p>
+                              <p style="margin-top: 10px;"><strong>GitHub Repository:</strong> <a href="https://github.com/${{ github.repository }}" class="url-link">https://github.com/${{ github.repository }}</a></p>
+                              <p><strong>Release URL:</strong> <a href="${{ env.BUNDLE_RELEASE_PAGE }}" class="url-link">${{ env.BUNDLE_RELEASE_PAGE }}</a></p>
+                          </div>
+                      </div>
+
+                      <!-- Support & Feedback -->
+                      <div class="log-section">
+                          <h2 class="section-title"><span class="emoji">📞</span> SUPPORT & FEEDBACK</h2>
+                          
+                          <div class="info-box">
+                              <p>If you encounter any issues or have feedback, please visit:</p>
+                              <p style="margin-top: 10px;"><strong>Issues Page:</strong> <a href="https://github.com/${{ github.repository }}/issues" class="url-link">https://github.com/${{ github.repository }}/issues</a></p>
+                          </div>
+                      </div>
+
+                      <!-- System Requirements -->
+                      <div class="log-section">
+                          <h2 class="section-title"><span class="emoji">💻</span> SYSTEM REQUIREMENTS</h2>
+                          
+                          <div style="margin-bottom: 20px;">
+                              <h3 style="color: #b0b0b0; font-size: 14px; margin-bottom: 10px;">Software Requirements:</h3>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🖥️</span> Operating System:</span>
+                                  <span class="log-value">Windows 10/11</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🐚</span> PowerShell:</span>
+                                  <span class="log-value">7.x + (or 5.1 with .NET 4.8)</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🔧</span> .NET Framework:</span>
+                                  <span class="log-value">4.8+</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🔐</span> Execution Policy:</span>
+                                  <span class="log-value">RemoteSigned or Unrestricted</span>
+                              </div>
+                          </div>
+
+                          <div>
+                              <h3 style="color: #b0b0b0; font-size: 14px; margin-bottom: 10px;">Hardware Requirements (Minimum):</h3>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">⚡</span> CPU:</span>
+                                  <span class="log-value">Dual-Core 2.0 GHz</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">🧠</span> RAM:</span>
+                                  <span class="log-value">512 MB</span>
+                              </div>
+                              <div class="log-entry">
+                                  <span class="log-label"><span class="emoji">💾</span> Disk Space:</span>
+                                  <span class="log-value">~10 MB</span>
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- Closing Section -->
+                      <div class="log-section" style="border-bottom: none;">
+                          <div style="text-align: center; padding: 20px; background: rgba(42, 82, 152, 0.1); border-radius: 6px; border: 1px solid #2a5298; margin-top: 30px;">
+                              <h2 style="color: #4a9eff; margin-bottom: 15px; font-size: 20px;">✨ THANK YOU FOR USING ${{ env.APP_NAME }}!</h2>
+                              
+                              <p style="color: #b0b0b0; margin-bottom: 15px;">
+                                  <strong style="color: #fff;">${{ env.APP_NAME }} ${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }})</strong>
+                              </p>
+                              
+                              <p style="color: #808080; margin-bottom: 15px;">
+                                  Made with ❤️ in Munich (Germany)
+                              </p>
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Footer -->
+                  <div class="footer">
+                      <p>
+                          <strong>Log File:</strong><br>${{ env.HTML_GAWLOGS }}<br><br>
+                          <strong>Generated on:</strong><br>${{ env.FULL_DATETIME }}<br><br>
+                          <em>This is an automated release log generated by GitHub Actions Workflow</em>
+                      </p>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+          echo "✅ ${{ env.HTML_GAWLOGS }} created successfully."
+          echo "🌍 ${{ env.HTML_GAWLOGS }} Download URL: ${{ env.BUNDLE_LOG_DOWNLOAD }}"
+          echo " "
+          echo "That's it, folks. We're done 🤩"
+          # **********************************************************************
