@@ -522,9 +522,14 @@ jobs:
           # Create the 7Z archive
           # -r = recursive (include subdirectories)
           # -mx=9 = maximum compression level (0-9, 9 is highest)
-          # -v0 = single volume (no splitting)
           cd release-temp
-          7z a -r -mx=9 -v0 ../${{ env.FILE_7ZP }} ${{ env.APP_NAME }}/
+          7z a -r -mx=9 ../${{ env.FILE_7ZP }} ${{ env.APP_NAME }}/
+          
+          # Make sure that the 7z archive was created
+          if [ $? -ne 0 ]; then
+            echo "❌ 7z archive creation failed!"
+            exit 1
+          fi
           
           # Return to root directory
           cd ..
@@ -546,8 +551,8 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo " "
           echo "📦 Archive Summary:"
+          ls -lh ${{ env.FILE_ZIP }}
           ls -lh ${{ env.FILE_7ZP }}
-          7z l ${{ env.FILE_7ZP }}
           echo " "
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           # **********************************************************************
