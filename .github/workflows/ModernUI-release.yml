@@ -303,6 +303,8 @@ jobs:
           BUNDLE_ZIP_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${FILE_ZIP}"
           BUNDLE_7ZP_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${FILE_7ZP}"
           BUNDLE_LOG_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${FILE_LOG}"
+          HTML_REQUIRE_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${HTML_INSTALL}"
+          HTML_INSTALL_DOWNLOAD="https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.tag_name }}/${FILE_LOG}"
 
           # Store all the results from above as environmental vars
           echo " → Creating environmental vars for Build-Number and Date/Time-Stamps"
@@ -338,6 +340,8 @@ jobs:
           echo "BUNDLE_ZIP_DOWNLOAD=$BUNDLE_ZIP_DOWNLOAD" >> $GITHUB_ENV
           echo "BUNDLE_7ZP_DOWNLOAD=$BUNDLE_7ZP_DOWNLOAD" >> $GITHUB_ENV
           echo "BUNDLE_LOG_DOWNLOAD=$BUNDLE_LOG_DOWNLOAD" >> $GITHUB_ENV
+          echo "HTML_REQUIRE_DOWNLOAD=$HTML_REQUIRE_DOWNLOAD" >> $GITHUB_ENV
+          echo "HTML_INSTALL_DOWNLOAD=$HTML_INSTALL_DOWNLOAD" >> $GITHUB_ENV
 
           # Export vars as step output
           echo " → Exporting vars as step outputs"
@@ -369,6 +373,8 @@ jobs:
           echo "bundle-zip-download=$BUNDLE_ZIP_DOWNLOAD" >> $GITHUB_OUTPUT
           echo "bundle-7zp-download=$BUNDLE_7ZP_DOWNLOAD" >> $GITHUB_OUTPUT
           echo "bundle-log-download=$BUNDLE_LOG_DOWNLOAD" >> $GITHUB_OUTPUT
+          echo "html-require-download=$HTML_REQUIRE_DOWNLOAD" >> $GITHUB_OUTPUT
+          echo "html-install-download=$HTML_INSTALL_DOWNLOAD" >> $GITHUB_OUTPUT
 
           # Debug Output
           echo ""
@@ -399,12 +405,14 @@ jobs:
           echo "  APPMODE_DRAFT:     ${GITHUB_REPO_URL}"
           echo "  APPMODE_PREREL:    ${GITHUB_REPO_URL}"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "  GITHUB_REPO_URL:        ${GITHUB_REPO_URL}"
-          echo "  GITHUB_PROJECT_URL:     ${GITHUB_PROJECT_URL}"
-          echo "  BUNDLE_RELEASE_PAGE:    ${BUNDLE_RELEASE_PAGE}"
-          echo "  BUNDLE_ZIP_DOWNLOAD:    ${BUNDLE_ZIP_DOWNLOAD}"
-          echo "  BUNDLE_7ZP_DOWNLOAD:    ${BUNDLE_7ZP_DOWNLOAD}"
-          echo "  BUNDLE_LOG_DOWNLOAD:    ${BUNDLE_LOG_DOWNLOAD}"
+          echo "  GITHUB_REPO_URL:          ${GITHUB_REPO_URL}"
+          echo "  GITHUB_PROJECT_URL:       ${GITHUB_PROJECT_URL}"
+          echo "  BUNDLE_RELEASE_PAGE:      ${BUNDLE_RELEASE_PAGE}"
+          echo "  BUNDLE_ZIP_DOWNLOAD:      ${BUNDLE_ZIP_DOWNLOAD}"
+          echo "  BUNDLE_7ZP_DOWNLOAD:      ${BUNDLE_7ZP_DOWNLOAD}"
+          echo "  BUNDLE_LOG_DOWNLOAD:      ${BUNDLE_LOG_DOWNLOAD}"
+          echo "  HTML_REQUIRE_DOWNLOAD:    ${HTML_REQUIRE_DOWNLOAD}"
+          echo "  HTML_INSTALL_DOWNLOAD:    ${HTML_INSTALL_DOWNLOAD}"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 
@@ -761,7 +769,7 @@ jobs:
                   </div>
                   
                   <div class="footer">
-                      <p><strong>${{ env.APP_NAME }}</strong> v${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }})</p>
+                      <p><strong>${{ env.APP_NAME }}</strong> ${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }})</p>
                       <p>Made with ❤️ in Munich (Germany)</p>
                       <br>
                       <p>This page was automatically generated on:<br>${{ env.FULL_DATETIME }}<br>using Github Actions.</p>
@@ -794,7 +802,7 @@ jobs:
                   
                   body {
                       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                      background: linear-gradient(165deg, #575757 0%, #575757 50%, #575757 100%);
+                      background: linear-gradient(165deg, #585858 0%, #585858 50%, #585858 100%);
                       color: #333;
                       line-height: 1.6;
                       padding: 20px;
@@ -811,7 +819,7 @@ jobs:
                   }
                   
                   .header {
-                      background: linear-gradient(165deg, #c1c4d3 0%, #727374 50%, #373738 100%);
+                      background: linear-gradient(165deg, #3B3B3B 0%, #3B3B3B 50%, #3B3B3B 100%);
                       color: white;
                       padding: 40px 20px;
                       text-align: center;
@@ -1026,7 +1034,7 @@ jobs:
                   </div>
                   
                   <div class="footer">
-                      <p>Installation Instruction for:<br><strong>${{ env.APP_NAME }}</strong> v${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }})</p>
+                      <p><strong>${{ env.APP_NAME }}</strong> ${{ env.APPVERS_FULL }} (Build: ${{ env.APP_BUILD }})</p>
                       <p>Made with ❤️ in Munich (Germany)</p>
                       <br>
                       <p>This page was automatically generated on:<br>${{ env.FULL_DATETIME }}<br>using Github Actions.</p>
@@ -1097,6 +1105,10 @@ jobs:
             
             [![7z Download](https://img.shields.io/badge/Click%20to%20Download-d9d9d9?style=flat&label=%F0%9F%93%A6%207z%20Archive&labelColor=545454)](${{ env.BUNDLE_7ZP_DOWNLOAD }})
 
+            [![Requirements](https://img.shields.io/badge/Click%20to%20Download-d9d9d9?style=flat&label=%F0%9F%93%84%20Requirements%20(HTML)&labelColor=008ae6)](${{ env.HTML_REQUIRE_DOWNLOAD }})
+
+            [![Installation](https://img.shields.io/badge/Click%20to%20Download-d9d9d9?style=flat&label=%F0%9F%93%84%20Installation%20(HTML)&labelColor=008ae6)](${{ env.HTML_INSTALL_DOWNLOAD }})
+            
             <br>
 
             ${{ github.event.inputs.release_notes != '' && format('## 📝 Additional Notes: <br><br> {0} <br><br>', github.event.inputs.release_notes) || '' }}
