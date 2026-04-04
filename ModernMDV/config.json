@@ -1,0 +1,76 @@
+{
+  "app": {
+    "_comment": "General application metadata",
+    "version": "1.00.00",
+    "name": "ModernMDV",
+    "description": "Modern Markdown Viewer - WPF/PowerShell-based",
+    "developer": "praetoriani (Marc Sczepanski)",
+    "website": "https://github.com/praetoriani"
+  },
+  "debug": {
+    "_comment": "Debug / logging configuration",
+    "file": "runtime.log",
+    "enabled": "true",
+    "datetime": "yyyy.MM.dd ; HH:mm:ss",
+    "severityLevel": {
+      "INFO":  "[INFO]  -> ",
+      "WARN":  "[WARN]  -> ",
+      "ERROR": "[ERROR] -> ",
+      "DEBUG": "[DEBUG] -> "
+    }
+  },
+  "window": {
+    "_comment": "Main window geometry and startup behaviour",
+    "title": "ModernMDV",
+    "width": 800,
+    "height": 600,
+    "minWidth": 600,
+    "minHeight": 400,
+    "startupLocation": "CenterScreen",
+    "leftPanelWidthRatio": "3*",
+    "rightPanelWidthRatio": "7*"
+  },
+  "paths": {
+    "_comment": "All PNG assets – place 20x20 PNGs in ./PNG folder",
+    "baseImagePath": "./PNG",
+    "windowIcon":        "appicon.png",
+    "btnClose":          "axn-winclose-normal.png",
+    "btnCloseHover":     "axn-winclose-hover.png",
+    "btnMinimize":       "axn-winmin-normal.png",
+    "btnMinimizeHover":  "axn-winmin-hover.png",
+    "btnMaximize":       "axn-winmax-normal.png",
+    "btnMaximizeHover":  "axn-winmax-hover.png",
+    "btnOpenFile":       "axn-openfile-normal.png",
+    "btnOpenFileHover":  "axn-openfile-hover.png",
+    "btnInfo":           "axn-info-normal.png",
+    "btnInfoHover":      "axn-info-hover.png",
+    "btnHelp":           "axn-help-normal.png",
+    "btnHelpHover":      "axn-help-hover.png",
+    "btnSettings":       "axn-settings-normal.png",
+    "btnSettingsHover":  "axn-settings-hover.png"
+  },
+  "screen": {
+    "_comment": "XAML layout files in ./WPF/",
+    "basePath": "./WPF",
+    "mainwin":     "MainWindow.xaml",
+    "helpwin":     "PopupHelp.xaml",
+    "aboutwin":    "PopupAbout.xaml",
+    "settingswin": "PopupSettings.xaml"
+  },
+  "viewer": {
+    "_comment": "Markdown rendering/styling options",
+    "fontFamily":      "Segoe UI",
+    "baseFontSize":    14,
+    "h1Color":         "#EEEEFF",
+    "h2Color":         "#CCDDFF",
+    "h3Color":         "#AABBDD",
+    "h4Color":         "#8899BB",
+    "bodyColor":       "#CCCCCC",
+    "linkColor":       "#4488FF",
+    "codeBackground":  "#1A1A2A",
+    "codeForeground":  "#88CCEE",
+    "blockquoteColor": "#7788AA",
+    "hrColor":         "#333344",
+    "tableBorderColor":"#333355"
+  }
+}

@@ -1,0 +1,145 @@
+#Requires -Version 7.0
+<#
+.SYNOPSIS
+    UI.lib - Base64 Image Resource Library for ModernMDV
+
+.DESCRIPTION
+    All GUI graphics are stored as Base64-encoded strings in this file.
+    To add or replace a graphic:
+      1. Convert your PNG file to Base64:
+         [Convert]::ToBase64String([IO.File]::ReadAllBytes("path\to\image.png"))
+      2. Paste the result into the corresponding variable below.
+      3. The loader function Convert-Base64ToBitmapImage decodes
+         each string on-the-fly at startup — no external PNG files needed
+         once UI.lib is fully populated.
+
+.IMAGE SIZES
+    All title-bar action icons:  20 x 20 px  (PNG, 32-bit RGBA)
+    Window icon / appicon:       20 x 20 px  (PNG, 32-bit RGBA)
+
+.NOTES
+    During development, ModernMDV falls back to loading PNGs from ./PNG/
+    if a Base64 entry here is empty (""). Populate each variable when you
+    have finalised the artwork.
+#>
+
+# ── Title-bar action icons ────────────────────────────────────────────────────
+# Naming convention: $UILib_<element>_<state>
+
+# Close button (normal / hover)
+$UILib_BtnClose_Normal  = ""   # TODO: paste Base64 of axn-winclose-normal.png
+$UILib_BtnClose_Hover   = ""   # TODO: paste Base64 of axn-winclose-hover.png
+
+# Minimize button (normal / hover)
+$UILib_BtnMin_Normal    = ""   # TODO: paste Base64 of axn-winmin-normal.png
+$UILib_BtnMin_Hover     = ""   # TODO: paste Base64 of axn-winmin-hover.png
+
+# Maximize button (normal / hover)
+$UILib_BtnMax_Normal    = ""   # TODO: paste Base64 of axn-winmax-normal.png
+$UILib_BtnMax_Hover     = ""   # TODO: paste Base64 of axn-winmax-hover.png
+
+# Open File button (normal / hover)
+$UILib_BtnOpenFile_Normal = "" # TODO: paste Base64 of axn-openfile-normal.png
+$UILib_BtnOpenFile_Hover  = "" # TODO: paste Base64 of axn-openfile-hover.png
+
+# Info (About) button (normal / hover)
+$UILib_BtnInfo_Normal   = ""   # TODO: paste Base64 of axn-info-normal.png
+$UILib_BtnInfo_Hover    = ""   # TODO: paste Base64 of axn-info-hover.png
+
+# Help button (normal / hover)
+$UILib_BtnHelp_Normal   = ""   # TODO: paste Base64 of axn-help-normal.png
+$UILib_BtnHelp_Hover    = ""   # TODO: paste Base64 of axn-help-hover.png
+
+# Settings button (normal / hover)
+$UILib_BtnSettings_Normal = "" # TODO: paste Base64 of axn-settings-normal.png
+$UILib_BtnSettings_Hover  = "" # TODO: paste Base64 of axn-settings-hover.png
+
+# Application icon
+$UILib_AppIcon          = ""   # TODO: paste Base64 of appicon.png
+
+# ── Helper: decode Base64 → BitmapImage ───────────────────────────────────────
+function Convert-Base64ToBitmapImage {
+    param(
+        [Parameter(Mandatory)][string]$Base64String,
+        [string]$FallbackPath = ""
+    )
+    # If Base64 is not yet populated, fall back to PNG file
+    if ([string]::IsNullOrWhiteSpace($Base64String)) {
+        if ($FallbackPath -and (Test-Path $FallbackPath)) {
+            try {
+                $bmp = New-Object System.Windows.Media.Imaging.BitmapImage
+                $bmp.BeginInit()
+                $bmp.UriSource = New-Object System.Uri($FallbackPath, [System.UriKind]::Absolute)
+                $bmp.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+                $bmp.EndInit()
+                return $bmp
+            } catch { return $null }
+        }
+        return $null
+    }
+    try {
+        $bytes  = [Convert]::FromBase64String($Base64String)
+        $stream = New-Object System.IO.MemoryStream($bytes, 0, $bytes.Length)
+        $bmp    = New-Object System.Windows.Media.Imaging.BitmapImage
+        $bmp.BeginInit()
+        $bmp.StreamSource  = $stream
+        $bmp.CacheOption   = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+        $bmp.EndInit()
+        $stream.Close()
+        return $bmp
+    } catch { return $null }
+}
+
+# ── Helper: decode BitmapImage → Base64 ───────────────────────────────────────
+<#
+# Usage Example: Load a BitmapImage from a file and convert it in Base64
+$img = New-Object System.Windows.Media.Imaging.BitmapImage
+$img.BeginInit()
+$img.UriSource = [System.Uri]::new('C:\Pfad\zu\bild.png', [System.UriKind]::Absolute)
+$img.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+$img.EndInit()
+
+$base64 = Convert-BitmapImageToBase64 -BitmapSource $img -Format Png
+# $base64 now holds the Base64-String of the PNG-Image
+#>
+function Convert-BitmapImageToBase64 {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [System.Windows.Media.Imaging.BitmapSource]$BitmapSource,
+
+        [ValidateSet('png','jpeg','pmp','gif','tiff')]
+        [string]$Format = 'png',
+
+        [ValidateRange(1,100)]
+        [int]$JpegQuality = 90
+    )
+
+    try {
+        switch ($Format) {
+            'png'  { $encoder = New-Object System.Windows.Media.Imaging.PngBitmapEncoder }
+            'jpeg' {
+                $encoder = New-Object System.Windows.Media.Imaging.JpegBitmapEncoder
+                $encoder.QualityLevel = $JpegQuality
+            }
+            'pmp'  { $encoder = New-Object System.Windows.Media.Imaging.BmpBitmapEncoder }
+            'gif'  { $encoder = New-Object System.Windows.Media.Imaging.GifBitmapEncoder }
+            'tiff' { $encoder = New-Object System.Windows.Media.Imaging.TiffBitmapEncoder }
+            default { $encoder = New-Object System.Windows.Media.Imaging.PngBitmapEncoder }
+        }
+
+        # The BitmapSource can be copied while it is not "frozen"
+        $frame = [System.Windows.Media.Imaging.BitmapFrame]::Create($BitmapSource)
+        $encoder.Frames.Add($frame)
+
+        $ms = New-Object System.IO.MemoryStream
+        $encoder.Save($ms)
+        $bytes = $ms.ToArray()
+        $ms.Close()
+
+        $base64 = [Convert]::ToBase64String($bytes)
+        return $base64
+    } catch {
+        return $null
+    }
+}

@@ -1,0 +1,95 @@
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="About ModernMDV"
+    Height="320" Width="480"
+    WindowStartupLocation="CenterOwner"
+    WindowStyle="None"
+    AllowsTransparency="True"
+    Background="Transparent"
+    ResizeMode="NoResize"
+    x:Name="AboutWindow">
+
+    <Grid>
+        <Border CornerRadius="8" Background="#1C1C1C" Margin="6">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="16" ShadowDepth="0"
+                                  Color="#000000" Opacity="0.65"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="36"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="48"/>
+                </Grid.RowDefinitions>
+
+                <!-- Title bar -->
+                <Border x:Name="AboutTitleBar" Grid.Row="0"
+                        Background="#111111" CornerRadius="8,8,0,0">
+                    <Grid>
+                        <TextBlock Text="About ModernMDV"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#EEEEEE"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+                        <Label x:Name="AboutBtnClose"
+                               HorizontalAlignment="Right"
+                               Width="24" Height="24" Padding="0"
+                               Background="Transparent" Cursor="Hand"
+                               VerticalContentAlignment="Center"
+                               HorizontalContentAlignment="Center"
+                               Margin="0,0,8,0" ToolTip="Close">
+                            <Image x:Name="AboutBtnCloseImage"
+                                   Width="20" Height="20" Stretch="Uniform"/>
+                        </Label>
+                    </Grid>
+                </Border>
+
+                <!-- Content -->
+                <StackPanel Grid.Row="1"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Margin="24,16,24,16">
+                    <TextBlock Text="ModernMDV"
+                               FontSize="22" FontWeight="Bold"
+                               Foreground="#DDEEFF"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,4"/>
+                    <TextBlock Text="Modern Markdown Viewer"
+                               FontSize="13" Foreground="#7788AA"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,16"/>
+                    <TextBlock Text="Version 1.00.00"
+                               FontSize="12" Foreground="#888888"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,4"/>
+                    <TextBlock Text="Developed by praetoriani (Marc Sczepanski)"
+                               FontSize="12" Foreground="#888888"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,4"/>
+                    <TextBlock Text="Built with PowerShell + WPF / .NET"
+                               FontSize="12" Foreground="#666677"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Footer button -->
+                <Border Grid.Row="2"
+                        Background="#111111"
+                        BorderBrush="#2A2A2A"
+                        BorderThickness="0,1,0,0"
+                        CornerRadius="0,0,8,8">
+                    <Button x:Name="AboutOkButton"
+                            Content="OK"
+                            Width="80" Height="28"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="12" Foreground="#CCCCCC"
+                            Background="#1A3050"
+                            BorderBrush="#2A4070"
+                            BorderThickness="1"
+                            Cursor="Hand"/>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,134 @@
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Settings"
+    Height="380" Width="480"
+    WindowStartupLocation="CenterOwner"
+    WindowStyle="None"
+    AllowsTransparency="True"
+    Background="Transparent"
+    ResizeMode="NoResize"
+    x:Name="SettingsWindow">
+
+    <Grid>
+        <Border CornerRadius="8" Background="#1C1C1C" Margin="6">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="16" ShadowDepth="0"
+                                  Color="#000000" Opacity="0.65"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="36"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="48"/>
+                </Grid.RowDefinitions>
+
+                <Border x:Name="SettingsTitleBar" Grid.Row="0"
+                        Background="#111111" CornerRadius="8,8,0,0">
+                    <Grid>
+                        <TextBlock Text="Settings"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#EEEEEE"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+                        <Label x:Name="SettingsBtnClose"
+                               HorizontalAlignment="Right"
+                               Width="24" Height="24" Padding="0"
+                               Background="Transparent" Cursor="Hand"
+                               VerticalContentAlignment="Center"
+                               HorizontalContentAlignment="Center"
+                               Margin="0,0,8,0" ToolTip="Close">
+                            <Image x:Name="SettingsBtnCloseImage"
+                                   Width="20" Height="20" Stretch="Uniform"/>
+                        </Label>
+                    </Grid>
+                </Border>
+
+                <ScrollViewer Grid.Row="1" Padding="24,16,24,16"
+                              VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Font size -->
+                        <TextBlock Text="Viewer Font Size"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="#7788AA" Margin="0,0,0,6"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <Slider x:Name="FontSizeSlider"
+                                    Minimum="10" Maximum="24" Value="14"
+                                    Width="240" VerticalAlignment="Center"
+                                    IsSnapToTickEnabled="True" TickFrequency="1"/>
+                            <TextBlock x:Name="FontSizeValue"
+                                       Text="14 pt"
+                                       FontSize="12" Foreground="#AAAAAA"
+                                       VerticalAlignment="Center"
+                                       Margin="12,0,0,0"/>
+                        </StackPanel>
+
+                        <!-- Font family -->
+                        <TextBlock Text="Viewer Font Family"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="#7788AA" Margin="0,0,0,6"/>
+                        <ComboBox x:Name="FontFamilyCombo"
+                                  Width="240" HorizontalAlignment="Left"
+                                  FontSize="12" Margin="0,0,0,16"
+                                  Background="#1A1A2A"
+                                  Foreground="#CCCCCC"
+                                  BorderBrush="#333355">
+                            <ComboBoxItem Content="Segoe UI"    IsSelected="True"/>
+                            <ComboBoxItem Content="Calibri"/>
+                            <ComboBoxItem Content="Consolas"/>
+                            <ComboBoxItem Content="Cascadia Code"/>
+                            <ComboBoxItem Content="Arial"/>
+                            <ComboBoxItem Content="Georgia"/>
+                        </ComboBox>
+
+                        <!-- Debug logging toggle -->
+                        <TextBlock Text="Debug Logging"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="#7788AA" Margin="0,0,0,6"/>
+                        <CheckBox x:Name="ChkLogging"
+                                  Content="Write runtime.log"
+                                  FontSize="12" Foreground="#AAAAAA"
+                                  IsChecked="True" Margin="0,0,0,16"/>
+
+                        <!-- Word wrap -->
+                        <TextBlock Text="Word Wrap"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="#7788AA" Margin="0,0,0,6"/>
+                        <CheckBox x:Name="ChkWordWrap"
+                                  Content="Enable word wrap in viewer"
+                                  FontSize="12" Foreground="#AAAAAA"
+                                  IsChecked="True"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <Border Grid.Row="2"
+                        Background="#111111"
+                        BorderBrush="#2A2A2A"
+                        BorderThickness="0,1,0,0"
+                        CornerRadius="0,0,8,8">
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center">
+                        <Button x:Name="SettingsSaveButton"
+                                Content="Save"
+                                Width="80" Height="28"
+                                FontSize="12" Foreground="#CCCCCC"
+                                Background="#1A3050"
+                                BorderBrush="#2A4070"
+                                BorderThickness="1"
+                                Cursor="Hand"
+                                Margin="0,0,8,0"/>
+                        <Button x:Name="SettingsCancelButton"
+                                Content="Cancel"
+                                Width="80" Height="28"
+                                FontSize="12" Foreground="#AAAAAA"
+                                Background="#222222"
+                                BorderBrush="#444444"
+                                BorderThickness="1"
+                                Cursor="Hand"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
