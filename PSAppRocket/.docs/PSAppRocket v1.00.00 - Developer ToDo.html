@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSAppRocket – Developer ToDo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root,[data-theme="light"]{
+  --bg:#f7f6f2;--surface:#f9f8f5;--surface-2:#fbfbf9;--surface-off:#ede9e3;--surface-dyn:#e4e0d9;
+  --border:rgba(40,37,29,0.12);--divider:rgba(40,37,29,0.08);
+  --text:#28251d;--text-muted:#6b6860;--text-faint:#b0afa9;--text-inv:#f5f4f0;
+  --primary:#01696f;--primary-h:#0c4e54;--primary-hl:#ced8d7;
+  --error:#a12c7b;--error-hl:#e8d0dd;
+  --warn:#964219;--warn-hl:#ded0c8;
+  --success:#437a22;--success-hl:#d3dfcc;
+  --orange:#da7101;--orange-hl:#e8d9c5;
+  --purple:#7a39bb;--purple-hl:#dbd0e0;
+  --shadow-sm:0 1px 3px rgba(40,37,29,.07);
+  --shadow-md:0 4px 14px rgba(40,37,29,.09);
+  --shadow-lg:0 12px 36px rgba(40,37,29,.13);
+  --r-sm:.375rem;--r-md:.5rem;--r-lg:.75rem;--r-xl:1rem;--r-full:9999px;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --tr:180ms cubic-bezier(.16,1,.3,1);
+}
+[data-theme="dark"]{
+  --bg:#121110;--surface:#181715;--surface-2:#1d1c1a;--surface-off:#1a1917;--surface-dyn:#252321;
+  --border:rgba(255,255,255,.08);--divider:rgba(255,255,255,.05);
+  --text:#cccbc8;--text-muted:#787673;--text-faint:#525150;--text-inv:#1a1917;
+  --primary:#4f9aa5;--primary-h:#227f8b;--primary-hl:#2a3b3c;
+  --error:#d163a7;--error-hl:#4a3244;
+  --warn:#bb653b;--warn-hl:#52403a;
+  --success:#6daa45;--success-hl:#334335;
+  --orange:#fdab43;--orange-hl:#4e3d2f;
+  --purple:#a86fdf;--purple-hl:#3f3249;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.25);
+  --shadow-md:0 4px 14px rgba(0,0,0,.35);
+  --shadow-lg:0 12px 36px rgba(0,0,0,.45);
+}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth;scroll-padding-top:5rem}
+body{font-family:var(--font-body);font-size:14px;color:var(--text);background:var(--bg);min-height:100dvh;line-height:1.6}
+button,input,select{font:inherit;color:inherit;cursor:pointer}
+button{background:none;border:none}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:100;background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:.625rem;text-decoration:none;flex-shrink:0}
+.logo-icon{width:32px;height:32px;flex-shrink:0}
+.logo-text{font-family:var(--font-mono);font-size:1rem;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.logo-text span{color:var(--primary)}
+.header-center{flex:1;min-width:200px}
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:.625rem;top:50%;transform:translateY(-50%);color:var(--text-faint);pointer-events:none;width:15px;height:15px}
+.search{width:100%;max-width:360px;padding:.4rem .75rem .4rem 2rem;background:var(--surface-off);border:1px solid var(--border);border-radius:var(--r-full);font-size:13px;color:var(--text);transition:border-color var(--tr),box-shadow var(--tr);outline:none}
+.search:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in oklab,var(--primary) 18%,transparent)}
+.search::placeholder{color:var(--text-faint)}
+.header-right{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.btn-theme{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);color:var(--text-muted);transition:background var(--tr),color var(--tr)}
+.btn-theme:hover{background:var(--surface-dyn);color:var(--text)}
+.btn-export{padding:.4rem .875rem;background:var(--primary);color:#fff;border-radius:var(--r-md);font-size:12px;font-weight:600;transition:background var(--tr);white-space:nowrap}
+.btn-export:hover{background:var(--primary-h)}
+
+/* STATS BAR */
+.stats-bar{padding:.875rem 1.5rem;display:flex;gap:1rem;flex-wrap:wrap;border-bottom:1px solid var(--divider)}
+.stat-pill{display:flex;align-items:center;gap:.5rem;padding:.35rem .75rem;border-radius:var(--r-full);border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:500;white-space:nowrap}
+.stat-pill .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.progress-global{flex:1;min-width:200px;display:flex;align-items:center;gap:.75rem}
+.progress-bar-wrap{flex:1;height:6px;background:var(--surface-off);border-radius:var(--r-full);overflow:hidden}
+.progress-bar-fill{height:100%;background:var(--primary);border-radius:var(--r-full);transition:width .4s ease}
+.progress-label{font-size:12px;font-weight:600;color:var(--primary);min-width:2.5rem;text-align:right;font-family:var(--font-mono)}
+
+/* FILTERS */
+.filters{padding:.75rem 1.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid var(--divider)}
+.filter-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);margin-right:.25rem}
+.filter-btn{padding:.3rem .625rem;border-radius:var(--r-full);border:1px solid var(--border);font-size:12px;font-weight:500;color:var(--text-muted);background:var(--surface);transition:all var(--tr)}
+.filter-btn:hover{border-color:var(--primary);color:var(--primary)}
+.filter-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.filter-sep{width:1px;height:18px;background:var(--divider);margin:0 .25rem}
+
+/* MAIN */
+.main{padding:1.25rem 1.5rem;max-width:1400px;margin:0 auto}
+.phases-grid{display:flex;flex-direction:column;gap:1rem}
+
+/* PHASE CARD */
+.phase-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow var(--tr)}
+.phase-card:hover{box-shadow:var(--shadow-md)}
+.phase-header{padding:.875rem 1.125rem;display:flex;align-items:center;gap:.75rem;cursor:pointer;user-select:none;transition:background var(--tr)}
+.phase-header:hover{background:var(--surface-dyn)}
+.phase-toggle{width:18px;height:18px;display:flex;align-items:center;justify-content:center;color:var(--text-faint);flex-shrink:0;transition:transform var(--tr)}
+.phase-card.collapsed .phase-toggle{transform:rotate(-90deg)}
+.phase-badge{font-family:var(--font-mono);font-size:11px;font-weight:700;padding:.2rem .5rem;border-radius:var(--r-sm);background:var(--primary-hl);color:var(--primary);flex-shrink:0}
+.phase-title{font-size:14px;font-weight:600;flex:1}
+.phase-meta{display:flex;align-items:center;gap:.625rem;flex-shrink:0}
+.phase-progress{font-size:11px;font-weight:600;font-family:var(--font-mono);color:var(--text-muted)}
+.phase-mini-bar{width:64px;height:4px;background:var(--surface-off);border-radius:var(--r-full);overflow:hidden}
+.phase-mini-fill{height:100%;background:var(--primary);border-radius:var(--r-full);transition:width .4s ease}
+.phase-body{border-top:1px solid var(--divider)}
+.phase-card.collapsed .phase-body{display:none}
+
+/* TODO TABLE */
+.todo-table{width:100%;border-collapse:collapse}
+.todo-table th{padding:.5rem 1rem;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);border-bottom:1px solid var(--divider);background:var(--surface-off)}
+.todo-table th:first-child{padding-left:1.125rem;width:44px}
+.todo-table td{padding:.6rem 1rem;border-bottom:1px solid var(--divider);vertical-align:middle;font-size:13px}
+.todo-table td:first-child{padding-left:1.125rem}
+.todo-table tr:last-child td{border-bottom:none}
+.todo-table tr{transition:background var(--tr)}
+.todo-table tr:hover td{background:var(--surface-2)}
+.todo-table tr.done td{opacity:.45}
+.todo-table tr.hidden-row{display:none}
+
+/* CHECKBOX */
+.cb-wrap{display:flex;align-items:center;justify-content:center}
+.cb{width:18px;height:18px;border-radius:var(--r-sm);border:2px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--tr);flex-shrink:0;background:var(--surface)}
+.cb:hover{border-color:var(--primary)}
+.cb.checked{background:var(--primary);border-color:var(--primary)}
+.cb.checked::after{content:'';display:block;width:5px;height:9px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg) translateY(-1px)}
+
+/* TASK ID */
+.task-id{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);white-space:nowrap}
+
+/* PRIORITY BADGE */
+.prio{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .5rem;border-radius:var(--r-full);font-size:11px;font-weight:600;white-space:nowrap}
+.prio-dot{width:6px;height:6px;border-radius:50%}
+.prio.critical{background:var(--error-hl);color:var(--error)}
+.prio.high{background:var(--warn-hl);color:var(--warn)}
+.prio.medium{background:var(--orange-hl);color:var(--orange)}
+.prio.low{background:var(--success-hl);color:var(--success)}
+
+/* CATEGORY BADGE */
+.cat{display:inline-flex;padding:.18rem .5rem;border-radius:var(--r-full);font-size:11px;font-weight:500;border:1px solid var(--border);color:var(--text-muted);white-space:nowrap}
+
+/* TASK NAME / DESC */
+.task-name{font-weight:600;color:var(--text);font-size:13px;line-height:1.3;margin-bottom:.15rem}
+.task-desc{font-size:12px;color:var(--text-muted);line-height:1.4;max-width:60ch}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text-muted)}
+.empty-state svg{width:40px;height:40px;margin:0 auto .75rem;color:var(--text-faint)}
+.empty-state h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:.25rem}
+.empty-state p{font-size:13px}
+
+/* FOOTER */
+.footer{padding:1.5rem;text-align:center;font-size:12px;color:var(--text-faint);border-top:1px solid var(--divider);margin-top:1.5rem}
+
+@media(max-width:768px){
+  .header{padding:.625rem 1rem;gap:.75rem}
+  .stats-bar,.filters{padding:.75rem 1rem}
+  .main{padding:1rem}
+  .todo-table th:nth-child(4),.todo-table td:nth-child(4),.todo-table th:nth-child(5),.todo-table td:nth-child(5){display:none}
+  .task-desc{display:none}
+}
+</style>
+</head>
+<body>
+<header class="header">
+  <a class="logo" href="#">
+    <svg class="logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="PSAppRocket Logo">
+      <rect width="32" height="32" rx="8" fill="var(--primary)"/>
+      <path d="M16 6C16 6 10 12 10 18C10 21.314 12.686 24 16 24C19.314 24 22 21.314 22 18C22 12 16 6 16 6Z" fill="white" opacity="0.9"/>
+      <circle cx="16" cy="18" r="3" fill="var(--primary)"/>
+      <path d="M13 25L11 29M19 25L21 29" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    </svg>
+    <span class="logo-text">PS<span>App</span>Rocket</span>
+  </a>
+  <div class="header-center">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search" type="text" id="searchInput" placeholder="Aufgabe suchen…" autocomplete="off">
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn-theme" id="themeToggle" data-theme-toggle aria-label="Theme wechseln">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="btn-export" id="exportBtn">↓ Export CSV</button>
+  </div>
+</header>
+
+<div class="stats-bar" id="statsBar"></div>
+<div class="filters" id="filtersBar"></div>
+<main class="main"><div class="phases-grid" id="phasesGrid"></div></main>
+<footer class="footer">PSAppRocket Developer ToDo · Generiert auf Basis des Developer Guides · <span id="doneCount">0</span> / <span id="totalCount">0</span> abgeschlossen</footer>
+
+<script>
+const TODOS = {"Phase 1: Projektstruktur & Grundgerüst": [["P1-01", "Verzeichnisstruktur anlegen", "Alle Ordner erstellen: PSAppRocket (root), logfiles, profiles, settings", "critical", "structure"], ["P1-02", "Hauptskript psapp.rocket.ps1 anlegen", "Leere Datei mit Kommentar-Header im eigenen Coding-Stil anlegen (Version, Autor, Datum, Beschreibung)", "critical", "structure"], ["P1-03", "psapp.profiledb.conf anlegen", "Leere Konfig-Datei im Wurzelverzeichnis erstellen; Format: ProfileName;Dateiname.config.ps1", "critical", "structure"], ["P1-04", "Core-Modul-Dateien im .core\\-Unterverzeichnis anlegen", "Dateien: psapp.logging.ps1, psapp.profile.ps1, psapp.launcher.ps1, psapp.ui.ps1, psapp.validation.ps1", "critical", "structure"], ["P1-05", "Dot-Sourcing aller Core-Module in psapp.rocket.ps1 implementieren", "Alle .core\\-Dateien via . $PSScriptRoot\\... einbinden, Fehler beim Laden abfangen", "critical", "structure"], ["P1-06", "Globale Konstanten und Variablen definieren", "$PSAR_VERSION, $PSAR_ROOT, $PSAR_PROFILES_DIR, $PSAR_LOGFILES_DIR, $PSAR_SETTINGS_DIR, $PSAR_PROFILEDB, $PSAR_MAX_PROFILES, $PSAR_MAX_LOGS", "high", "structure"], ["P1-07", "PSARreturn-Objekt-Typ definieren und implementieren", "Einheitliches Rückgabeobjekt (nach PSAppCoreLib-Vorbild): .Success [bool], .Message [string], .Data [object], .ErrorCode [int]", "critical", "structure"]], "Phase 2: Parameter-Handling & Validierung": [["P2-01", "CmdletBinding + ParameterSets definieren", "Parameter Sets: 'Run', 'AddProfile', 'DelProfile', 'Backup', 'Restore' — jeder Set schließt die anderen aus", "critical", "params"], ["P2-02", "-ProfileID [string] implementieren (Mandatory, Set: Run)", "Validierung: String nicht leer, keine Sonderzeichen außer - und _, max. 50 Zeichen", "critical", "params"], ["P2-03", "-Mode [string] implementieren (Mandatory, Set: Run)", "ValidateSet: 'GUI', 'Console', 'Taskbar', 'Hidden' — case-insensitiv", "critical", "params"], ["P2-04", "-NoLogs [switch] implementieren (Optional, Set: Run)", "Standardmäßig false; wenn gesetzt, wird kein Logfile erstellt", "medium", "params"], ["P2-05", "-AddProfile [switch] implementieren (Set: AddProfile)", "Nur gültig zusammen mit -NewProfileID; Prüfung via ParameterSet-Binding", "high", "params"], ["P2-06", "-NewProfileID [string] implementieren (Set: AddProfile)", "Validierungsregex: ^[a-zA-Z0-9_-]{1,50}$ — keine Leerzeichen, keine Sonderzeichen außer - und _", "high", "params"], ["P2-07", "-DelProfile [string] implementieren (Optional, Set: DelProfile)", "Prüfung ob Profil in profiledb.conf UND als .ps1-Datei existiert; kein Confirm-Dialog (by design)", "high", "params"], ["P2-08", "Zukünftige Parameter als Platzhalter definieren", "-Backup, -BackupDir, -Restore, -RestoreFile als Parameter-Platzhalter mit Write-Warning 'Not yet implemented'", "low", "params"], ["P2-09", "Parametervalidierung zentralisieren", "Funktion Invoke-PSARParameterValidation in psapp.validation.ps1 — alle Checks an einem Ort", "high", "params"]], "Phase 3: Profil-Management": [["P3-01", "Funktion New-PSARProfile implementieren", "Erstellt neues Profil: Validierung NewProfileID, Prüfung Duplikat in profiledb.conf (case-insensitiv), Template-Datei erzeugen, profiledb.conf aktualisieren", "critical", "profile"], ["P3-02", "Profil-Template-Datei definieren und implementieren", "Template enthält: PSCustomObject-Array $AppLoader, 3 auskommentierte Beispieleinträge mit allen Feldern, ausführliche Inline-Kommentare auf Englisch", "critical", "profile"], ["P3-03", "Profil-Dateiformat von String-Array auf PSCustomObject-Array migrieren", "Format: [PSCustomObject]@{ProgramName=''; ExePath=''; RunAs='AsUser'; WindowStyle='Normal'; WaitMillisecs=0}", "critical", "profile"], ["P3-04", "Funktion Remove-PSARProfile implementieren", "Prüft Existenz in profiledb.conf + Datei, löscht beides ohne Rückfrage, gibt PSARreturn zurück", "high", "profile"], ["P3-05", "Funktion Get-PSARProfile implementieren", "Lädt eine Profildatei, validiert die Struktur, gibt Array von PSCustomObjects zurück", "critical", "profile"], ["P3-06", "Funktion Get-PSARAllProfiles implementieren", "Liest psapp.profiledb.conf, gibt Liste aller verfügbaren Profile zurück", "medium", "profile"], ["P3-07", "Funktion Update-PSARProfileDB implementieren", "Liest, aktualisiert und schreibt profiledb.conf atomar; verhindert Race-Conditions", "high", "profile"], ["P3-08", "Maximale Programmanzahl pro Profil erzwingen (20)", "Validierung beim Laden: Wenn $AppLoader.Count -gt 20, Fehler + Abbruch", "high", "profile"], ["P3-09", "Profil-Validierungsfunktion implementieren", "Invoke-PSARProfileValidation: Prüft ProgramName-Einzigartigkeit, ExePath-Existenz, RunAs-Wert, WindowStyle-Wert, WaitMillisecs-Schritte (100er), exe-Only", "critical", "profile"], ["P3-10", "SHA256-Integritätsprüfung für Profildateien (optional/erweiterbar)", "Beim Laden Hash der .ps1 gegen gespeicherten Hash in profiledb.conf vergleichen; bei Abweichung warnen", "low", "profile"]], "Phase 4: Launcher-Engine": [["P4-01", "Funktion Invoke-PSARLaunch implementieren (Hauptfunktion)", "Orchestriert den gesamten Startvorgang: Profil laden → validieren → je Eintrag Prozess starten → Warten → nächster Eintrag", "critical", "launcher"], ["P4-02", "Prozessstart 'AsUser' implementieren", "Start-Process mit aktuellem Benutzerkontext, WindowStyle-Mapping, WaitMillisecs-Verzögerung via Start-Sleep", "critical", "launcher"], ["P4-03", "Prozessstart 'AsAdmin' implementieren", "Start-Process -Verb RunAs; Hinweis: UAC-Prompt erscheint; UseShellExecute=true erforderlich", "critical", "launcher"], ["P4-04", "Prozessstart als spezifischer Benutzer implementieren", "Start-Process -Credential (Get-Credential); Einschränkung dokumentieren: UseShellExecute=false + Credential = Konflikt auf Windows", "high", "launcher"], ["P4-05", "WindowStyle-Mapping implementieren", "Normal→Normal, Hidden→Hidden, Minimized→Minimized, Maximized→Maximized; Enum-Mapping zu [System.Diagnostics.ProcessWindowStyle]", "high", "launcher"], ["P4-06", "WaitMillisecs-Logik implementieren", "Start-Sleep -Milliseconds $entry.WaitMillisecs; 0 = kein Warten; 100er-Schritte validiert", "medium", "launcher"], ["P4-07", "Fehlerbehandlung pro Programm-Eintrag implementieren", "Try/Catch je Eintrag; bei Fehler: loggen, weitermachen (nicht abbrechen), am Ende Fehlerzusammenfassung", "critical", "launcher"], ["P4-08", "Fortschritts-Event-System implementieren (für GUI/Console/Taskbar)", "Write-Progress + Custom-Event-System: $PSAR_ProgressEvent; UI-Module subscriben; entkoppelt von Launcher-Logik", "high", "launcher"], ["P4-09", "Exe-Only-Validierung implementieren", "Vor jedem Start: [System.IO.Path]::GetExtension($entry.ExePath) -eq '.exe' — sonst überspringen + warnen", "critical", "launcher"]], "Phase 5: Logging-System": [["P5-01", "Funktion Write-PSARLog implementieren", "Schreibt in aktuelle Logdatei: Timestamp, Severity (INFO/WARN/ERROR), Message; Thread-safe via Mutex", "critical", "logging"], ["P5-02", "Logdatei-Namensschema implementieren", "YYYYMMDD-HHMMSS.log via Get-Date -Format 'yyyyMMdd-HHmmss'; eine neue Datei pro Programmausführung", "high", "logging"], ["P5-03", "Log-Rotation implementieren (max. 50 Dateien)", "Vor Start: Alle .log-Dateien zählen, wenn >50 → älteste (Sort-Object LastWriteTime) löschen bis <=49", "high", "logging"], ["P5-04", "NoLogs-Switch in Logging-System integrieren", "Wenn $NoLogs=$true → Write-PSARLog ist ein No-Op (schreibt nichts); Logdatei wird nicht erstellt", "medium", "logging"], ["P5-05", "Log-Level-System implementieren", "VERBOSE, INFO, WARN, ERROR, FATAL; konfigurierbar über settings\\psapp.settings.conf", "medium", "logging"], ["P5-06", "Session-Start und Session-End im Log erfassen", "Beim Start: Version, Modus, ProfilID, Timestamp; beim Ende: Erfolg/Fehler-Zusammenfassung, Dauer", "high", "logging"]], "Phase 6: GUI-Modi": [["P6-01", "Mode 'Hidden' implementieren", "Kein Fenster, keine Ausgabe; nur Logging; einfachste Implementierung, zuerst umsetzen", "critical", "gui"], ["P6-02", "Mode 'Console' implementieren (Custom-Console-GUI)", "WPF-Fenster das eine Konsole simuliert: Scrollbare TextBox, Monospace-Font, dunkel; Updates via Dispatcher", "high", "gui"], ["P6-03", "Mode 'GUI' implementieren (Fortschrittsfenster)", "WPF-Fenster mit ProgressBar, aktuellem Programmnamen, Status-Label; Runspace für nicht-blockierende UI", "high", "gui"], ["P6-04", "Mode 'Taskbar' implementieren (System Tray Icon)", "NotifyIcon via System.Windows.Forms; Icon anzeigen solange aktiv; Tooltip mit Fortschritt", "medium", "gui"], ["P6-05", "WPF-Runspace-Muster implementieren", "UI läuft in eigenem Runspace; PowerShell-Instanz mit SynchronizedHashtable für Thread-sichere Kommunikation", "critical", "gui"], ["P6-06", "GUI-Fortschrittsanzeige an Launcher-Events binden", "Fortschritts-Events aus Phase 4 in WPF-Dispatcher.Invoke() weiterleiten; UI-Update ohne Freeze", "high", "gui"], ["P6-07", "Sauberes Beenden aller GUI-Ressourcen sicherstellen", "Dispose() auf NotifyIcon, WPF-Window schließen, Runspace beenden — auch bei Fehler (try/finally)", "high", "gui"]], "Phase 7: Settings & Konfiguration": [["P7-01", "Settings-Datei psapp.settings.conf definieren", "Format: Key=Value, eine Einstellung pro Zeile; Kommentare mit #; Beispiel: LogLevel=INFO, MaxLogs=50", "medium", "settings"], ["P7-02", "Funktion Get-PSARSettings implementieren", "Liest settings-Datei, gibt Hashtable zurück; Default-Werte wenn Datei fehlt", "medium", "settings"], ["P7-03", "Funktion Set-PSARSetting implementieren", "Schreibt/aktualisiert einen Wert in der settings-Datei; atomares Schreiben", "low", "settings"], ["P7-04", "Settings beim Start laden und global verfügbar machen", "$script:PSAR_Settings = Get-PSARSettings; alle Module greifen auf diese Variable zu", "medium", "settings"]], "Phase 8: Fehlerbehandlung & Robustheit": [["P8-01", "Globalen Error-Handler implementieren", "trap { } oder $ErrorActionPreference='Stop' + Try/Catch in Main; unbehandelte Fehler ins Log schreiben", "critical", "robustness"], ["P8-02", "Graceful-Exit bei kritischen Fehlern implementieren", "Exit-Codes definieren: 0=OK, 1=Parameterfehler, 2=Profil nicht gefunden, 3=Launcher-Fehler, 99=Unbekannt", "high", "robustness"], ["P8-03", "Eingabe-Sanitization implementieren", "Alle String-Parameter: Trim, Länge prüfen, gefährliche Zeichen (Semikolon, Backtick in ProfileID) ablehnen", "critical", "robustness"], ["P8-04", "Profil-Datei darf nur ExePfade starten (Path Traversal verhindern)", "ExePath muss absoluter Pfad sein, keine .., keine UNC-Shares (optional konfigurierbar), Extension muss .exe sein", "critical", "robustness"], ["P8-05", "psapp.profiledb.conf vor Injection schützen", "Beim Schreiben: Semikolon im ProfileName verbieten; beim Lesen: Zeilen strikt parsen (Split(';')[0] und [1] only)", "high", "robustness"], ["P8-06", "Parallelstart verhindern (Single-Instance-Guard)", "Mutex mit globalem Namen; wenn bereits eine Instanz läuft: Fehler + Exit", "medium", "robustness"], ["P8-07", "Require-Elevation-Check implementieren", "Wenn AsAdmin-Einträge vorhanden: prüfen ob UAC verfügbar; warnen wenn UAC deaktiviert", "medium", "robustness"]], "Phase 9: Testing & Qualitätssicherung": [["P9-01", "Pester-Test-Suite anlegen", "Verzeichnis .\\tests\\; Pester v5; separate Test-Dateien pro Core-Modul", "high", "testing"], ["P9-02", "Unit-Tests für Validierungsfunktionen", "Tests für: ProfileID-Regex, WaitMillisecs-100er-Schritte, WindowStyle-Enum, ExePath-Extension, Max-20-Limit", "high", "testing"], ["P9-03", "Unit-Tests für Profil-CRUD-Operationen", "Tests für: New-PSARProfile (Duplikat, Erfolg), Remove-PSARProfile, Get-PSARProfile (ungültige Datei)", "high", "testing"], ["P9-04", "Unit-Tests für Log-Rotation", "Test: 50 Dummy-Logs erstellen, neues Log triggern, prüfen ob ältestes gelöscht wurde", "medium", "testing"], ["P9-05", "Integration-Test: Hidden-Mode End-to-End", "Testprofil mit Notepad.exe erstellen, Hidden-Mode ausführen, Log prüfen, Notepad beenden", "high", "testing"], ["P9-06", "Sicherheits-Tests (negative Tests)", "Test: Path-Traversal-Versuch, nicht-.exe-Datei im Profil, mehr als 20 Einträge, ungültige ProfileID", "critical", "testing"], ["P9-07", "PSScriptAnalyzer auf alle Dateien ausführen", "Alle Core-Module und Hauptskript durch PSScriptAnalyzer; 0 Errors, 0 Warnings anstreben", "high", "testing"]], "Phase 10: Dokumentation & Releases": [["P10-01", "README.md erstellen", "Beschreibung, Voraussetzungen, Installation, Schnellstart, Parameter-Referenz, Beispiele", "high", "docs"], ["P10-02", "CHANGELOG.md anlegen", "Keep-a-Changelog-Format; v0.1.0 initial entry", "medium", "docs"], ["P10-03", "Inline-Kommentare und Comment-Based Help hinzufügen", "Jede öffentliche Funktion: .SYNOPSIS, .DESCRIPTION, .PARAMETER, .EXAMPLE, .OUTPUTS", "high", "docs"], ["P10-04", "Beispiel-Profile erstellen", "3 Demo-Profile in profiles\\examples\\: standard-apps.config.ps1, dev-tools.config.ps1, admin-tools.config.ps1", "medium", "docs"], ["P10-05", "VPDLX-Modul-Integration dokumentieren", "Abschnitt im README: Wie PSAppRocket mit VPDLX zusammen genutzt werden kann", "low", "docs"], ["P10-06", "GitHub Repository aufsetzen", ".gitignore (Logfiles, Settings mit Secrets), LICENSE (MIT), Issues/Labels anlegen", "medium", "docs"], ["P10-07", "v0.1.0 Release taggen", "Erste funktionsfähige Version (Hidden + Console Mode, Profil-CRUD, Logging) als GitHub Release", "low", "docs"]]};
+
+const PRIO_ORDER = {critical:0,high:1,medium:2,low:3};
+const PRIO_LABELS = {critical:'Kritisch',high:'Hoch',medium:'Mittel',low:'Niedrig'};
+const CAT_LABELS = {structure:'Struktur',params:'Parameter',profile:'Profil-Mgmt',launcher:'Launcher',logging:'Logging',gui:'GUI-Modi',settings:'Settings',robustness:'Robustheit',testing:'Testing',docs:'Dokumentation'};
+
+let state = {};
+let activeFilters = {prio: null, cat: null, status: null};
+
+// Load state
+try { const s = sessionStorage.getItem('psar_todo'); if(s) state = JSON.parse(s); } catch(e){}
+
+function saveState() {
+  try { sessionStorage.setItem('psar_todo', JSON.stringify(state)); } catch(e){}
+}
+
+function getDoneCount() {
+  return Object.values(state).filter(Boolean).length;
+}
+
+function getTotalCount() {
+  return Object.values(TODOS).reduce((a,v)=>a+v.length,0);
+}
+
+function getPhaseStats(phase) {
+  const tasks = TODOS[phase];
+  const done = tasks.filter(t=>state[t[0]]).length;
+  return {done, total:tasks.length};
+}
+
+function buildStats() {
+  const bar = document.getElementById('statsBar');
+  const total = getTotalCount();
+  const done = getDoneCount();
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  const byPrio = {critical:0,high:0,medium:0,low:0};
+  Object.values(TODOS).flat().forEach(t=>{ byPrio[t[3]]++; });
+
+  bar.innerHTML = `
+    <div class="progress-global">
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      <span class="progress-label">${pct}%</span>
+    </div>
+    <div class="stat-pill"><span class="dot" style="background:var(--error)"></span><span>${byPrio.critical} Kritisch</span></div>
+    <div class="stat-pill"><span class="dot" style="background:var(--warn)"></span><span>${byPrio.high} Hoch</span></div>
+    <div class="stat-pill"><span class="dot" style="background:var(--orange)"></span><span>${byPrio.medium} Mittel</span></div>
+    <div class="stat-pill"><span class="dot" style="background:var(--success)"></span><span>${byPrio.low} Niedrig</span></div>
+    <div class="stat-pill" style="background:var(--primary-hl);border-color:var(--primary);color:var(--primary)"><span>${done}/${total} erledigt</span></div>
+  `;
+  document.getElementById('doneCount').textContent = done;
+  document.getElementById('totalCount').textContent = total;
+}
+
+function buildFilters() {
+  const bar = document.getElementById('filtersBar');
+  const prioFilters = Object.keys(PRIO_ORDER).map(p=>`<button class="filter-btn prio-filter ${activeFilters.prio===p?'active':''}" data-prio="${p}">${PRIO_LABELS[p]}</button>`).join('');
+  const catFilters = Object.keys(CAT_LABELS).map(c=>`<button class="filter-btn cat-filter ${activeFilters.cat===c?'active':''}" data-cat="${c}">${CAT_LABELS[c]}</button>`).join('');
+  const statusFilters = `
+    <button class="filter-btn status-filter ${activeFilters.status==='open'?'active':''}" data-status="open">Offen</button>
+    <button class="filter-btn status-filter ${activeFilters.status==='done'?'active':''}" data-status="done">Erledigt</button>
+  `;
+  bar.innerHTML = `
+    <span class="filter-label">Priorität</span>${prioFilters}
+    <div class="filter-sep"></div>
+    <span class="filter-label">Kategorie</span>${catFilters}
+    <div class="filter-sep"></div>
+    <span class="filter-label">Status</span>${statusFilters}
+    <div class="filter-sep"></div>
+    <button class="filter-btn" id="clearFilters">✕ Alle zurücksetzen</button>
+  `;
+  bar.querySelectorAll('.prio-filter').forEach(btn=>{
+    btn.addEventListener('click',()=>{ activeFilters.prio = activeFilters.prio===btn.dataset.prio?null:btn.dataset.prio; rebuild(); });
+  });
+  bar.querySelectorAll('.cat-filter').forEach(btn=>{
+    btn.addEventListener('click',()=>{ activeFilters.cat = activeFilters.cat===btn.dataset.cat?null:btn.dataset.cat; rebuild(); });
+  });
+  bar.querySelectorAll('.status-filter').forEach(btn=>{
+    btn.addEventListener('click',()=>{ activeFilters.status = activeFilters.status===btn.dataset.status?null:btn.dataset.status; rebuild(); });
+  });
+  document.getElementById('clearFilters').addEventListener('click',()=>{ activeFilters={prio:null,cat:null,status:null}; rebuild(); });
+}
+
+function taskMatchesFilters(task, searchVal) {
+  const [id,,name,prio,cat,desc] = [task[0],task[1],task[1]+' '+task[2],task[3],task[4],task[2]];
+  const isDone = !!state[task[0]];
+  if(activeFilters.prio && task[3]!==activeFilters.prio) return false;
+  if(activeFilters.cat && task[4]!==activeFilters.cat) return false;
+  if(activeFilters.status==='open' && isDone) return false;
+  if(activeFilters.status==='done' && !isDone) return false;
+  if(searchVal) {
+    const q = searchVal.toLowerCase();
+    if(!(task[0].toLowerCase().includes(q)||task[1].toLowerCase().includes(q)||task[2].toLowerCase().includes(q)||CAT_LABELS[task[4]].toLowerCase().includes(q)||PRIO_LABELS[task[3]].toLowerCase().includes(q))) return false;
+  }
+  return true;
+}
+
+function buildPhases(searchVal='') {
+  const grid = document.getElementById('phasesGrid');
+  grid.innerHTML='';
+  let anyVisible = false;
+
+  Object.entries(TODOS).forEach(([phase, tasks],pi)=>{
+    const phaseKey = 'phase_'+pi;
+    const collapsed = sessionStorage.getItem('psar_collapsed_'+phaseKey)==='1';
+    const {done,total} = getPhaseStats(phase);
+    const pct = total ? Math.round(done/total*100) : 0;
+    const visibleTasks = tasks.filter(t=>taskMatchesFilters(t,searchVal));
+    if(visibleTasks.length===0 && (activeFilters.prio||activeFilters.cat||activeFilters.status||searchVal)) return;
+    anyVisible=true;
+
+    const card = document.createElement('div');
+    card.className = 'phase-card'+(collapsed?' collapsed':'');
+    card.dataset.phase = phaseKey;
+
+    const phaseNum = phase.match(/Phase (\d+)/)?.[1]||'?';
+    card.innerHTML = `
+      <div class="phase-header" data-toggle="${phaseKey}">
+        <svg class="phase-toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+        <span class="phase-badge">Phase ${phaseNum}</span>
+        <span class="phase-title">${phase.replace(/Phase \d+: /,'')}</span>
+        <div class="phase-meta">
+          <span class="phase-progress">${done}/${total}</span>
+          <div class="phase-mini-bar"><div class="phase-mini-fill" style="width:${pct}%"></div></div>
+        </div>
+      </div>
+      <div class="phase-body">
+        <table class="todo-table">
+          <thead><tr>
+            <th></th>
+            <th>ID</th>
+            <th>Aufgabe</th>
+            <th>Priorität</th>
+            <th>Kategorie</th>
+          </tr></thead>
+          <tbody id="tbody_${phaseKey}"></tbody>
+        </table>
+        <div class="empty-state" id="empty_${phaseKey}" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <h3>Keine Treffer</h3>
+          <p>Kein Eintrag in dieser Phase entspricht dem Filter.</p>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+
+    const tbody = document.getElementById('tbody_'+phaseKey);
+    let shown = 0;
+    tasks.forEach(task=>{
+      const [id,name,desc,prio,cat] = task;
+      const isDone = !!state[id];
+      const visible = taskMatchesFilters(task,searchVal);
+      const tr = document.createElement('tr');
+      tr.className = (isDone?'done':'')+(!visible?' hidden-row':'');
+      tr.dataset.taskId = id;
+      tr.innerHTML = `
+        <td><div class="cb-wrap"><div class="cb ${isDone?'checked':''}" data-id="${id}" tabindex="0" role="checkbox" aria-checked="${isDone}" aria-label="${name}"></div></div></td>
+        <td><span class="task-id">${id}</span></td>
+        <td>
+          <div class="task-name">${name}</div>
+          <div class="task-desc">${desc}</div>
+        </td>
+        <td><span class="prio ${prio}"><span class="prio-dot" style="background:currentColor"></span>${PRIO_LABELS[prio]}</span></td>
+        <td><span class="cat">${CAT_LABELS[cat]||cat}</span></td>
+      `;
+      tbody.appendChild(tr);
+      if(visible) shown++;
+    });
+
+    if(shown===0 && (activeFilters.prio||activeFilters.cat||activeFilters.status||searchVal)){
+      document.getElementById('empty_'+phaseKey).style.display='';
+    }
+
+    card.querySelector('.phase-header').addEventListener('click',()=>{
+      card.classList.toggle('collapsed');
+      sessionStorage.setItem('psar_collapsed_'+phaseKey, card.classList.contains('collapsed')?'1':'0');
+    });
+  });
+
+  if(!anyVisible){
+    grid.innerHTML=`<div class="empty-state" style="padding:4rem 1rem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;margin:0 auto 1rem"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <h3>Keine Aufgaben gefunden</h3>
+      <p>Passe die Filter oder die Suche an.</p>
+    </div>`;
+  }
+
+  document.querySelectorAll('.cb').forEach(cb=>{
+    cb.addEventListener('click',()=>toggleTask(cb.dataset.id));
+    cb.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){e.preventDefault();toggleTask(cb.dataset.id);} });
+  });
+}
+
+function toggleTask(id) {
+  state[id] = !state[id];
+  saveState();
+  rebuild();
+}
+
+function rebuild() {
+  const q = document.getElementById('searchInput')?.value||'';
+  buildStats();
+  buildFilters();
+  buildPhases(q);
+}
+
+// Theme toggle
+const html = document.documentElement;
+let theme = html.getAttribute('data-theme')||'dark';
+const themeBtn = document.getElementById('themeToggle');
+function setTheme(t){
+  theme=t; html.setAttribute('data-theme',t);
+  themeBtn.innerHTML = t==='dark'
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
+}
+themeBtn.addEventListener('click',()=>setTheme(theme==='dark'?'light':'dark'));
+
+// Search
+document.getElementById('searchInput').addEventListener('input', e=>buildPhases(e.target.value));
+
+// Export CSV
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  let csv = 'ID;Phase;Aufgabe;Beschreibung;Priorität;Kategorie;Status\n';
+  Object.entries(TODOS).forEach(([phase,tasks])=>{
+    tasks.forEach(t=>{
+      const status = state[t[0]]?'Erledigt':'Offen';
+      csv += [t[0], phase.replace(/Phase \d+: /,''), t[1], t[2], PRIO_LABELS[t[3]], CAT_LABELS[t[4]], status].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')+'\n';
+    });
+  });
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='PSAppRocket_ToDo.csv'; a.click();
+});
+
+rebuild();
+</script>
+</body>
+</html>
