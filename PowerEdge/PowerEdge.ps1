@@ -263,7 +263,7 @@ function Import-WebView2Assemblies {
             Write-Verbose "PowerEdge: Loaded WebView2.Core from lib\."
         }
         catch {
-            # Assembly might already be loaded — that is acceptable
+            # Assembly might already be loaded - that is acceptable
             Write-Verbose "PowerEdge: WebView2.Core load note: $($_.Exception.Message)"
         }
         try {
@@ -275,7 +275,7 @@ function Import-WebView2Assemblies {
         }
     }
     else {
-        # DLLs not in .\lib\ — attempt to resolve via NuGet package cache or PATH
+        # DLLs not in .\lib\ - attempt to resolve via NuGet package cache or PATH
         Write-Verbose "PowerEdge: WebView2 DLLs not found in .\lib\. Attempting standard resolution."
         $nugetCache = Join-Path $env:USERPROFILE ".nuget\packages\microsoft.web.webview2"
         if (Test-Path $nugetCache) {
@@ -409,7 +409,7 @@ $uiScript = {
 
         if ($null -eq $window) {
             $syncHash.ExitCode = -1
-            $syncHash.ErrorMsg = "PowerEdge: XamlReader returned null — XAML parsing failed."
+            $syncHash.ErrorMsg = "PowerEdge: XamlReader returned null - XAML parsing failed."
             return
         }
 
