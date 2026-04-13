@@ -67,3 +67,4 @@ context-menu-switcher-release-v2.yml
 
 # EXCLUDE SPECIFIC FILES/FOLDERS FOR "PSx Composer"
 /PSx Composer/*
+unblock-all-files.cmd
