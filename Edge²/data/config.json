@@ -27,5 +27,10 @@
         "domain":   "localhost",
         "port":     "8080",
         "home":     "home.html"
-    }
+    },
+        "startup": {
+            "starturl":      "http://localhost:8080/home.html",
+            "secondurl":     "http://localhost:8080/app.html",
+            "secondurldelay": 3000
+        }
 }
