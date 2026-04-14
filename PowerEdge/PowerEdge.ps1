@@ -161,7 +161,7 @@ if ($global:useserver -eq $true) {
     if (Test-Path $global:servercore) {
         try {
             . $global:servercore
-            $global:PowerEdgeServer = New-LocalServer -RootPath $global:hostroot -Port $global:portconfig -HostName $global:httpdomain -AutoStart $true -OpenBrowser $false
+            $global:PowerEdgeServer = [LocalServer]::new($global:hostroot, $global:rootURL)             $global:PowerEdgeServer.SpaFallback = $true             $global:PowerEdgeServer.Start()
             Write-Verbose "PowerEdge: HTTP Server started on $($global:rootURL)"
         }
         catch {
