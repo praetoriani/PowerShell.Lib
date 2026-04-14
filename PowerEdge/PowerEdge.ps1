@@ -542,7 +542,7 @@ $uiScript = {
         $loadingOverlay = $window.FindName("LoadingOverlay")
         $titleBarPanel  = $window.FindName("TitleBarPanel")
 
-        # Update title bar label
+        AppIcon    =# Set title bar logo image     if ($null -ne $titleBarLogo) {         if (Test-Path -LiteralPath $syncHash.AppLogoIcon -ErrorAction SilentlyContinue) {             $titleBarLogo.Source = [System.Windows.Media.Imaging.BitmapImage]::new(                 [System.Uri]::new($syncHash.AppLogoIcon)             )         }     }     # Update title bar label$titleBarPanel = $window.FindName("TitleBarPanel")     $titleBarLogo  = $window.FindName("TitleBarLogo") $global:AppIcon     AppLogoIcon = $global:AppLogoIcon
         if ($null -ne $titleBar) {
             $titleBar.Text = $syncHash.WindowTitle
         }
