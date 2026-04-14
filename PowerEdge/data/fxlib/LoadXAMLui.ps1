@@ -21,7 +21,7 @@ function LoadXAMLui {
         [string]$XamlFilePath
     )
 
-    $status = New-StatusObject -Code -1 -Msg ""
+    $status = NewStatusObject -Code -1 -Msg ""
 
     if (-not (Test-Path -LiteralPath $XamlFilePath -PathType Leaf)) {
         $status.code = -1
