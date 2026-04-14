@@ -112,9 +112,9 @@
         <!-- Main layout: TitleBar (top) + Content (center) + StatusBar (bottom) -->
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="40"/>    <!-- Custom title bar           -->
+                <RowDefinition Height="44"/>    <!-- Custom title bar           -->
                 <RowDefinition Height="*"/>     <!-- WebView2 content area      -->
-                <RowDefinition Height="24"/>    <!-- Status bar                 -->
+                <RowDefinition Height="30"/>    <!-- Status bar                 -->
             </Grid.RowDefinitions>
 
             <!-- ──────────────────────────────────────────────────────────────── -->
@@ -143,7 +143,7 @@
                 -->
                 <Grid x:Name="TitleBarPanel"
                       Background="Transparent"
-                      Cursor="SizeAll">
+                      Cursor="Arrow">
 
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>  <!-- App logo area          -->
@@ -159,16 +159,23 @@
 
                         <!-- App logo icon (source set dynamically in PowerEdge.ps1) -->
                         <Image x:Name="TitleBarLogo"
-                               Width="20" Height="20"
+                               Width="26" Height="26"
                                VerticalAlignment="Center"
                                RenderOptions.BitmapScalingMode="HighQuality"/>
-                        <TextBlock Text="PowerEdge"
+                        <TextBlock Text="Power"
                                    Foreground="{StaticResource BrushText}"
                                    FontFamily="Segoe UI"
-                                   FontSize="13"
+                                   FontSize="14"
                                    FontWeight="SemiBold"
                                    VerticalAlignment="Center"
                                    Margin="8,0,0,0"/>
+                        <TextBlock Text="Edge"
+                                   Foreground="#90e30c"
+                                   FontFamily="Segoe UI"
+                                   FontSize="14"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,0,0"/>
                     </StackPanel>
 
                     <!-- Centered window title (dynamic — set from PowerShell) -->

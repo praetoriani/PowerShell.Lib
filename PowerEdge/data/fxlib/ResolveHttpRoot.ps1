@@ -24,12 +24,12 @@ function ResolveHttpRoot {
     $status = NewStatusObject -Code -1 -Msg ""
 
     if ([string]::IsNullOrWhiteSpace($InputPath)) {
-        $targetPath = Join-Path $global:WebAppDir "index.html"
+        $targetPath = $global:apphome
         Write-Verbose "PowerEdge: No WebAppPath provided. Using default: $targetPath"
     }
     else {
         if (-not [System.IO.Path]::IsPathRooted($InputPath)) {
-            $targetPath = Join-Path $global:AppPath $InputPath
+            $targetPath = Join-Path $global:approot $InputPath
         }
         else {
             $targetPath = $InputPath

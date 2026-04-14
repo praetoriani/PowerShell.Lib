@@ -86,7 +86,7 @@ param(
     [string]$httpRoot = "",
 
     [Parameter(Mandatory = $false)]
-    [string]$WindowTitle = "PowerEdge",
+    [string]$WindowTitle = "Far Beyond Limits               ",
 
     [Parameter(Mandatory = $false)]
     [switch]$Hidden,
@@ -107,13 +107,17 @@ if ($Hidden -and $Timeout -le 0) {
 # GLOBAL APPLICATION VARIABLES (mandatory per App Development Guidelines)
 # ─────────────────────────────────────────────────────────────────────────────
 
+$peCore = @{}   # ← This will hold the deserialized config.json content as a hashtable, accessible globally as $global:peCore
+
 # Load Configuration from JSON
 $configFile = Join-Path $PSScriptRoot "data\config.json"
 if (Test-Path $configFile) {
     try {
         $global:AppConfig = Get-Content $configFile -Raw | ConvertFrom-Json -ErrorAction Stop
-        $global:AppName   = $global:AppConfig.appinfo.name
-        $global:AppVers   = $global:AppConfig.appinfo.version
+        # Re-Assign to $peCore
+        $peCore = $global:AppConfig
+        $global:appname   = $peCore.appinfo.name
+        $global:AppVers   = $peCore.appinfo.version
     }
     catch {
         Write-Error "PowerEdge: Failed to load config.json: $($_.Exception.Message)"
@@ -125,17 +129,22 @@ else {
     exit 1
 }
 
-$global:AppPath    = $PSScriptRoot
-$global:AppIcon    = Join-Path $PSScriptRoot "PowerEdge.ico"
+$global:approot    = $PSScriptRoot
+$global:appicon    = Join-Path $PSScriptRoot "PowerEdge.ico"
 
 # Internal path constants
-$global:GuiDir     = Join-Path $PSScriptRoot $global:AppConfig.appcore.uidata
-$global:WebAppDir  = Join-Path $PSScriptRoot $global:AppConfig.appcore.webdata
-$global:LibDir     = Join-Path $PSScriptRoot $global:AppConfig.appcore.libdata
-$global:XamlFile   = Join-Path $global:GuiDir "main.window.xml"
+$global:uipath      = Join-Path $PSScriptRoot $peCore.appcore.uidata
+$global:hostroot    = Join-Path $PSScriptRoot $peCore.appcore.webdata
+$global:libpath     = Join-Path $PSScriptRoot $peCore.appcore.libdata
+$global:mainwin     = Join-Path $global:uipath "main.window.xml"
+$global:apphome     = Join-Path $global:hostroot "home.html"
 
-# WebView2 user-data folder
-$global:Wv2DataDir = Join-Path $PSScriptRoot $global:AppConfig.appcore.wv2root
+# WebView2 Root- & User-Data-Folders
+$global:wv2root     = Join-Path $PSScriptRoot $peCore.appcore.wv2root
+$global:wv2default  = Join-Path $PSScriptRoot $peCore.userdata.default
+
+# Get the VPDLX-AddOn
+$global:vpdlx       = Join-Path $PSScriptRoot $peCore.addon[0]
 
 # DOTSOURCING EXTERNAL FUNCTIONS (data\fxlib)
 $fxLibPath = Join-Path $PSScriptRoot "data\fxlib"
@@ -183,12 +192,12 @@ $resolvedHtmlPath = $pathResult.msg
 $wv2Result = LoadWebViewDLLs
 if ($wv2Result.code -ne 0) { Write-Error $wv2Result.msg; exit 1 }
 
-$xamlResult = LoadXAMLui -XamlFilePath $global:XamlFile
+$xamlResult = LoadXAMLui -XamlFilePath $global:mainwin
 if ($xamlResult.code -ne 0) { Write-Error $xamlResult.msg; exit 1 }
 $xamlDoc = $xamlResult.XmlDoc
 
-if (-not (Test-Path -LiteralPath $global:Wv2DataDir -PathType Container)) {
-    try   { New-Item -ItemType Directory -Path $global:Wv2DataDir -Force -ErrorAction Stop | Out-Null }
+if (-not (Test-Path -LiteralPath $global:wv2root -PathType Container)) {
+    try   { New-Item -ItemType Directory -Path $global:wv2root -Force -ErrorAction Stop | Out-Null }
     catch { Write-Error "PowerEdge: Could not create WebView2 data dir: $($_.Exception.Message)"; exit 1 }
 }
 
@@ -196,9 +205,9 @@ $syncHash = [hashtable]::Synchronized(@{
     HtmlPath    = $resolvedHtmlPath
     WindowTitle = $WindowTitle
     XamlDoc     = $xamlDoc
-    AppIcon     = $global:AppIcon
-    LibDir      = $global:LibDir
-    Wv2DataDir  = $global:Wv2DataDir
+    AppIcon     = $global:appicon
+    LibDir      = $global:libpath
+    Wv2DataDir  = $global:wv2root
     Hidden      = $Hidden.IsPresent
     Timeout     = $Timeout
     ExitCode    = 0

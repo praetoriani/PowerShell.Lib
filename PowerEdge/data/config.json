@@ -19,5 +19,6 @@
     },
     "userdata": {
         "default":  "pe.store\\EBWebView\\Default"
-    }
+    },
+    "addon":        ["data\\core\\VPDLX\\VPDLX.psd1"]
 }

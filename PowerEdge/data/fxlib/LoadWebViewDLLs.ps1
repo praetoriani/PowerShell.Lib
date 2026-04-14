@@ -18,8 +18,8 @@ function LoadWebViewDLLs {
 
     $status = NewStatusObject -Code -1 -Msg ""
 
-    $coreDll = Join-Path $global:LibDir "Microsoft.Web.WebView2.Core.dll"
-    $wpfDll  = Join-Path $global:LibDir "Microsoft.Web.WebView2.Wpf.dll"
+    $coreDll = Join-Path $global:libpath "Microsoft.Web.WebView2.Core.dll"
+    $wpfDll  = Join-Path $global:libpath "Microsoft.Web.WebView2.Wpf.dll"
 
     $dllsInLib = (Test-Path -LiteralPath $coreDll) -and (Test-Path -LiteralPath $wpfDll)
 
