@@ -1,5 +1,9 @@
 # PowerEdge v1.00.02
 
+<p align="center">
+  <img src=".logo/PowerEdge-Original-Poster-Slogan.png" width="640" alt="PowerEdge - A PowerShell WPF Host for Microsoft Edge WebView2">
+</p>
+
 > **A PowerShell/WPF application that hosts a Microsoft Edge (WebView2) instance**  
 > to display locally stored web applications (HTML files) in a modern, frameless window.
 
