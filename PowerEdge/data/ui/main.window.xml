@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    PowerEdge v1.00.02 — Main Window XAML Definition    ─────────────────────────────────────────────────────────────────────
+    PowerEdge v1.01.01 — Main Window XAML Definition    ───────────────────────────────────────────────────────1.01.01───────
     File:      data\ui\main.window.xml
     Purpose:   Defines the WPF UI for the PowerEdge application window.
                This file is loaded externally by PowerEdge.ps1 as per the
@@ -12,7 +12,7 @@
                clean white typography — professional and unobtrusive.
 
     Author:    Praetoriani
-    Version:       1.00.02    Date:      14.04.2026
+    Version:       1.01.01    Date:      14.04.2026
     ─────────────────────────────────────────────────────────────────────
 -->
 <Window
@@ -313,7 +313,7 @@
 
                     <!-- Right: version label -->
                     <TextBlock Grid.Column="1"
-                        Text="PowerEdge v1.00.02"                               Style="{StaticResource StatusBarText}"
+                        Text="PowerEdge v1.01.01"                               Style="{StaticResource StatusBarText}"
                                HorizontalAlignment="Right"/>
                 </Grid>
             </Border>
