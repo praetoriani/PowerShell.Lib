@@ -51,6 +51,9 @@
                so WebView2 uses the correct, writable location.
                Fixes: "Das Datenverzeichnis konnte nicht erstellt werden"
                       (HRESULT 0x80080005, CO_E_SERVER_EXEC_FAILURE)
+               Fixed: Corrupted code block in UI runspace that referenced
+                      undefined "AppIcon" command - cleaned up garbled lines
+                      in the TitleBarLogo assignment section.
 
     v1.00.01 - Fixed: EnsureCoreWebView2Async() is now called inside the
                Window.Loaded event handler instead of before ShowDialog().
@@ -541,8 +544,18 @@ $uiScript = {
         $statusText     = $window.FindName("StatusText")
         $loadingOverlay = $window.FindName("LoadingOverlay")
         $titleBarPanel  = $window.FindName("TitleBarPanel")
+        $titleBarLogo   = $window.FindName("TitleBarLogo")
 
-        AppIcon    =# Set title bar logo image     if ($null -ne $titleBarLogo) {         if (Test-Path -LiteralPath $syncHash.AppLogoIcon -ErrorAction SilentlyContinue) {             $titleBarLogo.Source = [System.Windows.Media.Imaging.BitmapImage]::new(                 [System.Uri]::new($syncHash.AppLogoIcon)             )         }     }     # Update title bar label$titleBarPanel = $window.FindName("TitleBarPanel")     $titleBarLogo  = $window.FindName("TitleBarLogo") $global:AppIcon     AppLogoIcon = $global:AppLogoIcon
+        # Set the title bar logo image if the control and icon file exist
+        if ($null -ne $titleBarLogo) {
+            if (Test-Path -LiteralPath $syncHash.AppIcon -ErrorAction SilentlyContinue) {
+                $titleBarLogo.Source = [System.Windows.Media.Imaging.BitmapImage]::new(
+                    [System.Uri]::new($syncHash.AppIcon)
+                )
+            }
+        }
+
+        # Update title bar label
         if ($null -ne $titleBar) {
             $titleBar.Text = $syncHash.WindowTitle
         }
@@ -641,19 +654,20 @@ $uiScript = {
             $syncHash.ErrorMsg = "PowerEdge: Named element 'MainWebView' not found in XAML. Check main.window.xml."
         }
 
-    # ── FIX v1.00.02 ─────────────────────────────────────────────────────────
-    # Ensure the window receives focus and appears in the foreground on startup.
-    # Setting Topmost = $true before ShowDialog() forces the WPF window to the
-    # front of the Z-order. A second Add_Loaded handler immediately resets
-    # Topmost to $false so the window behaves normally after initial display,
-    # while $window.Activate() explicitly requests the input focus.
-    # ─────────────────────────────────────────────────────────────────────────
-    $window.Topmost = $true
-    $window.Add_Loaded({
-        $window.Activate()
-        $window.Focus()
-        $window.Topmost = $false
-    })
+        # ── FIX v1.00.02 ─────────────────────────────────────────────────────
+        # Ensure the window receives focus and appears in the foreground on startup.
+        # Setting Topmost = $true before ShowDialog() forces the WPF window to the
+        # front of the Z-order. A second Add_Loaded handler immediately resets
+        # Topmost to $false so the window behaves normally after initial display,
+        # while $window.Activate() explicitly requests the input focus.
+        # ─────────────────────────────────────────────────────────────────────
+        $window.Topmost = $true
+        $window.Add_Loaded({
+            $window.Activate()
+            $window.Focus()
+            $window.Topmost = $false
+        })
+
         # Show the window and start the WPF message loop
         $window.ShowDialog() | Out-Null
 
