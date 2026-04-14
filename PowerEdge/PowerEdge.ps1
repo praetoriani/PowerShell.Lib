@@ -80,7 +80,7 @@ $global:AppIcon   = Join-Path $PSScriptRoot "PowerEdge.ico"
 
 # Internal path constants
 $global:GuiDir    = Join-Path $PSScriptRoot "data\ui"
-$global:WebAppDir = Join-Path $PSScriptRoot "data\web"
+$global:WebAppDir = Join-Path $PSScriptRoot "data\host"
 $global:LibDir    = Join-Path $PSScriptRoot "data\core\lib"
 $global:XamlFile  = Join-Path $global:GuiDir "main.window.xml"
 

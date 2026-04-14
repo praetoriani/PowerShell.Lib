@@ -1,0 +1,23 @@
+{
+    "appinfo":  {
+        "name":         "PowerEdge",
+        "version":      "v1.00.02",
+        "devname":      "Praetoriani",
+        "website":      "https://github.com/praetoriani/PowerShell.Lib/tree/main/PowerEdge",
+        "datecreate":   "12.04.2026",
+        "dateupdate":   "14.04.2026"
+    },
+    "appconfig":    {
+        "logfiles": [true,"logs"],
+        "profile":  "Default"
+    },
+    "appcore":  {
+        "uidata":   "data\\ui",
+        "webdata":  "data\\host",
+        "libdata":  "data\\core\\lib",
+        "wv2root":  "pe.store"
+    },
+    "userdata": {
+        "default":  "pe.store\\EBWebView\\Default"
+    }
+}
