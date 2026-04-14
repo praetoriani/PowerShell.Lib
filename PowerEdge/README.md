@@ -27,8 +27,13 @@ PowerEdge\
 |-- data\
 |   |-- config.json                  <- Application configuration (all paths, server settings)
 |   |
-|   |-- core\                        <- HTTP server core (LocalServer HttpListener)
-|   |   `-- LocalServer.HttpListener.ps1
+|   |-- core\                        <- Core modules and WebView2 DLLs
+|   |   |-- VPDLX\                   <- VPDLX logging engine module
+|   |   |   `-- VPDLX.psd1           <- Module manifest (loaded at startup)
+|   |   |-- lib\                     <- WebView2 SDK DLLs
+|   |   |   |-- Microsoft.Web.WebView2.Core.dll
+|   |   |   `-- Microsoft.Web.WebView2.Wpf.dll
+|   |   `-- localserver.ps1          <- LocalServer HttpListener (HTTP server)
 |   |
 |   |-- fxlib\                       <- PowerShell function library (dot-sourced at startup)
 |   |   `-- *.ps1
@@ -36,14 +41,10 @@ PowerEdge\
 |   |-- host\                        <- Web application root (served by HTTP server)
 |   |   `-- home.html                <- Default landing page
 |   |
-|   |-- lib\                         <- WebView2 SDK DLLs
-|   |   |-- Microsoft.Web.WebView2.Core.dll
-|   |   `-- Microsoft.Web.WebView2.Wpf.dll
-|   |
 |   `-- ui\
 |       `-- main.window.xml          <- WPF/XAML UI definition (loaded externally)
 |
-|-- wv2data\                         <- WebView2 user data directory (auto-created)
+|-- pe.store\                        <- WebView2 user data directory (auto-created)
 |
 |-- PowerEdge.ps1                    <- Main entry point / launcher
 |-- PowerEdge.ico                    <- Application icon
@@ -55,13 +56,13 @@ PowerEdge\
 
 ## Requirements
 
-| Requirement                         | Version / Notes                                                       |
-|-------------------------------------|-----------------------------------------------------------------------|
-| PowerShell                          | 5.1 or higher (7.x recommended)                                       |
-| .NET Framework / .NET               | 4.7.2 or higher (WPF dependency)                                      |
-| **Microsoft Edge WebView2 Runtime** | Must be installed — [Download here][wv2-runtime]                      |
-| **WebView2 SDK DLLs** (in `.\data\lib\`) | From NuGet package `Microsoft.Web.WebView2` — [NuGet link][wv2-nuget] |
-| Windows                             | Windows 10 / 11                                                       |
+| Requirement                              | Version / Notes                                                       |
+|------------------------------------------|-----------------------------------------------------------------------|
+| PowerShell                               | 5.1 or higher (7.x recommended)                                       |
+| .NET Framework / .NET                    | 4.7.2 or higher (WPF dependency)                                      |
+| **Microsoft Edge WebView2 Runtime**      | Must be installed — [Download here][wv2-runtime]                      |
+| **WebView2 SDK DLLs** (in `data\core\lib\`) | From NuGet package `Microsoft.Web.WebView2` — [NuGet link][wv2-nuget] |
+| Windows                                  | Windows 10 / 11                                                       |
 
 ---
 
@@ -75,7 +76,7 @@ PowerEdge requires two DLL files from the [Microsoft.Web.WebView2][wv2-nuget] Nu
 2. Click **Download package** (`.nupkg` file)
 3. Rename the `.nupkg` file to `.zip` and extract it
 4. Navigate into the extracted folder: `lib\net45\`
-5. Copy these two files into `PowerEdge\data\lib\`:
+5. Copy these two files into `PowerEdge\data\core\lib\`:
    - `Microsoft.Web.WebView2.Core.dll`
    - `Microsoft.Web.WebView2.Wpf.dll`
 
@@ -84,7 +85,7 @@ PowerEdge requires two DLL files from the [Microsoft.Web.WebView2][wv2-nuget] Nu
 ```powershell
 # Run in the PowerEdge root directory
 nuget install Microsoft.Web.WebView2 -OutputDirectory .\nuget-packages
-# Then copy the DLLs from .\nuget-packages\Microsoft.Web.WebView2.x.x.x\lib\net45\ into .\data\lib\
+# Then copy the DLLs from .\nuget-packages\Microsoft.Web.WebView2.x.x.x\lib\net45\ into .\data\core\lib\
 ```
 
 ### Option C — Via dotnet CLI
@@ -173,15 +174,15 @@ Key settings in `config.json`:
 PowerEdge.ps1 (Orchestrator)
 |
 |-- Loads config.json -> $peCore
-|-- Imports VPDLX logging module (addon[0])
+|-- Imports VPDLX logging module (data\core\VPDLX\VPDLX.psd1)
 |-- Dot-sources function library (data\fxlib\*.ps1)
 |
 |-- [if httpserver.active == true]
-|   `-- Starts LocalServer HttpListener (data\core\LocalServer.HttpListener.ps1)
+|   `-- Starts LocalServer HttpListener (data\core\localserver.ps1)
 |       Serves files from data\host\ on http://localhost:8080/
 |
 |-- Launches STA Runspace
-    `-- WPF Window (main.window.xml)
+    `-- WPF Window (data\ui\main.window.xml)
         `-- WebView2 control
             `-- Navigates to http://localhost:8080/home.html
                 OR file:// URI (if HTTP server is disabled)
@@ -195,14 +196,14 @@ All functions return a standardized `PSCustomObject` status object:
 
 ## Roadmap
 
-| Version       | Status      | Features                                                           |
-|---------------|-------------|--------------------------------------------------------------------|
-| **1.00.00**   | Released    | Core functionality: WPF window + WebView2 + local HTML load        |
-| **1.00.01**   | Released    | Config file support, external XAML, modular function library       |
-| **1.00.02**   | Released    | HTTP server integration, improved startup, window polish           |
+| Version       | Status      | Features                                                                             |
+|---------------|-------------|--------------------------------------------------------------------------------------|
+| **1.00.00**   | Released    | Core functionality: WPF window + WebView2 + local HTML load                          |
+| **1.00.01**   | Released    | Config file support, external XAML, modular function library                         |
+| **1.00.02**   | Released    | HTTP server integration, improved startup, window polish                             |
 | **1.01.01**   | **Current** | VPDLX logging engine integration, HTTP server conditional startup, updated home.html |
-| **1.02.00**   | Planned     | PowerShell <-> JavaScript bridge (PostWebMessageAsJson)            |
-| **2.00.00**   | Planned     | Profile-aware launch (integration with PSAppRocket)                |
+| **1.02.00**   | Planned     | PowerShell <-> JavaScript bridge (PostWebMessageAsJson)                              |
+| **2.00.00**   | Planned     | Profile-aware launch (integration with PSAppRocket)                                  |
 
 ---
 
