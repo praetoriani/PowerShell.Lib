@@ -26,7 +26,7 @@
 
 .NOTES
     Creation Date: 12.04.2026
-    Last Update:   12.04.2026
+    Last Update:   14.04.2026
     Version:       1.00.00
     Author:        Praetoriani
     Website:       https://github.com/praetoriani
@@ -240,10 +240,18 @@ function Import-WebView2Assemblies {
         Microsoft.Web.WebView2.Wpf.dll from the .\lib\ subdirectory.
         If the DLLs are not found there, falls back to checking the GAC/standard
         assembly resolution. Returns a status object indicating success or failure.
+
+        Error handling differentiates between three cases:
+          1. ReflectionTypeLoadException  - DLL found but dependencies missing or
+                                            wrong Target Framework (TFM).
+          2. FileLoadException / BadImageFormatException - DLL is blocked (Zone.Identifier),
+                                            corrupted, or bitness mismatch (x86 vs x64).
+          3. Assembly already loaded      - Benign; treated as success.
+          4. Any other exception          - Treated as a real error and propagated.
     .EXAMPLE
         $result = Import-WebView2Assemblies
     .NOTES
-        Version: 1.00.00 | Author: Praetoriani
+        Version: 1.00.01 | Author: Praetoriani
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -257,21 +265,89 @@ function Import-WebView2Assemblies {
     $dllsInLib = (Test-Path -LiteralPath $coreDll) -and (Test-Path -LiteralPath $wpfDll)
 
     if ($dllsInLib) {
-        # Load from local .\lib\ directory
+        # ── Load Microsoft.Web.WebView2.Core.dll ──────────────────────────────
         try {
             Add-Type -Path $coreDll -ErrorAction Stop
             Write-Verbose "PowerEdge: Loaded WebView2.Core from lib\."
         }
-        catch {
-            # Assembly might already be loaded - that is acceptable
-            Write-Verbose "PowerEdge: WebView2.Core load note: $($_.Exception.Message)"
+        catch [System.Reflection.ReflectionTypeLoadException] {
+            # DLL found but one or more dependent types could not be resolved.
+            # Most likely cause: wrong Target Framework (e.g. netcoreapp DLL loaded
+            # under PowerShell 5.1 / .NET Framework), or WebView2Loader.dll missing.
+            $loaderMsgs = ($_.Exception.LoaderExceptions | ForEach-Object { $_.Message }) -join "; "
+            $status.code = -1
+            $status.msg  = "PowerEdge: WebView2.Core could not be loaded (ReflectionTypeLoadException). " +
+                           "Verify the DLL targets net462 and that WebView2Loader.dll is present in .\lib\. " +
+                           "LoaderExceptions: $loaderMsgs"
+            return $status
         }
+        catch [System.BadImageFormatException] {
+            # Bitness mismatch (x86 DLL in x64 process or vice versa), or the file
+            # is not a valid managed assembly at all.
+            $status.code = -1
+            $status.msg  = "PowerEdge: WebView2.Core could not be loaded (BadImageFormatException). " +
+                           "The DLL architecture does not match the PowerShell process (x86/x64 mismatch), " +
+                           "or the file is not a valid .NET assembly. Details: $($_.Exception.Message)"
+            return $status
+        }
+        catch [System.IO.FileLoadException] {
+            # File was found but loading was refused - most commonly because the file
+            # is blocked by Windows (Zone.Identifier ADS). Run: Unblock-File .\lib\*.dll
+            $status.code = -1
+            $status.msg  = "PowerEdge: WebView2.Core could not be loaded (FileLoadException). " +
+                           "The file may be blocked by Windows security (Zone.Identifier). " +
+                           "Run 'Get-ChildItem .\lib\*.dll | Unblock-File' and retry. " +
+                           "Details: $($_.Exception.Message)"
+            return $status
+        }
+        catch {
+            # Distinguish "already loaded" (benign) from any other unexpected error.
+            if ($_.Exception.Message -match "already loaded|already exists") {
+                Write-Verbose "PowerEdge: WebView2.Core was already loaded in this session - continuing."
+            }
+            else {
+                $status.code = -1
+                $status.msg  = "PowerEdge: Unexpected error while loading WebView2.Core: $($_.Exception.GetType().Name) - $($_.Exception.Message)"
+                return $status
+            }
+        }
+
+        # ── Load Microsoft.Web.WebView2.Wpf.dll ──────────────────────────────
         try {
             Add-Type -Path $wpfDll -ErrorAction Stop
             Write-Verbose "PowerEdge: Loaded WebView2.Wpf from lib\."
         }
+        catch [System.Reflection.ReflectionTypeLoadException] {
+            $loaderMsgs = ($_.Exception.LoaderExceptions | ForEach-Object { $_.Message }) -join "; "
+            $status.code = -1
+            $status.msg  = "PowerEdge: WebView2.Wpf could not be loaded (ReflectionTypeLoadException). " +
+                           "Verify the DLL targets net462 and that WebView2Loader.dll is present in .\lib\. " +
+                           "LoaderExceptions: $loaderMsgs"
+            return $status
+        }
+        catch [System.BadImageFormatException] {
+            $status.code = -1
+            $status.msg  = "PowerEdge: WebView2.Wpf could not be loaded (BadImageFormatException). " +
+                           "Architecture mismatch (x86/x64) or invalid assembly. Details: $($_.Exception.Message)"
+            return $status
+        }
+        catch [System.IO.FileLoadException] {
+            $status.code = -1
+            $status.msg  = "PowerEdge: WebView2.Wpf could not be loaded (FileLoadException). " +
+                           "The file may be blocked by Windows security (Zone.Identifier). " +
+                           "Run 'Get-ChildItem .\lib\*.dll | Unblock-File' and retry. " +
+                           "Details: $($_.Exception.Message)"
+            return $status
+        }
         catch {
-            Write-Verbose "PowerEdge: WebView2.Wpf load note: $($_.Exception.Message)"
+            if ($_.Exception.Message -match "already loaded|already exists") {
+                Write-Verbose "PowerEdge: WebView2.Wpf was already loaded in this session - continuing."
+            }
+            else {
+                $status.code = -1
+                $status.msg  = "PowerEdge: Unexpected error while loading WebView2.Wpf: $($_.Exception.GetType().Name) - $($_.Exception.Message)"
+                return $status
+            }
         }
     }
     else {
@@ -282,9 +358,7 @@ function Import-WebView2Assemblies {
             # Find the latest version folder
             $latestVer = Get-ChildItem $nugetCache -Directory | Sort-Object Name -Descending | Select-Object -First 1
             if ($latestVer) {
-                $nugetCore = Join-Path $latestVer.FullName "lib\net45\Microsoft.Web.WebView2.Core.dll"
-                $nugetWpf  = Join-Path $latestVer.FullName "lib\net45\Microsoft.Web.WebView2.Wpf.dll"
-                # Try net45, then check for other TFMs
+                # Try net462 first (PS 5.1 / .NET Framework), then other TFMs
                 $wpfCandidates = Get-ChildItem (Join-Path $latestVer.FullName "lib") -Recurse -Filter "Microsoft.Web.WebView2.Wpf.dll" -ErrorAction SilentlyContinue
                 if ($wpfCandidates) {
                     foreach ($candidate in $wpfCandidates) {
@@ -295,7 +369,8 @@ function Import-WebView2Assemblies {
         }
     }
 
-    # Verify the type is resolvable after loading attempts
+    # ── Final type-resolution check ───────────────────────────────────────────
+    # Verify the WPF control type is actually accessible after all loading attempts.
     try {
         $null = [Microsoft.Web.WebView2.Wpf.WebView2]
         $status.code = 0
@@ -360,10 +435,15 @@ if ($wv2Result.code -ne 0) {
     Write-Host "SETUP INSTRUCTIONS:" -ForegroundColor Yellow
     Write-Host "  1. Download WebView2 SDK DLLs from NuGet:" -ForegroundColor Cyan
     Write-Host "     https://www.nuget.org/packages/Microsoft.Web.WebView2" -ForegroundColor Cyan
-    Write-Host "  2. Extract and place these files into .\lib\:" -ForegroundColor Cyan
+    Write-Host "  2. Extract the NuGet package (.nupkg is a ZIP) and copy these files" -ForegroundColor Cyan
+    Write-Host "     from the 'lib\net462\' subfolder into .\lib\:" -ForegroundColor Cyan
     Write-Host "     - Microsoft.Web.WebView2.Core.dll" -ForegroundColor Cyan
     Write-Host "     - Microsoft.Web.WebView2.Wpf.dll" -ForegroundColor Cyan
-    Write-Host "  3. Ensure the WebView2 Runtime is installed on this machine." -ForegroundColor Cyan
+    Write-Host "  3. Copy the native loader from 'runtimes\win-x64\native\' into .\lib\:" -ForegroundColor Cyan
+    Write-Host "     - WebView2Loader.dll" -ForegroundColor Cyan
+    Write-Host "  4. Unblock all DLLs to remove Windows security restrictions:" -ForegroundColor Cyan
+    Write-Host "     Get-ChildItem .\lib\*.dll | Unblock-File" -ForegroundColor Cyan
+    Write-Host "  5. Ensure the WebView2 Runtime is installed on this machine." -ForegroundColor Cyan
     Write-Host "     Runtime installer: https://developer.microsoft.com/en-us/microsoft-edge/webview2/" -ForegroundColor Cyan
     exit 1
 }
@@ -386,6 +466,7 @@ $syncHash = [hashtable]::Synchronized(@{
     WindowTitle = $WindowTitle
     XamlDoc     = $xamlDoc
     AppIcon     = $global:AppIcon
+    LibDir      = $global:LibDir
     ExitCode    = 0
     ErrorMsg    = ""
 })
@@ -401,6 +482,20 @@ $uiScript = {
     Add-Type -AssemblyName PresentationFramework
     Add-Type -AssemblyName PresentationCore
     Add-Type -AssemblyName WindowsBase
+
+    # Re-load WebView2 assemblies inside the STA runspace.
+    # Each runspace is an isolated AppDomain context; assemblies loaded in the
+    # main thread are NOT automatically available here. Without this, the XAML
+    # reader cannot resolve the <wv2:WebView2> element type.
+    $libDir = $syncHash.LibDir
+    $coreDll = Join-Path $libDir "Microsoft.Web.WebView2.Core.dll"
+    $wpfDll  = Join-Path $libDir "Microsoft.Web.WebView2.Wpf.dll"
+    if (Test-Path -LiteralPath $coreDll) {
+        try { Add-Type -Path $coreDll -ErrorAction Stop } catch {}
+    }
+    if (Test-Path -LiteralPath $wpfDll) {
+        try { Add-Type -Path $wpfDll -ErrorAction Stop } catch {}
+    }
 
     try {
         # Parse XAML and create the Window object
