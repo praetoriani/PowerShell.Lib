@@ -1,4 +1,4 @@
-# PowerEdge v1.00.00
+# PowerEdge v1.00.02
 
 > **A PowerShell/WPF application that hosts a Microsoft Edge (WebView2) instance**  
 > to display locally stored web applications (HTML files) in a modern, frameless window.
@@ -48,7 +48,7 @@ PowerEdge\
 
 PowerEdge requires two DLL files from the [Microsoft.Web.WebView2][wv2-nuget] NuGet package.
 
-### Option A — Manual Download (Recommended for v1.00.00)
+### Option A — Manual Download (Recommended for v1.00.02)
 
 1. Go to: https://www.nuget.org/packages/Microsoft.Web.WebView2
 2. Click **Download package** (`.nupkg` file)
