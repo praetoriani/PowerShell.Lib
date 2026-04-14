@@ -79,7 +79,7 @@ $global:AppPath   = $PSScriptRoot
 $global:AppIcon   = Join-Path $PSScriptRoot "poweredge.ico"
 
 # Internal path constants
-$global:GuiDir    = Join-Path $PSScriptRoot ".gui"
+$global:GuiDir    = Join-Path $PSScriptRoot "data\ui"
 $global:WebAppDir = Join-Path $PSScriptRoot "data\web"
 $global:LibDir    = Join-Path $PSScriptRoot "data\core\lib"
 $global:XamlFile  = Join-Path $global:GuiDir "main.window.xml"
@@ -134,13 +134,13 @@ function Resolve-WebAppPath {
     .SYNOPSIS
         Validates and canonicalizes the path to the HTML file to be loaded.
     .DESCRIPTION
-        Accepts a user-provided path or falls back to the default webapp\index.html.
+        Accepts a user-provided path or falls back to the default data\web\index.html.
         Performs path canonicalization and validates that the resolved path exists
         and has an .html or .htm extension.
     .PARAMETER InputPath
         Raw path string as provided by the user or empty string for default fallback.
     .EXAMPLE
-        $result = Resolve-WebAppPath -InputPath ".\webapp\index.html"
+        $result = Resolve-WebAppPath -InputPath ".\data\web\index.html"
     .NOTES
         Version: 1.00.00 | Author: Praetoriani
     #>
