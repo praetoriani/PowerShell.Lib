@@ -305,8 +305,8 @@
 
             <!-- ──────────────────────────────────────────────────────────────── -->
             <!--  ROW 2 — STATUS BAR                                         -->
-    PowerEdge v1.00.02 — Main Window XAML Definition            <Border Grid.Row="2"
-                    Background="{StaticResource BrushTitleBar}"
+                    <!-- ──────────────────────────────────────────────────────────────── -->
+        <Border Grid.Row="2"                    Background="{StaticResource BrushTitleBar}"
                     CornerRadius="0,0,10,10"
                     BorderBrush="{StaticResource BrushBorder}"
                     BorderThickness="0,1,0,0">
