@@ -36,6 +36,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Version display corrected:**
   - Fixed incorrect version string `v1.00.03` → `v1.00.02` in:
     - `data/ui/main.window.xml` (header comment, CHANGES section, status bar).
+   
+    - - **TitleBarPanel transparency fix:**
+      -   - Added `Background="Transparent"` to TitleBarPanel (Grid) in WPF.
+          -   - Prevents hit-testing issues where mouse events pass through transparent areas.
+              -   - Added `x:Name="TitleBarBorder"` to the Row-0 Border for reliable event handling.
+               
+                  - - **Typography.CharacterSpacing removed from logo TextBlock:**
+                    -   - Property not reliably supported on TextBlock elements under PowerShell 5.1 / .NET Framework 4.x.
+                        -   - Removed entirely to ensure compatibility; minimal visual impact at 13px font size.
 
 ### Changed
 - Updated XAML UI file (`data/ui/main.window.xml`):
