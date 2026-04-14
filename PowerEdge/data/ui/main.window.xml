@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    PowerEdge v1.00.03 — Main Window XAML Definition
-    ─────────────────────────────────────────────────────────────────────
+    PowerEdge v1.00.02 — Main Window XAML Definition    ─────────────────────────────────────────────────────────────────────
     File:      data\ui\main.window.xml
     Purpose:   Defines the WPF UI for the PowerEdge application window.
                This file is loaded externally by PowerEdge.ps1 as per the
@@ -13,11 +12,9 @@
                clean white typography — professional and unobtrusive.
 
     Author:    Praetoriani
-    Version:   1.00.03
-    Date:      14.04.2026
+    Version:       1.00.02    Date:      14.04.2026
 
-    CHANGES v1.00.03:
-      - Fix: Added Background="Transparent" to TitleBarPanel (Grid).
+    CHANGES v1.00.02:      - Fix: Added Background="Transparent" to TitleBarPanel (Grid).
         In WPF, a Grid/Panel without an explicit Background is treated as
         fully hit-test-transparent — mouse events (MouseLeftButtonDown,
         MouseMove, etc.) pass through it as if it does not exist.
@@ -308,8 +305,7 @@
 
             <!-- ──────────────────────────────────────────────────────────────── -->
             <!--  ROW 2 — STATUS BAR                                         -->
-            <!-- ──────────────────────────────────────────────────────────────── -->
-            <Border Grid.Row="2"
+    PowerEdge v1.00.02 — Main Window XAML Definition            <Border Grid.Row="2"
                     Background="{StaticResource BrushTitleBar}"
                     CornerRadius="0,0,10,10"
                     BorderBrush="{StaticResource BrushBorder}"
@@ -329,8 +325,7 @@
 
                     <!-- Right: version label -->
                     <TextBlock Grid.Column="1"
-                               Text="PowerEdge v1.00.03"
-                               Style="{StaticResource StatusBarText}"
+                        Text="PowerEdge v1.00.02"                               Style="{StaticResource StatusBarText}"
                                HorizontalAlignment="Right"/>
                 </Grid>
             </Border>
