@@ -1,0 +1,78 @@
+# PowerEdge Changelog
+
+All notable changes to the PowerEdge project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
+
+## [1.00.02] - 2026-04-14
+
+### Added
+- **-Hidden** parameter: Allows PowerEdge to start hidden (window not visible).
+  - Can only be used in combination with the `-Timeout` parameter.
+  - Use case: Pre-load the application in the background for faster subsequent display.
+- **-Timeout** parameter: Specifies duration (in milliseconds) PowerEdge remains hidden.
+  - After timeout expires, the window becomes visible automatically.
+  - Mandatory when `-Hidden` is used.
+- **LoadURL** function (`data/fxlib/LoadURL.ps1`):
+  - Navigates the WebView2 control to a new URL or local HTML file.
+  - Supports absolute URIs, local file paths, and relative paths.
+- **LoadURLafter** function (`data/fxlib/LoadURLafter.ps1`):
+  - Works like `LoadURL` but delays navigation by a specified number of milliseconds.
+  - Uses WPF DispatcherTimer for thread-safe delayed navigation.
+
+### Fixed
+- **WebView2 user-data folder issue:**
+  - WebView2 no longer tries to create its user-data folder inside
+    `C:\Windows\System32\WindowsPowerShell\v1.0\` (no write access).
+  - A `CoreWebView2Environment` is now explicitly created with the user-data folder
+    set to `<script dir>\.wv2data` (inside PowerEdge project directory).
+  - Fixes error: "Das Datenverzeichnis konnte nicht erstellt werden"
+    (HRESULT 0x80080005, CO_E_SERVER_EXEC_FAILURE).
+- **Corrupted code block in UI runspace:**
+  - Cleaned up garbled lines in the TitleBarLogo assignment section that referenced
+    undefined "AppIcon" command.
+- **Version display corrected:**
+  - Fixed incorrect version string `v1.00.03` → `v1.00.02` in:
+    - `data/ui/main.window.xml` (header comment, CHANGES section, status bar).
+
+### Changed
+- Updated XAML UI file (`data/ui/main.window.xml`):
+  - Header comment now reflects version 1.00.02.
+  - Status bar displays "PowerEdge v1.00.02" instead of v1.00.03.
+- Updated `PowerEdge.ps1` CHANGELOG section to document all v1.00.02 changes.
+
+---
+
+## [1.00.01] - 2026-04-12
+
+### Fixed
+- **EnsureCoreWebView2Async() timing issue:**
+  - `EnsureCoreWebView2Async()` is now called inside the `Window.Loaded` event handler
+    instead of before `ShowDialog()`.
+  - The WebView2 control requires the WPF dispatcher/event loop to be running before
+    `EnsureCoreWebView2Async` can be invoked.
+  - Calling it before `ShowDialog()` caused the error:
+    _"EnsureCoreWebView2Async cannot be used before the application's event loop has started running."_
+
+---
+
+## [1.00.00] - 2026-04-12
+
+### Added
+- **Initial release of PowerEdge:**
+  - Modern WPF application window with embedded Microsoft Edge WebView2 control.
+  - Loads local HTML files in a frameless, dark-themed window.
+  - External XAML UI definition (`data/ui/main.window.xml`).
+  - Modular function library (`data/fxlib/`) for reusable PowerShell code.
+  - Configuration file (`data/config.json`) for application metadata.
+  - Support for custom window titles via `-WindowTitle` parameter.
+  - Custom title bar with minimize, maximize, and close buttons (macOS-style traffic lights).
+  - Loading overlay with animated spinner during WebView2 initialization.
+  - Status bar showing current state and version.
+
+---
+
+**Author:** Praetoriani  
+**Repository:** [https://github.com/praetoriani/PowerShell.Lib/tree/main/PowerEdge](https://github.com/praetoriani/PowerShell.Lib/tree/main/PowerEdge)
