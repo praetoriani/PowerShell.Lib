@@ -13,15 +13,15 @@
                clean white typography — professional and unobtrusive.
 
     Author:    Praetoriani
-    Version:   1.00.01
+    Version:   1.00.02
     Date:      14.04.2026
 
-    CHANGES v1.00.01:
-      - Removed TextBlock.LetterSpacing (WinUI3/UWP-only; not supported in
-        WPF / .NET Framework). Replaced with character-spaced text via
-        Typography.CharacterSpacing attached property.
-      - Removed StackPanel.Spacing (WinUI3/UWP-only; not supported in WPF).
-        Replaced with explicit Margin on each child Button element.
+    CHANGES v1.00.02:
+      - Removed Typography.CharacterSpacing from the logo TextBlock.
+        This attached property is not reliably supported on TextBlock
+        elements when loaded via XamlReader.Load() under PowerShell 5.1
+        / .NET Framework 4.x. Removed entirely; visual impact at 13px
+        font size is negligible.
     ─────────────────────────────────────────────────────────────────────
 -->
 <Window
@@ -155,21 +155,13 @@
                                      Stroke="Transparent"/>
                         </Canvas>
 
-                        <!--
-                            LetterSpacing is a WinUI3/UWP-only property and is NOT
-                            supported in WPF / .NET Framework. The WPF equivalent is
-                            the Typography.CharacterSpacing attached property, which
-                            accepts values in 1/1000 em units (1 = 1 thousandth of em).
-                            A value of 50 corresponds to roughly 0.05em spacing.
-                        -->
                         <TextBlock Text="PowerEdge"
                                    Foreground="{StaticResource BrushText}"
                                    FontFamily="Segoe UI"
                                    FontSize="13"
                                    FontWeight="SemiBold"
                                    VerticalAlignment="Center"
-                                   Margin="8,0,0,0"
-                                   Typography.CharacterSpacing="50"/>
+                                   Margin="8,0,0,0"/>
                     </StackPanel>
 
                     <!-- Centered window title (dynamic — set from PowerShell) -->
@@ -183,14 +175,9 @@
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"/>
 
-                    <!--
-                        macOS-style traffic light window control buttons.
-                        NOTE: StackPanel.Spacing is a WinUI3/UWP-only property and is
-                        NOT supported in WPF / .NET Framework. In WPF the standard
-                        approach is to set Margin on each individual child element.
-                        The first button has no left margin; subsequent buttons carry
-                        a left margin of 8px to reproduce the original 8px gap.
-                    -->
+                    <!-- macOS-style traffic light window control buttons     -->
+                    <!-- Note: StackPanel.Spacing is WinUI3-only; use Margin  -->
+                    <!-- on individual buttons instead (WPF-compatible).      -->
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center"
