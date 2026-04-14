@@ -21,7 +21,7 @@ function ResolveHttpRoot {
         [string]$InputPath = ""
     )
 
-    $status = New-StatusObject -Code -1 -Msg ""
+    $status = NewStatusObject -Code -1 -Msg ""
 
     if ([string]::IsNullOrWhiteSpace($InputPath)) {
         $targetPath = Join-Path $global:WebAppDir "index.html"
