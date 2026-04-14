@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    PowerEdge v1.00.02 - A WPF host application that embeds a Microsoft Edge (WebView2) instance
+    PowerEdge v1.01.01 - A WPF host application that embeds a Microsoft Edge (WebView2) instance
     to display locally stored web applications (HTML files).
 
 .DESCRIPTION
@@ -41,7 +41,7 @@
 .NOTES
     Creation Date: 12.04.2026
     Last Update:   14.04.2026
-    Version:       1.00.02
+    Version:       1.01.01
     Author:        Praetoriani
     Website:       https://github.com/praetoriani
 
@@ -52,32 +52,6 @@
       Download: https://developer.microsoft.com/en-us/microsoft-edge/webview2/
     - Microsoft.Web.WebView2 NuGet package DLLs placed in .\lib\ subdirectory
       (Microsoft.Web.WebView2.Core.dll + Microsoft.Web.WebView2.Wpf.dll)
-
-    CHANGELOG:
-    v1.00.02 - Fixed: WebView2 no longer tries to create its user-data folder
-               inside C:\Windows\System32\WindowsPowerShell\v1.0\ (no write
-               access). A CoreWebView2Environment is now explicitly created
-               with the user-data folder set to:
-                   <script dir>\.wv2data
-               This folder is inside the PowerEdge project directory where
-               the current user always has write permission.
-               The environment object is passed to EnsureCoreWebView2Async()
-               so WebView2 uses the correct, writable location.
-               Fixes: "Das Datenverzeichnis konnte nicht erstellt werden"
-                      (HRESULT 0x80080005, CO_E_SERVER_EXEC_FAILURE)
-               Fixed: Corrupted code block in UI runspace that referenced
-                      undefined "AppIcon" command - cleaned up garbled lines
-                      in the TitleBarLogo assignment section.
-               Added: -Hidden and -Timeout parameters for delayed window visibility.
-               Added: LoadURL and LoadURLafter functions in fxlib.
-
-    v1.00.01 - Fixed: EnsureCoreWebView2Async() is now called inside the
-               Window.Loaded event handler instead of before ShowDialog().
-               The WebView2 control requires the WPF dispatcher/event loop
-               to be running before EnsureCoreWebView2Async can be invoked.
-               Calling it before ShowDialog() caused the error:
-               "EnsureCoreWebView2Async cannot be used before the
-                application's event loop has started running."
 #>
 
 [CmdletBinding()]
@@ -86,7 +60,7 @@ param(
     [string]$httpRoot = "",
 
     [Parameter(Mandatory = $false)]
-    [string]$WindowTitle = "Far Beyond Limits               ",
+    [string]$WindowTitle = "Far Beyond Limits ",
 
     [Parameter(Mandatory = $false)]
     [switch]$Hidden,
@@ -106,18 +80,18 @@ if ($Hidden -and $Timeout -le 0) {
 # ─────────────────────────────────────────────────────────────────────────────
 # GLOBAL APPLICATION VARIABLES (mandatory per App Development Guidelines)
 # ─────────────────────────────────────────────────────────────────────────────
-
-$peCore = @{}   # ← This will hold the deserialized config.json content as a hashtable, accessible globally as $global:peCore
+$peCore = @{} # ← This will hold the deserialized config.json content as a hashtable, accessible globally as $global:peCore
 
 # Load Configuration from JSON
 $configFile = Join-Path $PSScriptRoot "data\config.json"
 if (Test-Path $configFile) {
     try {
         $global:AppConfig = Get-Content $configFile -Raw | ConvertFrom-Json -ErrorAction Stop
+        
         # Re-Assign to $peCore
         $peCore = $global:AppConfig
-        $global:appname   = $peCore.appinfo.name
-        $global:AppVers   = $peCore.appinfo.version
+        $global:appname = $peCore.appinfo.name
+        $global:AppVers = $peCore.appinfo.version
     }
     catch {
         Write-Error "PowerEdge: Failed to load config.json: $($_.Exception.Message)"
@@ -129,42 +103,74 @@ else {
     exit 1
 }
 
-$global:approot    = $PSScriptRoot
-$global:appicon    = Join-Path $PSScriptRoot "PowerEdge.ico"
+$global:approot = $PSScriptRoot
+$global:appicon = Join-Path $PSScriptRoot "PowerEdge.ico"
 
 # Internal path constants
-$global:uipath      = Join-Path $PSScriptRoot $peCore.appcore.uidata
-$global:hostroot    = Join-Path $PSScriptRoot $peCore.appcore.webdata
-$global:libpath     = Join-Path $PSScriptRoot $peCore.appcore.libdata
-$global:mainwin     = Join-Path $global:uipath "main.window.xml"
-$global:apphome     = Join-Path $global:hostroot $peCore.httpserver.home
+$global:uipath = Join-Path $PSScriptRoot $peCore.appcore.uidata
+$global:hostroot = Join-Path $PSScriptRoot $peCore.appcore.webdata
+$global:libpath = Join-Path $PSScriptRoot $peCore.appcore.libdata
+$global:mainwin = Join-Path $global:uipath "main.window.xml"
+$global:apphome = Join-Path $global:hostroot $peCore.httpserver.home
 
 # WebView2 Root- & User-Data-Folders
-$global:wv2root     = Join-Path $PSScriptRoot $peCore.appcore.wv2root
-$global:wv2default  = Join-Path $PSScriptRoot $peCore.userdata.default
+$global:wv2root = Join-Path $PSScriptRoot $peCore.appcore.wv2root
+$global:wv2default = Join-Path $PSScriptRoot $peCore.userdata.default
 
 # Get the VPDLX-AddOn
-$global:vpdlx       = Join-Path $PSScriptRoot $peCore.addon[0]
+$global:vpdlxPath = Join-Path $PSScriptRoot $peCore.addon[0]
+if (Test-Path $global:vpdlxPath) {
+    try {
+        Import-Module -Name $global:vpdlxPath -ErrorAction Stop
+        Write-Verbose "PowerEdge: VPDLX module loaded successfully."
+    }
+    catch {
+        Write-Warning "PowerEdge: Failed to load VPDLX module: $($_.Exception.Message)"
+    }
+}
 
 # Get HTTP-Server Details
-$global:useserver   = $peCore.httpserver.active
-$global:httpdomain  = $peCore.httpserver.domain
-$global:portconfig  = $peCore.httpserver.port
-$global:servercore  = $peCore.httpserver.core
-$global:rootURL     = "http://$($global:httpdomain):$($global:portconfig)/"
-$global:homeURL     = "http://$($global:httpdomain):$($global:portconfig)/$($peCore.httpserver.home)/"
+$global:useserver = $peCore.httpserver.active
+$global:httpdomain = $peCore.httpserver.domain
+$global:portconfig = $peCore.httpserver.port
+$global:servercore = Join-Path $PSScriptRoot $peCore.httpserver.core
+$global:rootURL = "http://$($global:httpdomain):$($global:portconfig)/"
+$global:homeURL = "http://$($global:httpdomain):$($global:portconfig)/$($peCore.httpserver.home)"
 
 # DOTSOURCING EXTERNAL FUNCTIONS (data\fxlib)
 $fxLibPath = Join-Path $PSScriptRoot "data\fxlib"
 if (Test-Path $fxLibPath) {
     Get-ChildItem -Path $fxLibPath -Filter "*.ps1" | ForEach-Object {
-        try   { . $_.FullName }
-        catch { Write-Warning "PowerEdge: Failed to dotsource $($_.Name): $($_.Exception.Message)" }
+        try {
+            . $_.FullName
+        }
+        catch {
+            Write-Warning "PowerEdge: Failed to dotsource $($_.Name): $($_.Exception.Message)"
+        }
     }
 }
 else {
     Write-Error "PowerEdge: Function library directory not found: $fxLibPath"
     exit 1
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HTTP SERVER INITIALIZATION
+# ─────────────────────────────────────────────────────────────────────────────
+if ($global:useserver -eq $true) {
+    if (Test-Path $global:servercore) {
+        try {
+            . $global:servercore
+            $global:PowerEdgeServer = New-LocalServer -RootPath $global:hostroot -Port $global:portconfig -HostName $global:httpdomain -AutoStart $true -OpenBrowser $false
+            Write-Verbose "PowerEdge: HTTP Server started on $($global:rootURL)"
+        }
+        catch {
+            Write-Warning "PowerEdge: Failed to start HTTP Server: $($_.Exception.Message)"
+        }
+    }
+    else {
+        Write-Warning "PowerEdge: HTTP Server core file not found: $($global:servercore)"
+    }
 }
 
 # MAIN EXECUTION BLOCK
@@ -180,11 +186,13 @@ public class WinApi {
     public static extern IntPtr GetConsoleWindow();
 }
 "@ -ErrorAction SilentlyContinue
+
 try {
     $consoleHandle = [WinApi]::GetConsoleWindow()
-    [WinApi]::ShowWindow($consoleHandle, 0) | Out-Null # SW_MINIMIZE = 6 | SW_HIDE  = 0
+    [WinApi]::ShowWindow($consoleHandle, 0) | Out-Null # SW_MINIMIZE = 6 | SW_HIDE = 0
+} catch {
+    Write-Verbose "PowerEdge: Could not minimize console window: $($_.Exception.Message)"
 }
-catch { Write-Verbose "PowerEdge: Could not minimize console window: $($_.Exception.Message)" }
 
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
@@ -197,6 +205,14 @@ $pathResult = ResolveHttpRoot -InputPath $httpRoot
 if ($pathResult.code -ne 0) { Write-Error $pathResult.msg; exit 1 }
 $resolvedHtmlPath = $pathResult.msg
 
+# If server is active, we might want to use the URL instead of the file path
+if ($global:useserver -eq $true) {
+    # If the user didn't specify a custom root, use the home URL
+    if ([string]::IsNullOrEmpty($httpRoot)) {
+        $resolvedHtmlPath = $global:homeURL
+    }
+}
+
 $wv2Result = LoadWebViewDLLs
 if ($wv2Result.code -ne 0) { Write-Error $wv2Result.msg; exit 1 }
 
@@ -205,8 +221,11 @@ if ($xamlResult.code -ne 0) { Write-Error $xamlResult.msg; exit 1 }
 $xamlDoc = $xamlResult.XmlDoc
 
 if (-not (Test-Path -LiteralPath $global:wv2root -PathType Container)) {
-    try   { New-Item -ItemType Directory -Path $global:wv2root -Force -ErrorAction Stop | Out-Null }
-    catch { Write-Error "PowerEdge: Could not create WebView2 data dir: $($_.Exception.Message)"; exit 1 }
+    try {
+        New-Item -ItemType Directory -Path $global:wv2root -Force -ErrorAction Stop | Out-Null
+    } catch {
+        Write-Error "PowerEdge: Could not create WebView2 data dir: $($_.Exception.Message)"; exit 1
+    }
 }
 
 $syncHash = [hashtable]::Synchronized(@{
@@ -224,7 +243,7 @@ $syncHash = [hashtable]::Synchronized(@{
 
 $uiRunspace = [runspacefactory]::CreateRunspace()
 $uiRunspace.ApartmentState = "STA"
-$uiRunspace.ThreadOptions  = "ReuseThread"
+$uiRunspace.ThreadOptions = "ReuseThread"
 $uiRunspace.Open()
 $uiRunspace.SessionStateProxy.SetVariable("syncHash", $syncHash)
 
@@ -233,15 +252,17 @@ $uiScript = {
     Add-Type -AssemblyName PresentationCore
     Add-Type -AssemblyName WindowsBase
 
-    $libDir  = $syncHash.LibDir
+    $libDir = $syncHash.LibDir
     $coreDll = Join-Path $libDir "Microsoft.Web.WebView2.Core.dll"
-    $wpfDll  = Join-Path $libDir "Microsoft.Web.WebView2.Wpf.dll"
+    $wpfDll = Join-Path $libDir "Microsoft.Web.WebView2.Wpf.dll"
+
     if (Test-Path -LiteralPath $coreDll) { try { Add-Type -Path $coreDll -ErrorAction Stop } catch {} }
-    if (Test-Path -LiteralPath $wpfDll)  { try { Add-Type -Path $wpfDll  -ErrorAction Stop } catch {} }
+    if (Test-Path -LiteralPath $wpfDll) { try { Add-Type -Path $wpfDll -ErrorAction Stop } catch {} }
 
     try {
         $reader = [System.Xml.XmlNodeReader]::new($syncHash.XamlDoc)
         $window = [System.Windows.Markup.XamlReader]::Load($reader)
+
         if ($null -eq $window) {
             $syncHash.ExitCode = -1
             $syncHash.ErrorMsg = "PowerEdge: XamlReader returned null."
@@ -253,58 +274,78 @@ $uiScript = {
             $window.Icon = [System.Windows.Media.Imaging.BitmapImage]::new([System.Uri]::new($syncHash.AppIcon))
         }
 
-        $webView        = $window.FindName("MainWebView")
-        $titleBar       = $window.FindName("TitleBarText")
-        $btnClose       = $window.FindName("BtnClose")
-        $btnMinimize    = $window.FindName("BtnMinimize")
-        $btnMaximize    = $window.FindName("BtnMaximize")
-        $statusText     = $window.FindName("StatusText")
+        $webView = $window.FindName("MainWebView")
+        $titleBar = $window.FindName("TitleBarText")
+        $btnClose = $window.FindName("BtnClose")
+        $btnMinimize = $window.FindName("BtnMinimize")
+        $btnMaximize = $window.FindName("BtnMaximize")
+        $statusText = $window.FindName("StatusText")
         $loadingOverlay = $window.FindName("LoadingOverlay")
-        $titleBarPanel  = $window.FindName("TitleBarPanel")
-        $titleBarLogo   = $window.FindName("TitleBarLogo")
+        $titleBarPanel = $window.FindName("TitleBarPanel")
+        $titleBarLogo = $window.FindName("TitleBarLogo")
 
         if ($null -ne $titleBarLogo -and (Test-Path -LiteralPath $syncHash.AppIcon -ErrorAction SilentlyContinue)) {
             $titleBarLogo.Source = [System.Windows.Media.Imaging.BitmapImage]::new([System.Uri]::new($syncHash.AppIcon))
         }
-        if ($null -ne $titleBar)    { $titleBar.Text = $syncHash.WindowTitle }
-        if ($null -ne $btnClose)    { $btnClose.Add_Click({ $window.Close() }) }
-        if ($null -ne $btnMinimize) { $btnMinimize.Add_Click({ $window.WindowState = [System.Windows.WindowState]::Minimized }) }
+
+        if ($null -ne $titleBar) { $titleBar.Text = $syncHash.WindowTitle }
+
+        if ($null -ne $btnClose) {
+            $btnClose.Add_Click({ $window.Close() })
+        }
+
+        if ($null -ne $btnMinimize) {
+            $btnMinimize.Add_Click({
+                $window.WindowState = [System.Windows.WindowState]::Minimized
+            })
+        }
+
         if ($null -ne $btnMaximize) {
             $btnMaximize.Add_Click({
                 if ($window.WindowState -eq [System.Windows.WindowState]::Maximized) {
                     $window.WindowState = [System.Windows.WindowState]::Normal
-                } else { $window.WindowState = [System.Windows.WindowState]::Maximized }
+                } else {
+                    $window.WindowState = [System.Windows.WindowState]::Maximized
+                }
             })
         }
+
         if ($null -ne $titleBarPanel) {
-            $titleBarPanel.Add_MouseLeftButtonDown({ param($s,$e) $window.DragMove() })
+            $titleBarPanel.Add_MouseLeftButtonDown({
+                param($s,$e) $window.DragMove()
+            })
         }
 
         if ($null -ne $webView) {
             $window.Add_Loaded({
                 if ($null -ne $statusText) { $statusText.Text = "Loading web application..." }
+                
                 $wv2DataDir = $syncHash.Wv2DataDir
                 try {
                     $envTask = [Microsoft.Web.WebView2.Core.CoreWebView2Environment]::CreateAsync(
-                        [string]$null, $wv2DataDir,
-                        [Microsoft.Web.WebView2.Core.CoreWebView2EnvironmentOptions]$null)
+                        [string]$null, $wv2DataDir, [Microsoft.Web.WebView2.Core.CoreWebView2EnvironmentOptions]$null)
                     $wv2Env = $envTask.GetAwaiter().GetResult()
-                }
-                catch {
+                } catch {
                     if ($null -ne $statusText) { $statusText.Text = "WebView2 env failed: $($_.Exception.Message)" }
                     return
                 }
+
                 $webView.Add_CoreWebView2InitializationCompleted({
                     param($sender, $e)
                     if ($e.IsSuccess) {
-                        $fileUri = [System.Uri]::new($syncHash.HtmlPath)
-                        $sender.CoreWebView2.Navigate($fileUri.AbsoluteUri)
+                        $targetUri = $syncHash.HtmlPath
+                        if ($targetUri -notlike "http*") {
+                            $targetUri = [System.Uri]::new($syncHash.HtmlPath).AbsoluteUri
+                        }
+                        $sender.CoreWebView2.Navigate($targetUri)
+                        
                         if ($null -ne $loadingOverlay) { $loadingOverlay.Visibility = [System.Windows.Visibility]::Collapsed }
-                        if ($null -ne $statusText)     { $statusText.Text = "Ready" }
+                        if ($null -ne $statusText) { $statusText.Text = "Ready" }
                     } else {
                         if ($null -ne $statusText) { $statusText.Text = "WebView2 init failed: $($e.InitializationException.Message)" }
                     }
                 })
+
                 $webView.EnsureCoreWebView2Async($wv2Env) | Out-Null
             })
         } else {
@@ -318,7 +359,7 @@ $uiScript = {
             $timer = New-Object System.Windows.Threading.DispatcherTimer
             $timer.Interval = [TimeSpan]::FromMilliseconds($syncHash.Timeout)
             $capturedWindow = $window
-            $capturedTimer  = $timer
+            $capturedTimer = $timer
             $timer.Add_Tick({
                 $capturedWindow.Visibility = [System.Windows.Visibility]::Visible
                 $capturedWindow.Activate()
@@ -328,7 +369,9 @@ $uiScript = {
             $timer.Start()
         } else {
             $window.Topmost = $true
-            $window.Add_Loaded({ $window.Activate(); $window.Focus(); $window.Topmost = $false })
+            $window.Add_Loaded({
+                $window.Activate(); $window.Focus(); $window.Topmost = $false
+            })
         }
 
         $window.ShowDialog() | Out-Null
@@ -342,11 +385,18 @@ $uiScript = {
 $psInstance = [System.Management.Automation.PowerShell]::Create()
 $psInstance.Runspace = $uiRunspace
 $psInstance.AddScript($uiScript) | Out-Null
+
 $asyncHandle = $psInstance.BeginInvoke()
 $psInstance.EndInvoke($asyncHandle)
+
 $psInstance.Dispose()
 $uiRunspace.Close()
 $uiRunspace.Dispose()
+
+# Cleanup HTTP Server if it was started
+if ($global:PowerEdgeServer -ne $null -and $global:PowerEdgeServer.IsRunning()) {
+    $global:PowerEdgeServer.Stop()
+}
 
 if ($syncHash.ExitCode -ne 0) {
     Write-Error $syncHash.ErrorMsg
