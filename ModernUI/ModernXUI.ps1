@@ -1,20 +1,59 @@
 <#
 .SYNOPSIS
     ModernUI v2.0 - XML-Edition Demo
-    Vollständig XML-basiertes Design - keine PNG für das Fenster.
+    Vollstandig XML-basiertes Design - keine PNG fuer das Fenster.
+
+.DESCRIPTION
+    Diese Demo zeigt, wie das ModernUI-Design-Konzept (dunkel, stylisch, modern)
+    komplett uber eine externe XAML/XML-Datei realisiert wird - ganz ohne PNGs
+    fuer das Fenster selbst.
+
+    Architektur:
+      - UI vollstandig in ./WPF/ModernXUI.xaml definiert
+      - Alle Farben, Stile, Animationen, Hover-Effekte: reines XAML
+      - PowerShell-Skript nur fuer Logik & Event-Handler zustandig
+      - Frameless Window mit AllowsTransparency + DropShadowEffect
+      - Sanfte Einblendanimation (ScaleTransform + Opacity Fade-In)
+      - macOS-inspirierte Traffic-Light Fenstersteuerungsbuttons
+
+    Verzeichnisstruktur:
+      ModernUI\
+      |-- ModernXUI.ps1          <- dieses Skript
+      |-- WPF\
+          |-- ModernXUI.xaml     <- komplettes UI-Design (kein PNG!)
+
 .NOTES
-    Version: 2.0.0 | Datum: 14.04.2026
-    Anforderungen: PowerShell 5.1+ | .NET Framework 4.8+
+    Anforderungen : PowerShell 5.1+ | .NET Framework 4.8+
+    Version       : 2.0.0 (XML-Edition)
+    Datum         : 14.04.2026
 #>
 
-param([string]$WindowTitle = "ModernUI - XML-Design Demo")
+param(
+    [string]$WindowTitle = "ModernUI - XML-Design Demo"
+)
 
-# ── Globale Konstanten ────────────────────────────────────────────────────
+# =============================================================================
+# GLOBALE KONSTANTEN
+# =============================================================================
 $global:AppName  = "ModernUI"
 $global:AppVers  = "2.0.0"
+$global:AppPath  = $PSScriptRoot
 $global:XamlFile = Join-Path $PSScriptRoot "WPF\ModernXUI.xaml"
 
-# ── Konsolenfenster minimieren ────────────────────────────────────────────
+# =============================================================================
+# HILFSFUNKTION: Standardisiertes Status-Objekt
+# =============================================================================
+function New-StatusObject {
+    param(
+        [int]   $Code = -1,
+        [string]$Msg  = ""
+    )
+    return [PSCustomObject]@{ code = $Code; msg = $Msg }
+}
+
+# =============================================================================
+# KONSOLENFENSTER MINIMIEREN
+# =============================================================================
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
@@ -27,29 +66,36 @@ public class WinApi {
 "@ -ErrorAction SilentlyContinue
 
 try {
-    $h = [WinApi]::GetConsoleWindow()
-    [WinApi]::ShowWindow($h, 6) | Out-Null
-} catch {}
+    $consoleHandle = [WinApi]::GetConsoleWindow()
+    [WinApi]::ShowWindow($consoleHandle, 6) | Out-Null  # SW_MINIMIZE = 6
+} catch { }
 
-# ── WPF-Assemblies laden ──────────────────────────────────────────────────
+# =============================================================================
+# WPF-ASSEMBLIES LADEN
+# =============================================================================
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
+Add-Type -AssemblyName System.Xml
 
-# ── XAML prüfen und laden ─────────────────────────────────────────────────
-if (-not (Test-Path -LiteralPath $global:XamlFile)) {
-    Write-Error "XAML-Datei nicht gefunden: '$($global:XamlFile)'"
+# =============================================================================
+# XAML LADEN UND VALIDIEREN
+# =============================================================================
+if (-not (Test-Path -LiteralPath $global:XamlFile -PathType Leaf)) {
+    Write-Error "[ModernUI] XAML-Datei nicht gefunden: '$($global:XamlFile)'"
     exit 1
 }
 
 try {
     [xml]$xamlDoc = Get-Content -LiteralPath $global:XamlFile -Raw -Encoding UTF8
 } catch {
-    Write-Error "XAML konnte nicht geparst werden: $($_.Exception.Message)"
+    Write-Error "[ModernUI] XAML konnte nicht geparst werden: $($_.Exception.Message)"
     exit 1
 }
 
-# ── Synchronisierter Hashtable für Runspace-Kommunikation ─────────────────
+# =============================================================================
+# SYNCHRONISIERTER HASHTABLE FUER RUNSPACE-KOMMUNIKATION
+# =============================================================================
 $syncHash = [hashtable]::Synchronized(@{
     XamlDoc     = $xamlDoc
     WindowTitle = $WindowTitle
@@ -59,10 +105,12 @@ $syncHash = [hashtable]::Synchronized(@{
     ErrorMsg    = ""
 })
 
-# ── UI im STA-Runspace starten (WPF-Pflicht) ──────────────────────────────
-$uiRunspace                = [runspacefactory]::CreateRunspace()
-$uiRunspace.ApartmentState = "STA"
-$uiRunspace.ThreadOptions  = "ReuseThread"
+# =============================================================================
+# UI IM STA-RUNSPACE STARTEN (WPF BENOETIGT ZWINGEND STA-THREAD)
+# =============================================================================
+$uiRunspace                  = [runspacefactory]::CreateRunspace()
+$uiRunspace.ApartmentState   = "STA"
+$uiRunspace.ThreadOptions    = "ReuseThread"
 $uiRunspace.Open()
 $uiRunspace.SessionStateProxy.SetVariable("syncHash", $syncHash)
 
@@ -72,19 +120,20 @@ $uiScript = {
     Add-Type -AssemblyName WindowsBase
 
     try {
+        # Fenster aus XAML erstellen
         $reader = [System.Xml.XmlNodeReader]::new($syncHash.XamlDoc)
         $window = [System.Windows.Markup.XamlReader]::Load($reader)
 
         if ($null -eq $window) {
             $syncHash.ExitCode = -1
-            $syncHash.ErrorMsg = "XamlReader hat null zurückgegeben."
+            $syncHash.ErrorMsg = "XamlReader hat null zurueckgegeben."
             return
         }
 
-        # Dynamische Werte setzen
+        # Dynamische Eigenschaften setzen
         $window.Title = $syncHash.WindowTitle
 
-        # UI-Elemente per Name holen
+        # UI-Elemente per Name abrufen
         $btnClose      = $window.FindName("BtnClose")
         $btnMinimize   = $window.FindName("BtnMinimize")
         $btnMaximize   = $window.FindName("BtnMaximize")
@@ -94,11 +143,12 @@ $uiScript = {
         $versionText   = $window.FindName("VersionText")
         $titleBarText  = $window.FindName("TitleBarText")
 
+        # App-Name und Version aus syncHash setzen
         if ($null -ne $titleText)    { $titleText.Text    = $syncHash.AppName }
         if ($null -ne $versionText)  { $versionText.Text  = "v$($syncHash.AppVers)" }
         if ($null -ne $titleBarText) { $titleBarText.Text = $syncHash.WindowTitle }
 
-        # Fenstersteuerungsbuttons
+        # Schliessen-Button
         if ($null -ne $btnClose) {
             $btnClose.Add_Click({
                 if ($null -ne $statusText) { $statusText.Text = "Wird geschlossen..." }
@@ -106,12 +156,14 @@ $uiScript = {
             })
         }
 
+        # Minimieren-Button
         if ($null -ne $btnMinimize) {
             $btnMinimize.Add_Click({
                 $window.WindowState = [System.Windows.WindowState]::Minimized
             })
         }
 
+        # Maximieren/Wiederherstellen-Button
         if ($null -ne $btnMaximize) {
             $btnMaximize.Add_Click({
                 if ($window.WindowState -eq [System.Windows.WindowState]::Maximized) {
@@ -122,43 +174,49 @@ $uiScript = {
             })
         }
 
-        # Titelleiste als Ziehgriff
+        # Titelleiste als Ziehgriff (DragMove)
         if ($null -ne $titleBarPanel) {
             $titleBarPanel.Add_MouseLeftButtonDown({
                 param($sender, $e)
                 if ($e.Source -isnot [System.Windows.Controls.Button]) {
-                    try { $window.DragMove() } catch {}
+                    try { $window.DragMove() } catch { }
                 }
             })
         }
 
-        # Fenster in den Vordergrund
+        # Fenster in den Vordergrund bringen
         $window.Topmost = $true
         $window.Add_Loaded({
             $window.Activate()
             $window.Focus()
             $window.Topmost = $false
             if ($null -ne $statusText) {
-                $statusText.Text = "Bereit  ·  Alle Systeme aktiv"
+                $statusText.Text = "Bereit  -  Alle Systeme aktiv"
             }
         })
 
+        # Fenster anzeigen (blockiert bis geschlossen)
         $window.ShowDialog() | Out-Null
+
     } catch {
         $syncHash.ExitCode = -1
         $syncHash.ErrorMsg = "Fehler im UI-Runspace: $($_.Exception.Message)"
     }
 }
 
-$ps                  = [System.Management.Automation.PowerShell]::Create()
-$ps.Runspace         = $uiRunspace
-$ps.AddScript($uiScript) | Out-Null
-$handle              = $ps.BeginInvoke()
-$ps.EndInvoke($handle)
-$ps.Dispose()
+# Runspace starten und auf Abschluss warten
+$psInstance           = [System.Management.Automation.PowerShell]::Create()
+$psInstance.Runspace  = $uiRunspace
+$psInstance.AddScript($uiScript) | Out-Null
+$asyncHandle          = $psInstance.BeginInvoke()
+$psInstance.EndInvoke($asyncHandle)
+
+# Aufraeumen
+$psInstance.Dispose()
 $uiRunspace.Close()
 $uiRunspace.Dispose()
 
+# Fehlerbehandlung
 if ($syncHash.ExitCode -ne 0) {
     Write-Error "[ModernUI] $($syncHash.ErrorMsg)"
     exit 1
