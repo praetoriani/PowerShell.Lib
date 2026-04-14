@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    PowerEdge v1.00.00 — Main Window XAML Definition
+    PowerEdge v1.00.02 — Main Window XAML Definition
     ─────────────────────────────────────────────────────────────────────
     File:      .gui\main.window.xml
     Purpose:   Defines the WPF UI for the PowerEdge application window.
@@ -300,7 +300,7 @@
 
                     <!-- Right: version label -->
                     <TextBlock Grid.Column="1"
-                               Text="PowerEdge v1.00.00"
+                               Text="PowerEdge v1.00.02"
                                Style="{StaticResource StatusBarText}"
                                HorizontalAlignment="Right"/>
                 </Grid>
