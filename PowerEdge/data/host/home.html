@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PowerEdge Demo App</title>
+    <title>PowerEdge v1.01.01</title>
     <style>
         :root {
             --bg: #121212;
@@ -26,65 +26,80 @@
             font-family: 'Segoe UI', system-ui, sans-serif;
             font-size: 14px;
             line-height: 1.6;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             gap: 32px;
-            padding: 32px;
+            padding: 48px 32px;
         }
 
         .logo-area {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 16px;
+            text-align: center;
         }
 
         .logo-icon {
-            width: 96px;
-            height: 96px;
+            width: 120px;
+            height: 120px;
             object-fit: contain;
-            border-radius: 16px;
-            box-shadow: 0 0 32px rgba(0, 180, 200, 0.15);
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(0, 180, 200, 0.2);
         }
 
         h1 {
-            font-size: 28px;
-            font-weight: 600;
+            font-size: 32px;
+            font-weight: 700;
             letter-spacing: -0.5px;
-            color: var(--text);
+            background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .subtitle {
             color: var(--text-muted);
-            font-size: 14px;
-            text-align: center;
-            max-width: 420px;
+            font-size: 15px;
+            max-width: 500px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            width: 100%;
+            max-width: 1000px;
         }
 
         .card {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 24px 28px;
-            max-width: 520px;
-            width: 100%;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .card-title {
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             color: var(--accent);
-            margin-bottom: 16px;
         }
 
         .info-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 12px;
         }
 
@@ -92,11 +107,11 @@
             background: var(--surface-2);
             border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 12px 14px;
+            padding: 12px;
         }
 
         .info-item .label {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--text-faint);
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -104,72 +119,154 @@
         }
 
         .info-item .value {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text);
             font-weight: 500;
+            word-break: break-all;
         }
 
-        .info-item .value.accent {
-            color: var(--accent);
+        .info-item .value.accent { color: var(--accent); }
+
+        .partner-logos {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-top: 12px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
         }
+        .partner-logos:hover { opacity: 1; }
+        .partner-logo { height: 24px; filter: grayscale(1) brightness(2); }
 
         .status-dot {
             display: inline-block;
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             background: #25a244;
             border-radius: 50%;
-            margin-right: 6px;
-            box-shadow: 0 0 6px rgba(37, 162, 68, 0.6);
+            margin-right: 8px;
+            box-shadow: 0 0 8px rgba(37, 162, 68, 0.6);
             animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: var(--accent-dim);
+            color: #fff;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
+
     <div class="logo-area">
-        <img class="logo-icon" src="../../.logo/PowerEdge-Original-Icon.png" alt="PowerEdge Logo">
+        <img src="../../PowerEdge.ico" class="logo-icon" alt="PowerEdge Logo">
         <h1>PowerEdge</h1>
-        <p class="subtitle">
-            This is the default demo web application loaded inside the
-            Microsoft Edge WebView2 instance hosted by PowerEdge.
-        </p>
+        <p class="subtitle">The professional PowerShell-based Web Application Host environment. Modular, fast, and secure.</p>
+        
+        <div class="partner-logos">
+            <!-- VPDLX Logo placeholder -->
+            <img src="../core/VPDLX/VPDLX.Logo.v1.png" class="partner-logo" title="VPDLX Logging Engine Integrated">
+            <!-- Microsoft Logo placeholder -->
+            <svg class="partner-logo" viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg" title="Powered by Microsoft Edge WebView2">
+                <path fill="#f35325" d="M0 0h11v11H0z"/><path fill="#81bc06" d="M12 0h11v11H12z"/><path fill="#05a6f0" d="M0 12h11v11H0z"/><path fill="#ffba08" d="M12 12h11v11H12z"/>
+            </svg>
+        </div>
     </div>
 
-    <div class="card">
-        <div class="card-title">Runtime Information</div>
-        <div class="info-grid">
-            <div class="info-item">
-                <div class="label">Application</div>
-                <div class="value accent">PowerEdge</div>
+    <div class="container">
+        <!-- Runtime Section -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Runtime Information</span>
+                <span class="badge">Production Ready</span>
             </div>
-            <div class="info-item">
-                <div class="label">Version</div>
-                <div class="value">v1.00.02</div>
-            </div>
-            <div class="info-item">
-                <div class="label">WebView2 Status</div>
-                <div class="value">
-                    <span class="status-dot"></span>Active
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="label">Core Engine</div>
+                    <div class="value">PowerEdge v1.01.01</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Rendering Engine</div>
+                    <div class="value accent">WebView2 (Edge)</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Host Framework</div>
+                    <div class="value">WPF / .NET 4.7.2+</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Logging Engine</div>
+                    <div class="value accent">VPDLX v1.02.06</div>
                 </div>
             </div>
-            <div class="info-item">
-                <div class="label">Renderer</div>
-                <div class="value">Microsoft Edge</div>
+        </div>
+
+        <!-- HTTP Server Section -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">Standalone HTTP-Server</span>
+                <div><span class="status-dot"></span><span style="font-size: 11px; color: #25a244; font-weight: 600;">ACTIVE</span></div>
             </div>
-            <div class="info-item">
-                <div class="label">Host</div>
-                <div class="value">WPF / .NET</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="label">Service Name</div>
+                    <div class="value">LocalServer Listener</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Endpoint URL</div>
+                    <div class="value accent">http://localhost:8080/</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Domain</div>
+                    <div class="value">localhost</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Home</div>
+                    <div class="value">home.html</div>
+                </div>
             </div>
-            <div class="info-item">
-                <div class="label">Shell</div>
-                <div class="value">PowerShell</div>
+        </div>
+
+        <!-- System Information Section -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">System Information</span>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="label">Windows Version</div>
+                    <div class="value">Windows 11 (23H2)</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">PowerShell</div>
+                    <div class="value">7.4.1 (Core)</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">.NET Runtime</div>
+                    <div class="value">8.0.2</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">CPU Performance</div>
+                    <div class="value">High Efficiency</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">WinGet / NuGet</div>
+                    <div class="value">v1.7.10 / v6.9.1</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">System Memory</div>
+                    <div class="value">32 GB RAM</div>
+                </div>
             </div>
         </div>
     </div>
+
 </body>
 </html>
