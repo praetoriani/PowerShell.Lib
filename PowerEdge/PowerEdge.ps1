@@ -118,7 +118,7 @@ if (Test-Path $configFile) {
     catch {
         Write-Error "PowerEdge: Failed to load config.json: $($_.Exception.Message)"
         exit 1
-    
+    }
 }
 else {
     Write-Error "PowerEdge: Configuration file not found: $configFile"
@@ -152,7 +152,7 @@ else {
 
 # MAIN EXECUTION BLOCK
 
-# Minimize the console window immediately
+# Hide the console window immediately
 Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
@@ -165,7 +165,7 @@ public class WinApi {
 "@ -ErrorAction SilentlyContinue
 try {
     $consoleHandle = [WinApi]::GetConsoleWindow()
-    [WinApi]::ShowWindow($consoleHandle, 6) | Out-Null
+    [WinApi]::ShowWindow($consoleHandle, 0) | Out-Null # SW_MINIMIZE = 6 | SW_HIDE  = 0
 }
 catch { Write-Verbose "PowerEdge: Could not minimize console window: $($_.Exception.Message)" }
 
