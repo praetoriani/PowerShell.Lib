@@ -79,4 +79,4 @@ if ($psMajor -lt 5 -or ($psMajor -eq 5 -and $psMinor -lt 1)) {
 # ── All checks passed ──────────────────────────────────────────────────────────
 # The module loader (VPDLX.psm1) will continue with class and function loading.
 # No output is produced on success — the precheck is silent when everything is OK.
-Write-Verbose "VPDLX Precheck: PowerShell $psMajor.$psMinor detected — requirements met."
+Write-Verbose "VPDLX Precheck: PowerShell $psMajor.$psMinor detected - requirements met."
