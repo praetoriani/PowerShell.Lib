@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerEdge Demo App</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --surface: #1a1a1a;
+            --surface-2: #222222;
+            --border: #2a2a2a;
+            --accent: #00b4c8;
+            --accent-dim: #00697a;
+            --text: #e8e8e8;
+            --text-muted: #888;
+            --text-faint: #444;
+            --radius: 8px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            padding: 32px;
+        }
+
+        .logo-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 0 32px rgba(0, 180, 200, 0.15);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            color: var(--text);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            text-align: center;
+            max-width: 420px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px 28px;
+            max-width: 520px;
+            width: 100%;
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .info-item {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 14px;
+        }
+
+        .info-item .label {
+            font-size: 11px;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-item .value {
+            font-size: 14px;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .info-item .value.accent {
+            color: var(--accent);
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            background: #25a244;
+            border-radius: 50%;
+            margin-right: 6px;
+            box-shadow: 0 0 6px rgba(37, 162, 68, 0.6);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-area">
+        <img class="logo-icon" src="../../.logo/PowerEdge-Original-Icon.png" alt="PowerEdge Logo">
+        <h1>PowerEdge</h1>
+        <p class="subtitle">
+            This is the default demo web application loaded inside the
+            Microsoft Edge WebView2 instance hosted by PowerEdge.
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Runtime Information</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="label">Application</div>
+                <div class="value accent">PowerEdge</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Version</div>
+                <div class="value">v1.00.02</div>
+            </div>
+            <div class="info-item">
+                <div class="label">WebView2 Status</div>
+                <div class="value">
+                    <span class="status-dot"></span>Active
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="label">Renderer</div>
+                <div class="value">Microsoft Edge</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Host</div>
+                <div class="value">WPF / .NET</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Shell</div>
+                <div class="value">PowerShell</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
