@@ -38,7 +38,7 @@ param(
 $global:AppName  = "ModernUI"
 $global:AppVers  = "2.0.0"
 $global:AppPath  = $PSScriptRoot
-$global:XamlFile = Join-Path $PSScriptRoot "WPF\ModernXUI.xaml"
+$global:XamlFile = Join-Path $PSScriptRoot "WPF\ModernXUI2.xaml"
 
 # =============================================================================
 # HILFSFUNKTION: Standardisiertes Status-Objekt
