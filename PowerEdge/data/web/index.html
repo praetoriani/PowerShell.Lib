@@ -43,19 +43,11 @@
         }
 
         .logo-icon {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, var(--accent-dim), var(--accent));
+            width: 96px;
+            height: 96px;
+            object-fit: contain;
             border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 32px rgba(0, 180, 200, 0.25);
-        }
-
-        .logo-icon svg {
-            width: 36px;
-            height: 36px;
+            box-shadow: 0 0 32px rgba(0, 180, 200, 0.15);
         }
 
         h1 {
@@ -136,24 +128,11 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
-
-        .footer-text {
-            font-size: 11px;
-            color: var(--text-faint);
-            text-align: center;
-        }
     </style>
 </head>
 <body>
-
     <div class="logo-area">
-        <div class="logo-icon">
-            <!-- Lightning bolt icon -->
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <polygon points="13,2 6,13 12,13 11,22 18,11 12,11"
-                         fill="white" opacity="0.95"/>
-            </svg>
-        </div>
+        <img class="logo-icon" src="../../.logo/PowerEdge-Original-Icon.png" alt="PowerEdge Logo">
         <h1>PowerEdge</h1>
         <p class="subtitle">
             This is the default demo web application loaded inside the
@@ -170,7 +149,7 @@
             </div>
             <div class="info-item">
                 <div class="label">Version</div>
-                <div class="value">v1.00.00</div>
+                <div class="value">v1.00.02</div>
             </div>
             <div class="info-item">
                 <div class="label">WebView2 Status</div>
@@ -192,10 +171,5 @@
             </div>
         </div>
     </div>
-
-    <p class="footer-text">
-        Replace <code style="color: var(--accent)">.\webapp\index.html</code> with your own web application.
-    </p>
-
 </body>
 </html>
