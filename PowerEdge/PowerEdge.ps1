@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    PowerEdge v1.00.01 - A WPF host application that embeds a Microsoft Edge (WebView2) instance
+    PowerEdge v1.00.02 - A WPF host application that embeds a Microsoft Edge (WebView2) instance
     to display locally stored web applications (HTML files).
 
 .DESCRIPTION
@@ -27,7 +27,7 @@
 .NOTES
     Creation Date: 12.04.2026
     Last Update:   14.04.2026
-    Version:       1.00.01
+    Version:       1.00.02
     Author:        Praetoriani
     Website:       https://github.com/praetoriani
 
@@ -40,6 +40,18 @@
       (Microsoft.Web.WebView2.Core.dll + Microsoft.Web.WebView2.Wpf.dll)
 
     CHANGELOG:
+    v1.00.02 - Fixed: WebView2 no longer tries to create its user-data folder
+               inside C:\Windows\System32\WindowsPowerShell\v1.0\ (no write
+               access). A CoreWebView2Environment is now explicitly created
+               with the user-data folder set to:
+                 <script dir>\.wv2data
+               This folder is inside the PowerEdge project directory where
+               the current user always has write permission.
+               The environment object is passed to EnsureCoreWebView2Async()
+               so WebView2 uses the correct, writable location.
+               Fixes: "Das Datenverzeichnis konnte nicht erstellt werden"
+                      (HRESULT 0x80080005, CO_E_SERVER_EXEC_FAILURE)
+
     v1.00.01 - Fixed: EnsureCoreWebView2Async() is now called inside the
                Window.Loaded event handler instead of before ShowDialog().
                The WebView2 control requires the WPF dispatcher/event loop
@@ -61,16 +73,21 @@ param(
 # ─────────────────────────────────────────────────────────────────────────────
 # GLOBAL APPLICATION VARIABLES (mandatory per App Development Guidelines)
 # ─────────────────────────────────────────────────────────────────────────────
-$global:AppName  = "PowerEdge"
-$global:AppVers  = "1.00.01"
-$global:AppPath  = $PSScriptRoot
-$global:AppIcon  = Join-Path $PSScriptRoot "poweredge.ico"
+$global:AppName   = "PowerEdge"
+$global:AppVers   = "1.00.02"
+$global:AppPath   = $PSScriptRoot
+$global:AppIcon   = Join-Path $PSScriptRoot "poweredge.ico"
 
 # Internal path constants
-$global:GuiDir   = Join-Path $PSScriptRoot ".gui"
+$global:GuiDir    = Join-Path $PSScriptRoot ".gui"
 $global:WebAppDir = Join-Path $PSScriptRoot "webapp"
-$global:LibDir   = Join-Path $PSScriptRoot "lib"
-$global:XamlFile = Join-Path $global:GuiDir "main.window.xml"
+$global:LibDir    = Join-Path $PSScriptRoot "lib"
+$global:XamlFile  = Join-Path $global:GuiDir "main.window.xml"
+
+# WebView2 user-data folder: placed inside the project directory so the
+# current user always has read/write access. WebView2 stores its browser
+# cache, cookies, and profile data here.
+$global:Wv2DataDir = Join-Path $PSScriptRoot ".wv2data"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # HELPER: Standard status return object (mandatory per App Development Guidelines)
@@ -119,8 +136,7 @@ function Resolve-WebAppPath {
     .DESCRIPTION
         Accepts a user-provided path or falls back to the default webapp\index.html.
         Performs path canonicalization and validates that the resolved path exists
-        and has an .html or .htm extension. Does NOT enforce directory whitelisting
-        for maximum flexibility in v1.00.00 (planned for v1.01.00).
+        and has an .html or .htm extension.
     .PARAMETER InputPath
         Raw path string as provided by the user or empty string for default fallback.
     .EXAMPLE
@@ -138,13 +154,11 @@ function Resolve-WebAppPath {
 
     $status = New-StatusObject -Code -1 -Msg ""
 
-    # Determine which path to use: user-provided or default fallback
     if ([string]::IsNullOrWhiteSpace($InputPath)) {
         $targetPath = Join-Path $global:WebAppDir "index.html"
         Write-Verbose "PowerEdge: No WebAppPath provided. Using default: $targetPath"
     }
     else {
-        # Resolve relative paths against the script root
         if (-not [System.IO.Path]::IsPathRooted($InputPath)) {
             $targetPath = Join-Path $global:AppPath $InputPath
         }
@@ -153,7 +167,6 @@ function Resolve-WebAppPath {
         }
     }
 
-    # Canonicalize the path to prevent directory traversal
     try {
         $resolvedPath = [System.IO.Path]::GetFullPath($targetPath)
     }
@@ -163,14 +176,12 @@ function Resolve-WebAppPath {
         return $status
     }
 
-    # Validate that the file exists
     if (-not (Test-Path -LiteralPath $resolvedPath -PathType Leaf)) {
         $status.code = -1
         $status.msg  = "PowerEdge: HTML file not found at resolved path: '$resolvedPath'"
         return $status
     }
 
-    # Validate file extension (only .html and .htm are permitted)
     $ext = [System.IO.Path]::GetExtension($resolvedPath).ToLower()
     if ($ext -notin @(".html", ".htm")) {
         $status.code = -1
@@ -178,7 +189,6 @@ function Resolve-WebAppPath {
         return $status
     }
 
-    # Return success with the resolved path in the msg field
     $status.code = 0
     $status.msg  = $resolvedPath
     return $status
@@ -212,14 +222,12 @@ function Import-XamlDefinition {
 
     $status = New-StatusObject -Code -1 -Msg ""
 
-    # Check that the XAML file exists
     if (-not (Test-Path -LiteralPath $XamlFilePath -PathType Leaf)) {
         $status.code = -1
         $status.msg  = "PowerEdge: XAML definition file not found: '$XamlFilePath'"
         return $status
     }
 
-    # Load and parse the XML content
     try {
         [xml]$xamlDoc = Get-Content -LiteralPath $XamlFilePath -Raw -Encoding UTF8
     }
@@ -229,10 +237,8 @@ function Import-XamlDefinition {
         return $status
     }
 
-    # Return the parsed XmlDocument via a wrapper object
     $status.code = 0
     $status.msg  = ""
-    # Attach the XML document as a note property for retrieval
     $status | Add-Member -NotePropertyName "XmlDoc" -NotePropertyValue $xamlDoc
     return $status
 }
@@ -247,16 +253,8 @@ function Import-WebView2Assemblies {
     .DESCRIPTION
         Attempts to load Microsoft.Web.WebView2.Core.dll and
         Microsoft.Web.WebView2.Wpf.dll from the .\lib\ subdirectory.
-        If the DLLs are not found there, falls back to checking the GAC/standard
-        assembly resolution. Returns a status object indicating success or failure.
-
-        Error handling differentiates between three cases:
-          1. ReflectionTypeLoadException  - DLL found but dependencies missing or
-                                            wrong Target Framework (TFM).
-          2. FileLoadException / BadImageFormatException - DLL is blocked (Zone.Identifier),
-                                            corrupted, or bitness mismatch (x86 vs x64).
-          3. Assembly already loaded      - Benign; treated as success.
-          4. Any other exception          - Treated as a real error and propagated.
+        If the DLLs are not found there, falls back to checking the NuGet
+        package cache. Returns a status object indicating success or failure.
     .EXAMPLE
         $result = Import-WebView2Assemblies
     .NOTES
@@ -352,7 +350,6 @@ function Import-WebView2Assemblies {
         }
     }
     else {
-        # DLLs not in .\lib\ - attempt to resolve via NuGet package cache or PATH
         Write-Verbose "PowerEdge: WebView2 DLLs not found in .\lib\. Attempting standard resolution."
         $nugetCache = Join-Path $env:USERPROFILE ".nuget\packages\microsoft.web.webview2"
         if (Test-Path $nugetCache) {
@@ -456,15 +453,35 @@ if ($xamlResult.code -ne 0) {
 $xamlDoc = $xamlResult.XmlDoc
 Write-Verbose "PowerEdge: XAML definition loaded from '$global:XamlFile'."
 
-# Step 4: Build the WPF window from the XAML definition in an STA runspace
+# Step 4: Ensure the WebView2 user-data directory exists and is writable.
+# WebView2 needs a dedicated folder to store its browser profile (cache,
+# cookies, settings). By default it tries to create this folder next to the
+# host executable, which in our case is powershell.exe inside
+# C:\Windows\System32\WindowsPowerShell\v1.0\ - a location the current user
+# cannot write to. We therefore create the folder explicitly inside the
+# PowerEdge project directory (.wv2data) where write access is guaranteed.
+if (-not (Test-Path -LiteralPath $global:Wv2DataDir -PathType Container)) {
+    try {
+        New-Item -ItemType Directory -Path $global:Wv2DataDir -Force -ErrorAction Stop | Out-Null
+        Write-Verbose "PowerEdge: Created WebView2 user-data directory: $global:Wv2DataDir"
+    }
+    catch {
+        Write-Error "PowerEdge: Could not create WebView2 user-data directory '$global:Wv2DataDir': $($_.Exception.Message)"
+        exit 1
+    }
+}
+
+# Step 5: Build the WPF window from the XAML definition in an STA runspace.
 # WPF requires a Single-Thread Apartment (STA) thread to operate.
-# We use a synchronized hashtable to pass data between the calling thread and the UI thread.
+# We use a synchronized hashtable to pass data between the calling thread
+# and the UI thread.
 $syncHash = [hashtable]::Synchronized(@{
     HtmlPath    = $resolvedHtmlPath
     WindowTitle = $WindowTitle
     XamlDoc     = $xamlDoc
     AppIcon     = $global:AppIcon
     LibDir      = $global:LibDir
+    Wv2DataDir  = $global:Wv2DataDir
     ExitCode    = 0
     ErrorMsg    = ""
 })
@@ -483,8 +500,7 @@ $uiScript = {
 
     # Re-load WebView2 assemblies inside the STA runspace.
     # Each runspace is an isolated AppDomain context; assemblies loaded in the
-    # main thread are NOT automatically available here. Without this, the XAML
-    # reader cannot resolve the <wv2:WebView2> element type.
+    # main thread are NOT automatically available here.
     $libDir  = $syncHash.LibDir
     $coreDll = Join-Path $libDir "Microsoft.Web.WebView2.Core.dll"
     $wpfDll  = Join-Path $libDir "Microsoft.Web.WebView2.Wpf.dll"
@@ -517,14 +533,14 @@ $uiScript = {
         }
 
         # Retrieve named controls from the XAML tree
-        $webView         = $window.FindName("MainWebView")
-        $titleBar        = $window.FindName("TitleBarText")
-        $btnClose        = $window.FindName("BtnClose")
-        $btnMinimize     = $window.FindName("BtnMinimize")
-        $btnMaximize     = $window.FindName("BtnMaximize")
-        $statusText      = $window.FindName("StatusText")
-        $loadingOverlay  = $window.FindName("LoadingOverlay")
-        $titleBarPanel   = $window.FindName("TitleBarPanel")
+        $webView        = $window.FindName("MainWebView")
+        $titleBar       = $window.FindName("TitleBarText")
+        $btnClose       = $window.FindName("BtnClose")
+        $btnMinimize    = $window.FindName("BtnMinimize")
+        $btnMaximize    = $window.FindName("BtnMaximize")
+        $statusText     = $window.FindName("StatusText")
+        $loadingOverlay = $window.FindName("LoadingOverlay")
+        $titleBarPanel  = $window.FindName("TitleBarPanel")
 
         # Update title bar label
         if ($null -ne $titleBar) {
@@ -556,32 +572,51 @@ $uiScript = {
             })
         }
 
-        # ── FIX v1.00.01 ──────────────────────────────────────────────────────
-        # EnsureCoreWebView2Async() MUST be called AFTER the WPF dispatcher /
-        # event loop has started. Calling it before ShowDialog() raises:
-        #   "EnsureCoreWebView2Async cannot be used before the application's
-        #    event loop has started running."
-        #
-        # Solution: hook into the Window.Loaded event, which fires after
-        # ShowDialog() has started the dispatcher and the visual tree is ready.
-        # All WebView2 initialisation is moved inside this handler.
-        # ─────────────────────────────────────────────────────────────────────
         if ($null -ne $webView) {
             $window.Add_Loaded({
-                # Update status
+                # Update status text
                 if ($null -ne $statusText) {
                     $statusText.Text = "Loading web application..."
                 }
 
-                # Hook CoreWebView2InitializationCompleted BEFORE calling EnsureCoreWebView2Async
+                # ── FIX v1.00.02 ─────────────────────────────────────────────
+                # Build an explicit CoreWebView2Environment that points the
+                # user-data folder to <script dir>\.wv2data.
+                # Without this, WebView2 defaults to a folder next to
+                # powershell.exe (C:\Windows\System32\...\powershell.exe.WebView2)
+                # which is not writable for normal users, causing:
+                #   "Das Datenverzeichnis konnte nicht erstellt werden."
+                #   HRESULT 0x80080005 (CO_E_SERVER_EXEC_FAILURE)
+                # ─────────────────────────────────────────────────────────────────────
+                $wv2DataDir = $syncHash.Wv2DataDir
+
+                # CoreWebView2Environment.CreateAsync() is a .NET Task; we
+                # use .GetAwaiter().GetResult() to block synchronously on the
+                # STA thread so the environment object is ready before we
+                # pass it to EnsureCoreWebView2Async.
+                try {
+                    $envTask = [Microsoft.Web.WebView2.Core.CoreWebView2Environment]::CreateAsync(
+                        [string]$null,   # browserExecutableFolder  - null = use installed Edge
+                        $wv2DataDir,     # userDataFolder           - our writable project subdir
+                        [Microsoft.Web.WebView2.Core.CoreWebView2EnvironmentOptions]$null
+                    )
+                    $wv2Env = $envTask.GetAwaiter().GetResult()
+                }
+                catch {
+                    if ($null -ne $statusText) {
+                        $statusText.Text = "WebView2 environment creation failed: $($_.Exception.Message)"
+                    }
+                    return
+                }
+
+                # Register the initialization-completed handler BEFORE calling
+                # EnsureCoreWebView2Async so no event is ever missed.
                 $webView.Add_CoreWebView2InitializationCompleted({
                     param($sender, $e)
                     if ($e.IsSuccess) {
-                        # Convert local file path to a file:// URI and navigate
                         $fileUri = [System.Uri]::new($syncHash.HtmlPath)
                         $sender.CoreWebView2.Navigate($fileUri.AbsoluteUri)
 
-                        # Hide loading overlay once navigation starts
                         if ($null -ne $loadingOverlay) {
                             $loadingOverlay.Visibility = [System.Windows.Visibility]::Collapsed
                         }
@@ -596,9 +631,9 @@ $uiScript = {
                     }
                 })
 
-                # Now it is safe to trigger async WebView2 initialisation -
-                # the event loop is running at this point.
-                $webView.EnsureCoreWebView2Async($null) | Out-Null
+                # Pass the explicit environment so WebView2 uses .wv2data
+                # instead of the unwritable default location.
+                $webView.EnsureCoreWebView2Async($wv2Env) | Out-Null
             })
         }
         else {
