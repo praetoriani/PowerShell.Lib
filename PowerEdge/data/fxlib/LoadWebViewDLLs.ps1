@@ -16,7 +16,7 @@ function LoadWebViewDLLs {
     [OutputType([PSCustomObject])]
     param()
 
-    $status = New-StatusObject -Code -1 -Msg ""
+    $status = NewStatusObject -Code -1 -Msg ""
 
     $coreDll = Join-Path $global:LibDir "Microsoft.Web.WebView2.Core.dll"
     $wpfDll  = Join-Path $global:LibDir "Microsoft.Web.WebView2.Wpf.dll"
