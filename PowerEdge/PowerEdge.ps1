@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    PowerEdge v1.00.00 - A WPF host application that embeds a Microsoft Edge (WebView2) instance
+    PowerEdge v1.00.01 - A WPF host application that embeds a Microsoft Edge (WebView2) instance
     to display locally stored web applications (HTML files).
 
 .DESCRIPTION
@@ -27,7 +27,7 @@
 .NOTES
     Creation Date: 12.04.2026
     Last Update:   14.04.2026
-    Version:       1.00.00
+    Version:       1.00.01
     Author:        Praetoriani
     Website:       https://github.com/praetoriani
 
@@ -38,6 +38,15 @@
       Download: https://developer.microsoft.com/en-us/microsoft-edge/webview2/
     - Microsoft.Web.WebView2 NuGet package DLLs placed in .\lib\ subdirectory
       (Microsoft.Web.WebView2.Core.dll + Microsoft.Web.WebView2.Wpf.dll)
+
+    CHANGELOG:
+    v1.00.01 - Fixed: EnsureCoreWebView2Async() is now called inside the
+               Window.Loaded event handler instead of before ShowDialog().
+               The WebView2 control requires the WPF dispatcher/event loop
+               to be running before EnsureCoreWebView2Async can be invoked.
+               Calling it before ShowDialog() caused the error:
+               "EnsureCoreWebView2Async cannot be used before the
+               application's event loop has started running."
 #>
 
 [CmdletBinding()]
@@ -53,7 +62,7 @@ param(
 # GLOBAL APPLICATION VARIABLES (mandatory per App Development Guidelines)
 # ─────────────────────────────────────────────────────────────────────────────
 $global:AppName  = "PowerEdge"
-$global:AppVers  = "1.00.00"
+$global:AppVers  = "1.00.01"
 $global:AppPath  = $PSScriptRoot
 $global:AppIcon  = Join-Path $PSScriptRoot "poweredge.ico"
 
@@ -271,9 +280,6 @@ function Import-WebView2Assemblies {
             Write-Verbose "PowerEdge: Loaded WebView2.Core from lib\."
         }
         catch [System.Reflection.ReflectionTypeLoadException] {
-            # DLL found but one or more dependent types could not be resolved.
-            # Most likely cause: wrong Target Framework (e.g. netcoreapp DLL loaded
-            # under PowerShell 5.1 / .NET Framework), or WebView2Loader.dll missing.
             $loaderMsgs = ($_.Exception.LoaderExceptions | ForEach-Object { $_.Message }) -join "; "
             $status.code = -1
             $status.msg  = "PowerEdge: WebView2.Core could not be loaded (ReflectionTypeLoadException). " +
@@ -282,8 +288,6 @@ function Import-WebView2Assemblies {
             return $status
         }
         catch [System.BadImageFormatException] {
-            # Bitness mismatch (x86 DLL in x64 process or vice versa), or the file
-            # is not a valid managed assembly at all.
             $status.code = -1
             $status.msg  = "PowerEdge: WebView2.Core could not be loaded (BadImageFormatException). " +
                            "The DLL architecture does not match the PowerShell process (x86/x64 mismatch), " +
@@ -291,8 +295,6 @@ function Import-WebView2Assemblies {
             return $status
         }
         catch [System.IO.FileLoadException] {
-            # File was found but loading was refused - most commonly because the file
-            # is blocked by Windows (Zone.Identifier ADS). Run: Unblock-File .\lib\*.dll
             $status.code = -1
             $status.msg  = "PowerEdge: WebView2.Core could not be loaded (FileLoadException). " +
                            "The file may be blocked by Windows security (Zone.Identifier). " +
@@ -301,7 +303,6 @@ function Import-WebView2Assemblies {
             return $status
         }
         catch {
-            # Distinguish "already loaded" (benign) from any other unexpected error.
             if ($_.Exception.Message -match "already loaded|already exists") {
                 Write-Verbose "PowerEdge: WebView2.Core was already loaded in this session - continuing."
             }
@@ -355,10 +356,8 @@ function Import-WebView2Assemblies {
         Write-Verbose "PowerEdge: WebView2 DLLs not found in .\lib\. Attempting standard resolution."
         $nugetCache = Join-Path $env:USERPROFILE ".nuget\packages\microsoft.web.webview2"
         if (Test-Path $nugetCache) {
-            # Find the latest version folder
             $latestVer = Get-ChildItem $nugetCache -Directory | Sort-Object Name -Descending | Select-Object -First 1
             if ($latestVer) {
-                # Try net462 first (PS 5.1 / .NET Framework), then other TFMs
                 $wpfCandidates = Get-ChildItem (Join-Path $latestVer.FullName "lib") -Recurse -Filter "Microsoft.Web.WebView2.Wpf.dll" -ErrorAction SilentlyContinue
                 if ($wpfCandidates) {
                     foreach ($candidate in $wpfCandidates) {
@@ -370,7 +369,6 @@ function Import-WebView2Assemblies {
     }
 
     # ── Final type-resolution check ───────────────────────────────────────────
-    # Verify the WPF control type is actually accessible after all loading attempts.
     try {
         $null = [Microsoft.Web.WebView2.Wpf.WebView2]
         $status.code = 0
@@ -487,7 +485,7 @@ $uiScript = {
     # Each runspace is an isolated AppDomain context; assemblies loaded in the
     # main thread are NOT automatically available here. Without this, the XAML
     # reader cannot resolve the <wv2:WebView2> element type.
-    $libDir = $syncHash.LibDir
+    $libDir  = $syncHash.LibDir
     $coreDll = Join-Path $libDir "Microsoft.Web.WebView2.Core.dll"
     $wpfDll  = Join-Path $libDir "Microsoft.Web.WebView2.Wpf.dll"
     if (Test-Path -LiteralPath $coreDll) {
@@ -519,13 +517,14 @@ $uiScript = {
         }
 
         # Retrieve named controls from the XAML tree
-        $webView    = $window.FindName("MainWebView")
-        $titleBar   = $window.FindName("TitleBarText")
-        $btnClose   = $window.FindName("BtnClose")
-        $btnMinimize = $window.FindName("BtnMinimize")
-        $btnMaximize = $window.FindName("BtnMaximize")
-        $statusText = $window.FindName("StatusText")
-        $loadingOverlay = $window.FindName("LoadingOverlay")
+        $webView         = $window.FindName("MainWebView")
+        $titleBar        = $window.FindName("TitleBarText")
+        $btnClose        = $window.FindName("BtnClose")
+        $btnMinimize     = $window.FindName("BtnMinimize")
+        $btnMaximize     = $window.FindName("BtnMaximize")
+        $statusText      = $window.FindName("StatusText")
+        $loadingOverlay  = $window.FindName("LoadingOverlay")
+        $titleBarPanel   = $window.FindName("TitleBarPanel")
 
         # Update title bar label
         if ($null -ne $titleBar) {
@@ -550,7 +549,6 @@ $uiScript = {
         }
 
         # Allow dragging the custom title bar
-        $titleBarPanel = $window.FindName("TitleBarPanel")
         if ($null -ne $titleBarPanel) {
             $titleBarPanel.Add_MouseLeftButtonDown({
                 param($sender, $e)
@@ -558,38 +556,50 @@ $uiScript = {
             })
         }
 
-        # WebView2: Navigate to the local HTML file once the control is initialized
+        # ── FIX v1.00.01 ──────────────────────────────────────────────────────
+        # EnsureCoreWebView2Async() MUST be called AFTER the WPF dispatcher /
+        # event loop has started. Calling it before ShowDialog() raises:
+        #   "EnsureCoreWebView2Async cannot be used before the application's
+        #    event loop has started running."
+        #
+        # Solution: hook into the Window.Loaded event, which fires after
+        # ShowDialog() has started the dispatcher and the visual tree is ready.
+        # All WebView2 initialisation is moved inside this handler.
+        # ─────────────────────────────────────────────────────────────────────
         if ($null -ne $webView) {
-            # Update status text
-            if ($null -ne $statusText) {
-                $statusText.Text = "Loading web application..."
-            }
-
-            # Hook into CoreWebView2InitializationCompleted to navigate after init
-            $webView.Add_CoreWebView2InitializationCompleted({
-                param($sender, $e)
-                if ($e.IsSuccess) {
-                    # Convert local file path to a file:// URI
-                    $fileUri = [System.Uri]::new($syncHash.HtmlPath)
-                    $sender.CoreWebView2.Navigate($fileUri.AbsoluteUri)
-
-                    # Hide loading overlay once navigation starts
-                    if ($null -ne $loadingOverlay) {
-                        $loadingOverlay.Visibility = [System.Windows.Visibility]::Collapsed
-                    }
-                    if ($null -ne $statusText) {
-                        $statusText.Text = "Ready"
-                    }
+            $window.Add_Loaded({
+                # Update status
+                if ($null -ne $statusText) {
+                    $statusText.Text = "Loading web application..."
                 }
-                else {
-                    if ($null -ne $statusText) {
-                        $statusText.Text = "WebView2 initialization failed: $($e.InitializationException.Message)"
+
+                # Hook CoreWebView2InitializationCompleted BEFORE calling EnsureCoreWebView2Async
+                $webView.Add_CoreWebView2InitializationCompleted({
+                    param($sender, $e)
+                    if ($e.IsSuccess) {
+                        # Convert local file path to a file:// URI and navigate
+                        $fileUri = [System.Uri]::new($syncHash.HtmlPath)
+                        $sender.CoreWebView2.Navigate($fileUri.AbsoluteUri)
+
+                        # Hide loading overlay once navigation starts
+                        if ($null -ne $loadingOverlay) {
+                            $loadingOverlay.Visibility = [System.Windows.Visibility]::Collapsed
+                        }
+                        if ($null -ne $statusText) {
+                            $statusText.Text = "Ready"
+                        }
                     }
-                }
+                    else {
+                        if ($null -ne $statusText) {
+                            $statusText.Text = "WebView2 initialization failed: $($e.InitializationException.Message)"
+                        }
+                    }
+                })
+
+                # Now it is safe to trigger async WebView2 initialisation -
+                # the event loop is running at this point.
+                $webView.EnsureCoreWebView2Async($null) | Out-Null
             })
-
-            # Trigger async WebView2 initialization
-            $webView.EnsureCoreWebView2Async($null) | Out-Null
         }
         else {
             $syncHash.ExitCode = -1
