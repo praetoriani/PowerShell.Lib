@@ -13,25 +13,6 @@
 
     Author:    Praetoriani
     Version:       1.00.02    Date:      14.04.2026
-
-    CHANGES v1.00.02:      - Fix: Added Background="Transparent" to TitleBarPanel (Grid).
-        In WPF, a Grid/Panel without an explicit Background is treated as
-        fully hit-test-transparent — mouse events (MouseLeftButtonDown,
-        MouseMove, etc.) pass through it as if it does not exist.
-        Setting Background="Transparent" makes the grid participate in
-        hit-testing so that DragMove() and cursor changes work correctly
-        across the entire title bar area, not just over child controls.
-      - Fix: Added x:Name="TitleBarBorder" to the Row-0 Border element
-        so that PowerEdge.ps1 can attach MouseLeftButtonDown → DragMove()
-        directly to the Border (which always has a real background brush
-        and is therefore reliably hit-testable).
-
-    CHANGES v1.00.02:
-      - Removed Typography.CharacterSpacing from the logo TextBlock.
-        This attached property is not reliably supported on TextBlock
-        elements when loaded via XamlReader.Load() under PowerShell 5.1
-        / .NET Framework 4.x. Removed entirely; visual impact at 13px
-        font size is negligible.
     ─────────────────────────────────────────────────────────────────────
 -->
 <Window
