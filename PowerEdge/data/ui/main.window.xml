@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    PowerEdge v1.00.02 — Main Window XAML Definition
+    PowerEdge v1.00.03 — Main Window XAML Definition
     ─────────────────────────────────────────────────────────────────────
-    File:      .gui\main.window.xml
+    File:      data\ui\main.window.xml
     Purpose:   Defines the WPF UI for the PowerEdge application window.
                This file is loaded externally by PowerEdge.ps1 as per the
                mandatory App Development Guidelines (no inline XAML).
@@ -13,8 +13,21 @@
                clean white typography — professional and unobtrusive.
 
     Author:    Praetoriani
-    Version:   1.00.02
+    Version:   1.00.03
     Date:      14.04.2026
+
+    CHANGES v1.00.03:
+      - Fix: Added Background="Transparent" to TitleBarPanel (Grid).
+        In WPF, a Grid/Panel without an explicit Background is treated as
+        fully hit-test-transparent — mouse events (MouseLeftButtonDown,
+        MouseMove, etc.) pass through it as if it does not exist.
+        Setting Background="Transparent" makes the grid participate in
+        hit-testing so that DragMove() and cursor changes work correctly
+        across the entire title bar area, not just over child controls.
+      - Fix: Added x:Name="TitleBarBorder" to the Row-0 Border element
+        so that PowerEdge.ps1 can attach MouseLeftButtonDown → DragMove()
+        directly to the Border (which always has a real background brush
+        and is therefore reliably hit-testable).
 
     CHANGES v1.00.02:
       - Removed Typography.CharacterSpacing from the logo TextBlock.
@@ -129,11 +142,29 @@
             <!-- ──────────────────────────────────────────────────────────────── -->
             <!--  ROW 0 — CUSTOM TITLE BAR                                   -->
             <!-- ──────────────────────────────────────────────────────────────── -->
-            <Border Grid.Row="0"
+            <!--
+                FIX v1.00.03: x:Name="TitleBarBorder" added so that
+                PowerEdge.ps1 can wire MouseLeftButtonDown → DragMove()
+                directly onto this Border. The Border already has a real
+                background brush (BrushTitleBar) and is therefore always
+                hit-testable — no transparency issue.
+            -->
+            <Border x:Name="TitleBarBorder"
+                    Grid.Row="0"
                     Background="{StaticResource BrushTitleBar}"
                     CornerRadius="10,10,0,0">
 
+                <!--
+                    FIX v1.00.03: Background="Transparent" added to TitleBarPanel.
+                    Without an explicit Background, a WPF Grid is hit-test-invisible:
+                    mouse clicks/moves pass straight through it to whatever is behind
+                    the window.  Setting Background="Transparent" makes every pixel
+                    of the grid participate in hit-testing so that the Cursor="SizeAll"
+                    visual and the DragMove() handler fire reliably across the whole
+                    title bar, not just over the child TextBlock/Button controls.
+                -->
                 <Grid x:Name="TitleBarPanel"
+                      Background="Transparent"
                       Cursor="SizeAll">
 
                     <Grid.ColumnDefinitions>
@@ -148,7 +179,7 @@
                                 VerticalAlignment="Center"
                                 Margin="14,0,0,0">
 
-<!-- App logo icon (source set dynamically in PowerEdge.ps1) -->
+                        <!-- App logo icon (source set dynamically in PowerEdge.ps1) -->
                         <Image x:Name="TitleBarLogo"
                                Width="20" Height="20"
                                VerticalAlignment="Center"
@@ -298,7 +329,7 @@
 
                     <!-- Right: version label -->
                     <TextBlock Grid.Column="1"
-                               Text="PowerEdge v1.00.02"
+                               Text="PowerEdge v1.00.03"
                                Style="{StaticResource StatusBarText}"
                                HorizontalAlignment="Right"/>
                 </Grid>
