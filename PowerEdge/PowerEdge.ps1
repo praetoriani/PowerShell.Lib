@@ -76,7 +76,7 @@ param(
 $global:AppName   = "PowerEdge"
 $global:AppVers   = "1.00.02"
 $global:AppPath   = $PSScriptRoot
-$global:AppIcon   = Join-Path $PSScriptRoot "poweredge.ico"
+$global:AppIcon   = Join-Path $PSScriptRoot "PowerEdge.ico"
 
 # Internal path constants
 $global:GuiDir    = Join-Path $PSScriptRoot "data\ui"
@@ -107,7 +107,7 @@ function New-StatusObject {
     .EXAMPLE
         $result = New-StatusObject -Code 0 -Msg ""
     .NOTES
-        Version: 1.00.00 | Author: Praetoriani
+        Version: 1.00.02 | Author: Praetoriani
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -142,7 +142,7 @@ function Resolve-WebAppPath {
     .EXAMPLE
         $result = Resolve-WebAppPath -InputPath ".\data\web\index.html"
     .NOTES
-        Version: 1.00.00 | Author: Praetoriani
+        Version: 1.00.02 | Author: Praetoriani
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -210,7 +210,7 @@ function Import-XamlDefinition {
     .EXAMPLE
         $result = Import-XamlDefinition -XamlFilePath $global:XamlFile
     .NOTES
-        Version: 1.00.00 | Author: Praetoriani
+        Version: 1.00.02 | Author: Praetoriani
     #>
     [CmdletBinding()]
     [OutputType([PSCustomObject])]
@@ -641,6 +641,19 @@ $uiScript = {
             $syncHash.ErrorMsg = "PowerEdge: Named element 'MainWebView' not found in XAML. Check main.window.xml."
         }
 
+    # ── FIX v1.00.02 ─────────────────────────────────────────────────────────
+    # Ensure the window receives focus and appears in the foreground on startup.
+    # Setting Topmost = $true before ShowDialog() forces the WPF window to the
+    # front of the Z-order. A second Add_Loaded handler immediately resets
+    # Topmost to $false so the window behaves normally after initial display,
+    # while $window.Activate() explicitly requests the input focus.
+    # ─────────────────────────────────────────────────────────────────────────
+    $window.Topmost = $true
+    $window.Add_Loaded({
+        $window.Activate()
+        $window.Focus()
+        $window.Topmost = $false
+    })
         # Show the window and start the WPF message loop
         $window.ShowDialog() | Out-Null
 
