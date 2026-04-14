@@ -20,5 +20,12 @@
     "userdata": {
         "default":  "pe.store\\EBWebView\\Default"
     },
-    "addon":        ["data\\core\\VPDLX\\VPDLX.psd1"]
+    "addon":        ["data\\core\\VPDLX\\VPDLX.psd1"],
+    "httpserver": {
+        "active":   true,
+        "core":     "data\\core\\localserver.ps1",
+        "domain":   "localhost",
+        "port":     "8080",
+        "home":     "home.html"
+    }
 }

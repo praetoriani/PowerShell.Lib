@@ -137,7 +137,7 @@ $global:uipath      = Join-Path $PSScriptRoot $peCore.appcore.uidata
 $global:hostroot    = Join-Path $PSScriptRoot $peCore.appcore.webdata
 $global:libpath     = Join-Path $PSScriptRoot $peCore.appcore.libdata
 $global:mainwin     = Join-Path $global:uipath "main.window.xml"
-$global:apphome     = Join-Path $global:hostroot "home.html"
+$global:apphome     = Join-Path $global:hostroot $peCore.httpserver.home
 
 # WebView2 Root- & User-Data-Folders
 $global:wv2root     = Join-Path $PSScriptRoot $peCore.appcore.wv2root
@@ -145,6 +145,14 @@ $global:wv2default  = Join-Path $PSScriptRoot $peCore.userdata.default
 
 # Get the VPDLX-AddOn
 $global:vpdlx       = Join-Path $PSScriptRoot $peCore.addon[0]
+
+# Get HTTP-Server Details
+$global:useserver   = $peCore.httpserver.active
+$global:httpdomain  = $peCore.httpserver.domain
+$global:portconfig  = $peCore.httpserver.port
+$global:servercore  = $peCore.httpserver.core
+$global:rootURL     = "http://$($global:httpdomain):$($global:portconfig)/"
+$global:homeURL     = "http://$($global:httpdomain):$($global:portconfig)/$($peCore.httpserver.home)/"
 
 # DOTSOURCING EXTERNAL FUNCTIONS (data\fxlib)
 $fxLibPath = Join-Path $PSScriptRoot "data\fxlib"
