@@ -13,13 +13,13 @@
 
 .PARAMETER WebAppPath
     Full or relative path to the local HTML file to be loaded inside the Edge WebView2 instance.
-    If omitted, PowerEdge looks for a default 'index.html' inside the .\webapp\ subdirectory.
+    If omitted, PowerEdge looks for a default 'index.html' inside the .\data\web\ subdirectory.
 
 .PARAMETER WindowTitle
     Optional custom window title. Defaults to "PowerEdge" if not specified.
 
 .EXAMPLE
-    .\PowerEdge.ps1 -WebAppPath ".\webapp\index.html"
+    .\PowerEdge.ps1 -WebAppPath ".\data\web\index.html"
 
 .EXAMPLE
     .\PowerEdge.ps1 -WebAppPath "C:\MyApps\dashboard.html" -WindowTitle "My Dashboard"
@@ -80,8 +80,8 @@ $global:AppIcon   = Join-Path $PSScriptRoot "poweredge.ico"
 
 # Internal path constants
 $global:GuiDir    = Join-Path $PSScriptRoot ".gui"
-$global:WebAppDir = Join-Path $PSScriptRoot "webapp"
-$global:LibDir    = Join-Path $PSScriptRoot "lib"
+$global:WebAppDir = Join-Path $PSScriptRoot "data\web"
+$global:LibDir    = Join-Path $PSScriptRoot "data\core\lib"
 $global:XamlFile  = Join-Path $global:GuiDir "main.window.xml"
 
 # WebView2 user-data folder: placed inside the project directory so the
