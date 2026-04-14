@@ -87,7 +87,7 @@ $global:XamlFile  = Join-Path $global:GuiDir "main.window.xml"
 # WebView2 user-data folder: placed inside the project directory so the
 # current user always has read/write access. WebView2 stores its browser
 # cache, cookies, and profile data here.
-$global:Wv2DataDir = Join-Path $PSScriptRoot ".wv2data"
+$global:Wv2DataDir = Join-Path $PSScriptRoot "pe.store"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # HELPER: Standard status return object (mandatory per App Development Guidelines)

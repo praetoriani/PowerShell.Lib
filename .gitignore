@@ -69,3 +69,4 @@ context-menu-switcher-release-v2.yml
 /PSx Composer/*
 unblock-all-files.cmd
 /PowerEdge/.wv2data
+/PowerEdge/userdata
