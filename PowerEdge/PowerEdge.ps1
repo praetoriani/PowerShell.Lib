@@ -164,7 +164,7 @@ if ($global:useserver -eq $true) {
             . "$($global:servercore)"
             $global:PowerEdgeServer = [LocalServer]::new($global:hostroot, $global:rootURL)
             $global:PowerEdgeServer.SpaFallback = $true
-            $global:PowerEdgeServer.Start()
+            $global:PowerEdgeServer.Start(); Start-Sleep -Milliseconds 800
             
             Write-Verbose "PowerEdge: HTTP Server started on $($global:rootURL)"
         }
