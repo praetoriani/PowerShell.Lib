@@ -325,15 +325,9 @@ $uiScript = {
             $window.Add_Loaded({
                 if ($null -ne $statusText) { $statusText.Text = "Loading web application..." }
                 
-                $wv2DataDir = $syncHash.Wv2DataDir
-                try {
-                    $envTask = [Microsoft.Web.WebView2.Core.CoreWebView2Environment]::CreateAsync(
-                        [string]$null, $wv2DataDir, [Microsoft.Web.WebView2.Core.CoreWebView2EnvironmentOptions]$null)
-                    $wv2Env = $envTask.GetAwaiter().GetResult()
-                } catch {
-                    if ($null -ne $statusText) { $statusText.Text = "WebView2 env failed: $($_.Exception.Message)" }
-                    return
-                }
+                $wv2Props = [Microsoft.Web.WebView2.Wpf.CoreWebView2CreationProperties]::new()
+                $wv2Props.UserDataFolder = $syncHash.Wv2DataDir
+                $webView.CreationProperties = $wv2Props
 
                 $webView.Add_CoreWebView2InitializationCompleted({
                     param($sender, $e)
@@ -351,7 +345,7 @@ $uiScript = {
                     }
                 })
 
-                $webView.EnsureCoreWebView2Async($wv2Env) | Out-Null
+                                $webView.EnsureCoreWebView2Async() | Out-Null
             })
         } else {
             $syncHash.ExitCode = -1
