@@ -242,7 +242,7 @@
                 <!-- Loading overlay — shown while WebView2 initializes -->
                 <Border x:Name="LoadingOverlay"
                         Background="{StaticResource BrushBg}"
-                        Visibility="Visible">
+                        Visibility="Collapsed">
 
                     <StackPanel HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
