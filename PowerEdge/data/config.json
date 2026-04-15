@@ -22,7 +22,7 @@
     },
     "addon":        ["data\\core\\VPDLX\\VPDLX.psd1"],
     "httpserver": {
-        "active":   true,
+        "active":   false,
         "core":     "data\\core\\localserver.ps1",
         "domain":   "localhost",
         "port":     "8080",
