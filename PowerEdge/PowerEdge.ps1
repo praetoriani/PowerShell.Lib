@@ -165,7 +165,7 @@ if ($global:useserver -eq $true) {
             $global:PowerEdgeServer = [LocalServer]::new($global:hostroot, $global:rootURL)
             $global:PowerEdgeServer.SpaFallback = $true
             $global:PowerEdgeServer.Start()
-            LoadURL -WebView true -URL $global:homeURL
+            
             Write-Verbose "PowerEdge: HTTP Server started on $($global:rootURL)"
         }
         catch {
