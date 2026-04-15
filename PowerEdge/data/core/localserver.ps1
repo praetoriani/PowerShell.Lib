@@ -547,10 +547,10 @@ class LocalServer {
             return
         }
         Write-Host "[LocalServer] Opening $url in default browser..." -ForegroundColor Cyan
-        if (($null -ne (Get-Variable -Name 'IsWindows' -ErrorAction SilentlyContinue) -and $IsWindows) -or $env:OS -eq 'Windows_NT') {
+        if (($null -ne (Get-Variable -Name 'IsWindows' -ErrorAction SilentlyContinue) -and (Get-Variable -Name 'IsWindows').Value) -or $env:OS -eq 'Windows_NT') {
             Start-Process $url
         }
-        elseif ($null -ne (Get-Variable -Name 'IsMacOS' -ErrorAction SilentlyContinue) -and $IsMacOS) {
+        elseif ($null -ne (Get-Variable -Name 'IsMacOS' -ErrorAction SilentlyContinue) -and (Get-Variable -Name 'IsMacOS').Value) {
             & open $url
         }
         else {
