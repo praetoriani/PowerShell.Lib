@@ -119,6 +119,7 @@ $global:wv2default = Join-Path $PSScriptRoot $peCore.userdata.default
 
 # Get the VPDLX-AddOn
 $global:vpdlxPath = Join-Path $PSScriptRoot $peCore.addon[0]
+<#
 if (Test-Path $global:vpdlxPath) {
     try {
         Import-Module -Name $global:vpdlxPath -ErrorAction Stop
@@ -128,7 +129,7 @@ if (Test-Path $global:vpdlxPath) {
         Write-Warning "PowerEdge: Failed to load VPDLX module: $($_.Exception.Message)"
     }
 }
-
+#>
 # Get HTTP-Server Details
 $global:useserver = $peCore.httpserver.active
 $global:httpdomain = $peCore.httpserver.domain
@@ -160,8 +161,10 @@ else {
 if ($global:useserver -eq $true) {
     if (Test-Path $global:servercore) {
         try {
-            . $global:servercore
-            $global:PowerEdgeServer = [LocalServer]::new($global:hostroot, $global:rootURL)             $global:PowerEdgeServer.SpaFallback = $true             $global:PowerEdgeServer.Start()
+            . "$($global:servercore)"
+            $global:PowerEdgeServer = [LocalServer]::new($global:hostroot, $global:rootURL)
+            $global:PowerEdgeServer.SpaFallback = $true
+            $global:PowerEdgeServer.Start()
             Write-Verbose "PowerEdge: HTTP Server started on $($global:rootURL)"
         }
         catch {
