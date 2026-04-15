@@ -336,7 +336,7 @@ $uiScript = {
                         if ($targetUri -notlike "http*") {
                             $targetUri = [System.Uri]::new($syncHash.HtmlPath).AbsoluteUri
                         }
-                        $sender.Source = [System.Uri]::new($syncHash.HtmlPath)
+                        $webView.CoreWebView2.Navigate($targetUri)
                         
                         if ($null -ne $loadingOverlay) { $loadingOverlay.Visibility = [System.Windows.Visibility]::Collapsed }
                         if ($null -ne $statusText) { $statusText.Text = "Ready" }
