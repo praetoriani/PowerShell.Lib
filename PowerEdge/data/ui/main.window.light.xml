@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    PowerEdge v1.01.01 – Main Window XAML Definition (Light Theme)                            —1.01.01—
+    File:       data\ui\main.window.light.xml
+    Purpose:    Defines the WPF UI for the PowerEdge application window.
+                This file is loaded externally by PowerEdge.ps1 as per the
+                mandatory App Development Guidelines (no inline XAML).
+
+    Design:     Modern light-themed frameless window with a custom title bar,
+                WebView2 host area, and a minimal status bar.
+                Color palette: light grey backgrounds, pastel whites,
+                clean typography — professional and unobtrusive.
+
+    Author:     Praetoriani
+    Version:    1.01.01    Date:      16.04.2026
+                                                                                               —————————
+-->
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+    Title="PowerEdge"
+    Width="1280"
+    Height="800"
+    MinWidth="800"
+    MinHeight="500"
+    WindowStyle="None"
+    AllowsTransparency="True"
+    Background="Transparent"
+    ResizeMode="CanResize"
+    WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+
+        <!-- ———————————————————————————————————————————————————————————————— -->
+        <!--   COLOR PALETTE                                                  -->
+        <!-- ———————————————————————————————————————————————————————————————— -->
+
+        <SolidColorBrush x:Key="BrushBg"                Color="#F5F5F5"/>
+        <SolidColorBrush x:Key="BrushSurface"           Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="BrushSurface2"          Color="#FAFAFA"/>
+        <SolidColorBrush x:Key="BrushTitleBar"          Color="#E8E8E8"/>
+        <SolidColorBrush x:Key="BrushAccent"            Color="#5B9BD5"/>
+        <SolidColorBrush x:Key="BrushAccentHover"       Color="#7BB4E8"/>
+        <SolidColorBrush x:Key="BrushAccentDim"         Color="#4A7CA8"/>
+        <SolidColorBrush x:Key="BrushText"              Color="#2C2C2C"/>
+        <SolidColorBrush x:Key="BrushTextMuted"         Color="#707070"/>
+        <SolidColorBrush x:Key="BrushTextFaint"         Color="#B0B0B0"/>
+        <SolidColorBrush x:Key="BrushBorder"            Color="#D0D0D0"/>
+        <SolidColorBrush x:Key="BrushBtnClose"          Color="#E05055"/>
+        <SolidColorBrush x:Key="BrushBtnCloseHover"     Color="#FF6B70"/>
+        <SolidColorBrush x:Key="BrushBtnMinimize"       Color="#F0A500"/>
+        <SolidColorBrush x:Key="BrushBtnMaximize"       Color="#25A244"/>
+        <SolidColorBrush x:Key="BrushTransparent"       Color="Transparent"/>
+
+        <!-- ———————————————————————————————————————————————————————————————— -->
+        <!--   WINDOW CONTROL BUTTON STYLE (Close / Minimize / Maximize)      -->
+        <!-- ———————————————————————————————————————————————————————————————— -->
+
+        <Style x:Key="WinCtrlBtn" TargetType="Button">
+            <Setter Property="Width"                                    Value="14"/>
+            <Setter Property="Height"                                   Value="14"/>
+            <Setter Property="Cursor"                                   Value="Hand"/>
+            <Setter Property="BorderThickness"                          Value="0"/>
+            <Setter Property="Focusable"                                Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Ellipse x:Name="BtnEllipse"
+                                 Fill="{TemplateBinding Background}"
+                                 Width="14" Height="14">
+                        </Ellipse>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="BtnEllipse" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="BtnEllipse" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ———————————————————————————————————————————————————————————————— -->
+        <!--   TOOLTIP STYLE                                                  -->
+        <!-- ———————————————————————————————————————————————————————————————— -->
+
+        <Style TargetType="ToolTip">
+            <Setter Property="Foreground"                               Value="{StaticResource BrushTextMuted}"/>
+            <Setter Property="FontFamily"                               Value="Segoe UI"/>
+            <Setter Property="FontSize"                                 Value="11"/>
+            <Setter Property="VerticalAlignment"                        Value="Center"/>
+            <Setter Property="Background"                               Value="{StaticResource BrushSurface}"/>
+            <Setter Property="BorderBrush"                              Value="{StaticResource BrushBorder}"/>
+            <Setter Property="BorderThickness"                          Value="1"/>
+            <Setter Property="Padding"                                  Value="8,4"/>
+            <Setter Property="HasDropShadow"                            Value="True"/>
+        </Style>
+
+        <!-- ———————————————————————————————————————————————————————————————— -->
+        <!--   STATUS BAR TEXT STYLE                                          -->
+        <!-- ———————————————————————————————————————————————————————————————— -->
+
+        <Style x:Key="StatusBarText" TargetType="TextBlock">
+            <Setter Property="Foreground"                               Value="{StaticResource BrushTextMuted}"/>
+            <Setter Property="FontFamily"                               Value="Segoe UI"/>
+            <Setter Property="FontSize"                                 Value="11"/>
+            <Setter Property="VerticalAlignment"                        Value="Center"/>
+        </Style>
+
+    </Window.Resources>
+
+    <!-- ============================================================================== -->
+    <!--   MAIN WINDOW BORDER & GRID                                                    -->
+    <!-- ============================================================================== -->
+
+    <Border x:Name="MainBorder"
+            Background="{StaticResource BrushBg}"
+            BorderBrush="{StaticResource BrushBorder}"
+            BorderThickness="1"
+            CornerRadius="8">
+
+        <Grid>
+            <!-- Row 0: Title Bar (36px height)       -->
+            <!-- Row 1: WebView2 Host Area (dynamic)  -->
+            <!-- Row 2: Status Bar (24px height)      -->
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="36"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="24"/>
+            </Grid.RowDefinitions>
+
+            <!-- ======================================================================== -->
+            <!--   ROW 0 - TITLE BAR                                                     -->
+            <!-- ======================================================================== -->
+
+            <Border Grid.Row="0"
+                    x:Name="TitleBar"
+                    Background="{StaticResource BrushTitleBar}"
+                    CornerRadius="8,8,0,0"
+                    BorderBrush="{StaticResource BrushBorder}"
+                    BorderThickness="0,0,0,1">
+
+                <Grid x:Name="TitleBarPanel">
+
+                    <Grid.ColumnDefinitions>
+                        <!-- Left:   PowerEdge Icon     (40px)   -->
+                        <!-- Center: Draggable Title    (auto)   -->
+                        <!-- Right:  Window Controls    (120px)  -->
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left: PowerEdge Icon -->
+
+                    <Image x:Name="PowerEdgeIcon"
+                           Grid.Column="0"
+                           Source="../PowerEdge.ico"
+                           Width="24" Height="24"
+                           Margin="12,0,0,0"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Left"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+
+                    <!-- Center: Draggable Title Text -->
+
+                    <TextBlock x:Name="WindowTitle"
+                               Grid.Column="0"
+                               Grid.ColumnSpan="3"
+                               Text="PowerEdge"
+                               Foreground="{StaticResource BrushText}"
+                               FontFamily="Segoe UI Semibold"
+                               FontSize="13"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False"/>
+
+                    <!-- Right: Window Control Buttons -->
+
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Margin="0,0,16,0">
+
+                        <Button x:Name="MinimizeButton"
+                                Background="{StaticResource BrushBtnMinimize}"
+                                Style="{StaticResource WinCtrlBtn}"
+                                ToolTip="Minimize"
+                                Margin="0,0,8,0"/>
+
+                        <Button x:Name="MaximizeButton"
+                                Background="{StaticResource BrushBtnMaximize}"
+                                Style="{StaticResource WinCtrlBtn}"
+                                ToolTip="Maximize"
+                                Margin="0,0,8,0"/>
+
+                        <Button x:Name="CloseButton"
+                                Background="{StaticResource BrushBtnClose}"
+                                Style="{StaticResource WinCtrlBtn}"
+                                ToolTip="Close"/>
+
+                    </StackPanel>
+
+                </Grid>
+
+            </Border>
+
+            <!-- ======================================================================== -->
+            <!--   ROW 1 - WEBVIEW2 HOST AREA                                            -->
+            <!-- ======================================================================== -->
+
+            <Border Grid.Row="1"
+                    x:Name="WebViewHost"
+                    Background="{StaticResource BrushSurface}">
+
+                <Grid>
+
+                    <!-- Loading Spinner (initially visible until WebView2 loads) -->
+
+                    <Grid x:Name="LoadingOverlay"
+                          Background="{StaticResource BrushSurface2}"
+                          Visibility="Visible">
+
+                        <StackPanel VerticalAlignment="Center"
+                                    HorizontalAlignment="Center">
+
+                            <Ellipse x:Name="Spinner"
+                                     Width="48"
+                                     Height="48"
+                                     Stroke="{StaticResource BrushAccent}"
+                                     StrokeThickness="4"
+                                     StrokeDashArray="10 5"
+                                     HorizontalAlignment="Center">
+                                <Ellipse.RenderTransform>
+                                    <RotateTransform x:Name="SpinnerRotate" CenterX="24" CenterY="24"/>
+                                </Ellipse.RenderTransform>
+                                <Ellipse.Triggers>
+                                    <EventTrigger RoutedEvent="Ellipse.Loaded">
+                                        <BeginStoryboard>
+                                            <Storyboard RepeatBehavior="Forever">
+                                                <DoubleAnimation
+                                                    Storyboard.TargetName="SpinnerRotate"
+                                                    Storyboard.TargetProperty="Angle"
+                                                    From="0" To="360"
+                                                    Duration="0:0:1.2"/>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Ellipse.Triggers>
+                            </Ellipse>
+
+                            <TextBlock Text="Initializing Edge WebView2..."
+                                       Foreground="{StaticResource BrushTextMuted}"
+                                       FontFamily="Segoe UI"
+                                       FontSize="13"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,16,0,0"/>
+
+                            <TextBlock Text="Powered by Microsoft Edge"
+                                       Foreground="{StaticResource BrushTextFaint}"
+                                       FontFamily="Segoe UI"
+                                       FontSize="11"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,8,0,0"/>
+
+                        </StackPanel>
+
+                    </Grid>
+
+                    <!-- WebView2 Control (injected at runtime via PowerEdge.ps1) -->
+
+                </Grid>
+
+            </Border>
+
+            <!-- ======================================================================== -->
+            <!--   ROW 2 - STATUS BAR                                                    -->
+            <!-- ======================================================================== -->
+
+            <Border Grid.Row="2"
+                    Background="{StaticResource BrushTitleBar}"
+                    CornerRadius="0,0,8,8"
+                    BorderBrush="{StaticResource BrushBorder}"
+                    BorderThickness="0,1,0,0">
+
+                <Grid Margin="14,0">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left: dynamic status message -->
+
+                    <TextBlock x:Name="StatusText"
+                               Grid.Column="0"
+                               Text="Initializing..."
+                               Style="{StaticResource StatusBarText}"/>
+
+                    <!-- Right: version label -->
+
+                    <TextBlock Grid.Column="1"
+                               Text="PowerEdge v1.01.01"
+                               Style="{StaticResource StatusBarText}"
+                               HorizontalAlignment="Right"/>
+
+                </Grid>
+
+            </Border>
+
+        </Grid>
+
+    </Border>
+
+</Window>
