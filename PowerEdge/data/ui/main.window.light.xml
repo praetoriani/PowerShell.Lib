@@ -9,7 +9,7 @@
     Design:     Modern light-themed frameless window with a custom title bar,
                 WebView2 host area, and a minimal status bar.
                 Color palette: light grey backgrounds, pastel whites,
-                clean typography — professional and unobtrusive.
+                clean typography – professional and unobtrusive.
 
     Author:     Praetoriani
     Version:    1.01.01    Date:      16.04.2026
@@ -138,13 +138,14 @@
             <!-- ======================================================================== -->
 
             <Border Grid.Row="0"
-                    x:Name="TitleBar"
+                    x:Name="TitleBarBorder"
                     Background="{StaticResource BrushTitleBar}"
                     CornerRadius="8,8,0,0"
                     BorderBrush="{StaticResource BrushBorder}"
                     BorderThickness="0,0,0,1">
 
-                <Grid x:Name="TitleBarPanel">
+                <Grid x:Name="TitleBarPanel"
+                      Background="Transparent">
 
                     <Grid.ColumnDefinitions>
                         <!-- Left:   PowerEdge Icon     (40px)   -->
@@ -154,9 +155,8 @@
 
                     <!-- Left: PowerEdge Icon -->
 
-                    <Image x:Name="PowerEdgeIcon"
+                    <Image x:Name="TitleBarLogo"
                            Grid.Column="0"
-                           Source="../PowerEdge.ico"
                            Width="24" Height="24"
                            Margin="12,0,0,0"
                            VerticalAlignment="Center"
@@ -165,7 +165,7 @@
 
                     <!-- Center: Draggable Title Text -->
 
-                    <TextBlock x:Name="WindowTitle"
+                    <TextBlock x:Name="TitleBarText"
                                Grid.Column="0"
                                Grid.ColumnSpan="3"
                                Text="PowerEdge"
@@ -184,19 +184,19 @@
                                 VerticalAlignment="Center"
                                 Margin="0,0,16,0">
 
-                        <Button x:Name="MinimizeButton"
+                        <Button x:Name="BtnMinimize"
                                 Background="{StaticResource BrushBtnMinimize}"
                                 Style="{StaticResource WinCtrlBtn}"
                                 ToolTip="Minimize"
                                 Margin="0,0,8,0"/>
 
-                        <Button x:Name="MaximizeButton"
+                        <Button x:Name="BtnMaximize"
                                 Background="{StaticResource BrushBtnMaximize}"
                                 Style="{StaticResource WinCtrlBtn}"
                                 ToolTip="Maximize"
                                 Margin="0,0,8,0"/>
 
-                        <Button x:Name="CloseButton"
+                        <Button x:Name="BtnClose"
                                 Background="{StaticResource BrushBtnClose}"
                                 Style="{StaticResource WinCtrlBtn}"
                                 ToolTip="Close"/>
@@ -216,6 +216,11 @@
                     Background="{StaticResource BrushSurface}">
 
                 <Grid>
+
+                    <!-- WebView2 Control -->
+                    <wv2:WebView2 x:Name="MainWebView"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Stretch"/>
 
                     <!-- Loading Spinner (initially visible until WebView2 loads) -->
 
@@ -268,8 +273,6 @@
                         </StackPanel>
 
                     </Grid>
-
-                    <!-- WebView2 Control (injected at runtime via PowerEdge.ps1) -->
 
                 </Grid>
 

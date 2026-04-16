@@ -222,7 +222,7 @@
             </Border>
 
             <!-- ──────────────────────────────────────────────────────────────── -->
-            <!--  SEPARATOR LINE between title bar and content               -->
+            <!--  SEPARATOR LINE between title bar and content                    -->
             <!-- ──────────────────────────────────────────────────────────────── -->
             <Rectangle Grid.Row="0"
                        Height="1"
@@ -230,7 +230,7 @@
                        Fill="{StaticResource BrushBorder}"/>
 
             <!-- ──────────────────────────────────────────────────────────────── -->
-            <!--  ROW 1 — WEBVIEW2 CONTENT AREA                              -->
+            <!--  ROW 1 — WEBVIEW2 CONTENT AREA                                   -->
             <!-- ──────────────────────────────────────────────────────────────── -->
             <Grid Grid.Row="1">
 
@@ -292,8 +292,8 @@
             </Grid>
 
             <!-- ──────────────────────────────────────────────────────────────── -->
-            <!--  ROW 2 — STATUS BAR                                         -->
-                    <!-- ──────────────────────────────────────────────────────────────── -->
+            <!--  ROW 2 — STATUS BAR                                              -->
+            <!-- ──────────────────────────────────────────────────────────────── -->
         <Border Grid.Row="2"                    Background="{StaticResource BrushTitleBar}"
                     CornerRadius="0,0,10,10"
                     BorderBrush="{StaticResource BrushBorder}"
@@ -313,8 +313,7 @@
 
                     <!-- Right: version label -->
                     <TextBlock Grid.Column="1"
-                        Text="PowerEdge v1.01.01"                               Style="{StaticResource StatusBarText}"
-                               HorizontalAlignment="Right"/>
+                        Text="PowerEdge v1.01.01" Style="{StaticResource StatusBarText}" HorizontalAlignment="Right"/>
                 </Grid>
             </Border>
 

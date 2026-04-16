@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    PowerEdge v1.01.01 – Main Window XAML Definition (Grey Theme)                             —1.01.01—
-    File:       data\ui\main.window.grey.xml
+    PowerEdge v1.01.01 – Main Window XAML Definition (Light Theme)                            —1.01.01—
+    File:       data\ui\main.window.light.xml
     Purpose:    Defines the WPF UI for the PowerEdge application window.
                 This file is loaded externally by PowerEdge.ps1 as per the
                 mandatory App Development Guidelines (no inline XAML).
 
-    Design:     Modern grey-themed frameless window with a custom title bar,
+    Design:     Modern light-themed frameless window with a custom title bar,
                 WebView2 host area, and a minimal status bar.
-                Color palette: balanced grey spectrum - mix of light and dark greys,
-                creating a neutral, professional appearance that avoids extremes.
+                Color palette: light grey backgrounds, pastel whites,
+                clean typography – professional and unobtrusive.
 
     Author:     Praetoriani
     Version:    1.01.01    Date:      16.04.2026
@@ -36,17 +36,17 @@
         <!--   COLOR PALETTE                                                  -->
         <!-- ———————————————————————————————————————————————————————————————— -->
 
-        <SolidColorBrush x:Key="BrushBg"                Color="#3C3C3C"/>
-        <SolidColorBrush x:Key="BrushSurface"           Color="#505050"/>
-        <SolidColorBrush x:Key="BrushSurface2"          Color="#585858"/>
-        <SolidColorBrush x:Key="BrushTitleBar"          Color="#2E2E2E"/>
-        <SolidColorBrush x:Key="BrushAccent"            Color="#7A7A7A"/>
-        <SolidColorBrush x:Key="BrushAccentHover"       Color="#999999"/>
-        <SolidColorBrush x:Key="BrushAccentDim"         Color="#5A5A5A"/>
-        <SolidColorBrush x:Key="BrushText"              Color="#E0E0E0"/>
-        <SolidColorBrush x:Key="BrushTextMuted"         Color="#A0A0A0"/>
-        <SolidColorBrush x:Key="BrushTextFaint"         Color="#707070"/>
-        <SolidColorBrush x:Key="BrushBorder"            Color="#606060"/>
+        <SolidColorBrush x:Key="BrushBg"                Color="#F5F5F5"/>
+        <SolidColorBrush x:Key="BrushSurface"           Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="BrushSurface2"          Color="#FAFAFA"/>
+        <SolidColorBrush x:Key="BrushTitleBar"          Color="#E8E8E8"/>
+        <SolidColorBrush x:Key="BrushAccent"            Color="#5B9BD5"/>
+        <SolidColorBrush x:Key="BrushAccentHover"       Color="#7BB4E8"/>
+        <SolidColorBrush x:Key="BrushAccentDim"         Color="#4A7CA8"/>
+        <SolidColorBrush x:Key="BrushText"              Color="#2C2C2C"/>
+        <SolidColorBrush x:Key="BrushTextMuted"         Color="#707070"/>
+        <SolidColorBrush x:Key="BrushTextFaint"         Color="#B0B0B0"/>
+        <SolidColorBrush x:Key="BrushBorder"            Color="#D0D0D0"/>
         <SolidColorBrush x:Key="BrushBtnClose"          Color="#E05055"/>
         <SolidColorBrush x:Key="BrushBtnCloseHover"     Color="#FF6B70"/>
         <SolidColorBrush x:Key="BrushBtnMinimize"       Color="#F0A500"/>
@@ -138,13 +138,14 @@
             <!-- ======================================================================== -->
 
             <Border Grid.Row="0"
-                    x:Name="TitleBar"
+                    x:Name="TitleBarBorder"
                     Background="{StaticResource BrushTitleBar}"
                     CornerRadius="8,8,0,0"
                     BorderBrush="{StaticResource BrushBorder}"
                     BorderThickness="0,0,0,1">
 
-                <Grid x:Name="TitleBarPanel">
+                <Grid x:Name="TitleBarPanel"
+                      Background="Transparent">
 
                     <Grid.ColumnDefinitions>
                         <!-- Left:   PowerEdge Icon     (40px)   -->
@@ -154,9 +155,8 @@
 
                     <!-- Left: PowerEdge Icon -->
 
-                    <Image x:Name="PowerEdgeIcon"
+                    <Image x:Name="TitleBarLogo"
                            Grid.Column="0"
-                           Source="../PowerEdge.ico"
                            Width="24" Height="24"
                            Margin="12,0,0,0"
                            VerticalAlignment="Center"
@@ -165,7 +165,7 @@
 
                     <!-- Center: Draggable Title Text -->
 
-                    <TextBlock x:Name="WindowTitle"
+                    <TextBlock x:Name="TitleBarText"
                                Grid.Column="0"
                                Grid.ColumnSpan="3"
                                Text="PowerEdge"
@@ -184,19 +184,19 @@
                                 VerticalAlignment="Center"
                                 Margin="0,0,16,0">
 
-                        <Button x:Name="MinimizeButton"
+                        <Button x:Name="BtnMinimize"
                                 Background="{StaticResource BrushBtnMinimize}"
                                 Style="{StaticResource WinCtrlBtn}"
                                 ToolTip="Minimize"
                                 Margin="0,0,8,0"/>
 
-                        <Button x:Name="MaximizeButton"
+                        <Button x:Name="BtnMaximize"
                                 Background="{StaticResource BrushBtnMaximize}"
                                 Style="{StaticResource WinCtrlBtn}"
                                 ToolTip="Maximize"
                                 Margin="0,0,8,0"/>
 
-                        <Button x:Name="CloseButton"
+                        <Button x:Name="BtnClose"
                                 Background="{StaticResource BrushBtnClose}"
                                 Style="{StaticResource WinCtrlBtn}"
                                 ToolTip="Close"/>
@@ -216,6 +216,11 @@
                     Background="{StaticResource BrushSurface}">
 
                 <Grid>
+
+                    <!-- WebView2 Control -->
+                    <wv2:WebView2 x:Name="MainWebView"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Stretch"/>
 
                     <!-- Loading Spinner (initially visible until WebView2 loads) -->
 
@@ -268,8 +273,6 @@
                         </StackPanel>
 
                     </Grid>
-
-                    <!-- WebView2 Control (injected at runtime via PowerEdge.ps1) -->
 
                 </Grid>
 
