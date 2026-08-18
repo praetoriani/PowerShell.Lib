@@ -25,7 +25,7 @@ context-menu-switcher-release-v2.yml
 /SysDaemon/RunSystemJob.xml.txt
 
 # EXCLUDE SPECIFIC FILES/FOLDERS FOR "DISM.UI.CC"
-/DISM.UI.CC/PS.Module/*
+#/DISM.UI.CC/PS.Module/*
 # EXCLUDE SPECIFIC FILES/FOLDERS FOR "ModernUI"
 /ModernUI/runtime.log
 /ModernUI/runtime.txt
