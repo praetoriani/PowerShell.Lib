@@ -1,0 +1,41 @@
+﻿<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="DataGrid Demo" Height="480" Width="720"
+    WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <ToolBarTray Grid.Row="0">
+            <ToolBar>
+                <Button Content="Add"/>
+                <Button Content="Edit"/>
+                <Button Content="Delete"/>
+                <Separator/>
+                <Button Content="Refresh"/>
+            </ToolBar>
+        </ToolBarTray>
+
+        <!-- DataGrid -->
+        <DataGrid Grid.Row="1" Margin="0,10" AutoGenerateColumns="True"
+                  CanUserAddRows="False" CanUserDeleteRows="False"
+                  HeadersVisibility="Column" GridLinesVisibility="All">
+            <!-- In a real application the rows would be populated from an
+                 ItemsSource. This demo only shows the DataGrid layout. -->
+        </DataGrid>
+
+        <!-- Status Bar -->
+        <StatusBar Grid.Row="2">
+            <StatusBarItem Content="Ready"/>
+            <Separator/>
+            <StatusBarItem Content="Rows: 0"/>
+            <StatusBarItem HorizontalAlignment="Right" Content="DataGrid Demo"/>
+        </StatusBar>
+    </Grid>
+</Window>

@@ -1,0 +1,36 @@
+# =============================================================================
+# UI-Preview-Tool - .gitignore
+# =============================================================================
+# This .gitignore uses an "include-only" strategy: everything is ignored by
+# default, and only the files that are relevant for this repository are
+# explicitly re-included. This keeps the published folder clean and free of
+# temporary, runtime and unrelated files.
+# =============================================================================
+
+# Ignore everything by default
+*
+
+# --- Re-include the files relevant to this repository ---
+!UI-Preview-Tool.ps1
+!README.md
+!Documentation.de.md
+!Documentation.en.md
+!LICENSE
+!.gitignore
+!Example-Test.xaml
+!Complex-Layout-Test.xaml
+!Simple-Form-Demo.xaml
+!DataGrid-Demo.xaml
+!UI-Preview-Tool-release.yml
+
+# --- Explicitly excluded (for clarity) ---
+# Runtime / generated files
+ui-preview-recent.json
+*.json
+
+# Unrelated / legacy files
+*.afphoto
+*.png
+*.code-workspace
+Dokumentation-v*.md
+UI-Preview-Tool-Dokumentation.md
